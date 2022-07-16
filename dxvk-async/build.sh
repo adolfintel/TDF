@@ -23,6 +23,12 @@ else
     if [ $? -ne 0 ]; then exit 1; fi
     git clone https://github.com/doitsujin/dxvk
     if [ $? -ne 0 ]; then exit 1; fi
+    if [ -e "../branch.txt" ]; then
+        cd dxvk
+        git checkout $(cat "../../branch.txt")
+        if [ $? -ne 0 ]; then exit 1; fi
+        cd ..
+    fi
     git clone https://github.com/Sporif/dxvk-async
     if [ $? -ne 0 ]; then exit 1; fi
     cd dxvk
