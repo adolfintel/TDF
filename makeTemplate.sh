@@ -10,13 +10,26 @@ rm -f "$dir.tar.zst"
 mkdir "$dir"
 cp -r "template-base"/* "$dir"
 cd dxvk-async
+dxvkAsyncFallbacked=0
+./build.sh master
+if [ $? -ne 0 ]; then
+    dxvkAsyncFallbacked=1
+    ./build.sh stable
+    if [ $? -ne 0 ]; then
+        fail "dxvk-async"
+    fi
+fi
+mv build/* "../$dir/system/dxvk-async"
+rm -rf build
+cd ..
+cd dxvk
 dxvkFallbacked=0
 ./build.sh master
 if [ $? -ne 0 ]; then
     dxvkFallbacked=1
     ./build.sh stable
     if [ $? -ne 0 ]; then
-        fail "dxvk-async"
+        fail "dxvk"
     fi
 fi
 mv build/* "../$dir/system/dxvk"
@@ -65,8 +78,11 @@ if [ $? -ne 0 ]; then fail 6; fi
 echo "Cleaning up"
 rm -rf "$dir"
 echo "All done"
-if [ $dxvkFallbacked -eq 1 ]; then
+if [ $dxvkAsyncFallbacked -eq 1 ]; then
     echo "WARNING: dxvk-async build failed, using latest prebuilt binary"
+fi
+if [ $dxvkFallbacked -eq 1 ]; then
+    echo "WARNING: dxvk build failed, using latest prebuilt binary"
 fi
 if [ $vkd3dFallbacked -eq 1 ]; then
     echo "WARNING: vkd3d-proton build failed, using latest prebuilt binary"

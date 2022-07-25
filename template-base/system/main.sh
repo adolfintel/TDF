@@ -8,6 +8,7 @@ game_exe=''
 game_args=''
 
 USE_DXVK=1
+USE_DXVK_ASYNC=1
 USE_VKD3D=1
 USE_WINEMONO=0
 USE_WINEGECKO=0
@@ -37,7 +38,7 @@ gamescopeParameters="-f"
 additionalStartArgs=''
 export WINEPREFIX="$(pwd)/zzprefix"
 export USER="wine"
-export DXVK_CONFIG_FILE="$(pwd)/system/dxvk/dxvk.conf"
+export DXVK_CONFIG_FILE="$(pwd)/system/dxvk.conf"
 
 alias zenity='zenity --title "Launcher $LAUNCHER_VERSION"'
 
@@ -165,6 +166,9 @@ fi
 if [ "$(type -t customChecks)" == "function" ]; then
     customChecks
 fi
+justRunManualCommand(){
+    $debotnetPrefix wine start /WAIT $1
+}
 justLaunchCommandPrompt(){
     $debotnetPrefix wine start /D "C:\\Windows\\System32" /WAIT "cmd.exe"
 }
@@ -232,6 +236,9 @@ launchGame(){
 applyDllsIfNeeded(){
     windows_dir="$WINEPREFIX/drive_c/windows"
     dxvk_dir="system/dxvk"
+    if [ $USE_DXVK_ASYNC -eq 1 ]; then
+        dxvk_dir="$dxvk_dir-async"
+    fi
     vkd3d_dir="system/vkd3d"
     overrideDll() {
         wine reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /d 'native,builtin' /f
@@ -677,6 +684,11 @@ if [ -d "$WINEPREFIX" ]; then
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
     ) | zenity --progress --no-cancel --text="Launching..." --width=200 --auto-close --auto-kill
     wait
+    if [ $initOnly -eq 1 ]; then
+        if [ ! -z "$2" ]; then
+            justRunManualCommand $2
+        fi
+    fi
     if [ -z "$game_exe" ]; then
         launchCommandPrompt
     else

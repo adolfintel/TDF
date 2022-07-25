@@ -31,10 +31,19 @@ if [ $USE_STEAMRT -eq 1 ] && [ -e "./system/steamrt" ]; then
         ./system/steamrt/run.sh zenity --warning --width 400 --text "$mechanicalDriveMessage"
     fi
     ./system/steamrt/setup.sh
-    ./system/steamrt/run.sh ./system/main.sh normal
+    if [ ! -z "$1" ]; then 
+        ./system/steamrt/run.sh ./system/main.sh $*
+    else
+        ./system/steamrt/run.sh ./system/main.sh normal
+    fi
+    
 else
     if [ $mustShowHDDWarning -eq 1 ]; then
         zenity --warning --width 400 --text "$mechanicalDriveMessage"
     fi
-    ./system/main.sh normal
+    if [ ! -z "$1" ]; then 
+        ./system/main.sh $*
+    else
+        ./system/main.sh normal
+    fi
 fi
