@@ -47,9 +47,9 @@ if [ -z $1 ]; then
     exit
 fi
 
-initOnly=0
-if [ $1 == "manualinit" ]; then
-    initOnly=1
+manualInit=0
+if [ $1 == "manualInit" ]; then
+    manualInit=1
 fi
 vulkaninfo | grep -e "PHYSICAL_DEVICE_TYPE_DISCRETE_GPU" -e "PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU" -e "PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU" > /dev/null
 if [ $? -ne 0 ]; then
@@ -173,7 +173,7 @@ justLaunchCommandPrompt(){
     $debotnetPrefix wine start /D "C:\\Windows\\System32" /WAIT "cmd.exe"
 }
 launchCommandPrompt(){
-    if [ $initOnly -eq 1 ]; then
+    if [ $manualInit -eq 1 ]; then
         return
     fi
     zenity --info --width 500 --text "A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet"
@@ -194,7 +194,7 @@ justLaunchGame(){
     fi
 }
 launchGame(){
-    if [ $initOnly -eq 1 ]; then
+    if [ $manualInit -eq 1 ]; then
         return
     fi
     wdir=$(winepath -u "$game_workingDir" 2> /dev/null)
@@ -684,7 +684,7 @@ if [ -d "$WINEPREFIX" ]; then
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
     ) | zenity --progress --no-cancel --text="Launching..." --width=200 --auto-close --auto-kill
     wait
-    if [ $initOnly -eq 1 ]; then
+    if [ $manualInit -eq 1 ]; then
         if [ ! -z "$2" ]; then
             justRunManualCommand $2
         fi
@@ -726,7 +726,13 @@ else
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
     ) | zenity --progress --no-cancel --text="Initializing a new wineprefix, this may take a while" --width=500 --auto-close --auto-kill
     wait
-    launchCommandPrompt
+    if [ $manualInit -eq 1 ]; then
+        if [ ! -z "$2" ]; then
+            justRunManualCommand $2
+        fi
+    else
+        launchCommandPrompt
+    fi
 fi
 if [ $KILL_WINE_AFTER -eq 1 ]; then
     killWine
