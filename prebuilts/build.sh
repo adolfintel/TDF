@@ -4,7 +4,7 @@ mkdir build
 cd build
 echo "Downloading wine-ge"
 rm -rf wine temp
-url=$(curl --silent "https://api.github.com/repos/GloriousEggroll/wine-ge-custom/releases/latest" | grep '"browser_download_url"' | grep '.tar.xz"' | sed -E 's/.*"([^"]+)".*/\1/')
+url=$(curl --silent "https://api.github.com/repos/GloriousEggroll/wine-ge-custom/releases" | grep "browser_download_url" | grep "lutris-GE-Proton" | grep ".tar.xz" | sed -E 's/.*"([^"]+)".*/\1/' | head -n 1)
 if [ $? -ne 0 ]; then exit 1; fi
 wget -O wine.tar.xz "$url"
 if [ $? -ne 0 ]; then exit 1; fi
