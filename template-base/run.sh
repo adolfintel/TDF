@@ -8,6 +8,24 @@ while [ -h "$SOURCE" ]; do
 done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 cd "$DIR"
+if [ "$1" == "archive" ]; then
+    archiveName="../$(basename "$DIR")"
+    if [ "$2" == "nocompress" ]; then
+        archiveName="$archiveName.tar"
+        echo "Archiving to $archiveName without compression"
+        sleep 1
+        tar -cvf "$archiveName" .
+    else
+        archiveName="$archiveName.tar.zst"
+        echo "Compressing to $archiveName"
+        sleep 1
+        tar -I 'zstd --ultra -22' -cvf "$archiveName" .
+    fi
+    if [ $? -ne 0 ]; then
+        echo "Failed"
+    fi
+    exit
+fi
 USE_STEAMRT=1
 IGNORE_MECHANICAL_HDD=0
 mustShowHDDWarning=0
