@@ -9,20 +9,24 @@ done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 cd "$DIR"
 if [ "$1" == "archive" ]; then
-    archiveName="../$(basename "$DIR")"
+    cd ..
+    folderPath="$(basename "$DIR")"
+    archivePath="$(realpath "$folderPath")"
     if [ "$2" == "nocompress" ]; then
-        archiveName="$archiveName.tar"
-        echo "Archiving to $archiveName without compression"
+        archivePath="$archivePath.tar"
+        echo "Archiving to $archivePath without compression"
         sleep 1
-        tar -cvf "$archiveName" .
+        tar -cvf "$archivePath" "$folderPath"
     else
-        archiveName="$archiveName.tar.zst"
-        echo "Compressing to $archiveName"
+        archivePath="$archivePath.tar.zst"
+        echo "Compressing to $archivePath"
         sleep 1
-        tar -I 'zstd --ultra -22' -cvf "$archiveName" .
+        tar -I 'zstd --ultra -22' -cvf "$archivePath" "$folderPath"
     fi
     if [ $? -ne 0 ]; then
         echo "Failed"
+    else
+        echo "Saved to $archivePath"
     fi
     exit
 fi
