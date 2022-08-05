@@ -8,15 +8,22 @@ while [ -h "$SOURCE" ]; do
 done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 cd "$DIR"
-if [ "$1" == "archive" ]; then
-    ./system/archive.sh $*
-    exit
-fi
 USE_STEAMRT=1
 IGNORE_MECHANICAL_HDD=0
 mustShowHDDWarning=0
 mechanicalDriveMessage="Running from a mechanical hard drive is not recommended, expect performance issues"
 source "vars.conf"
+if [ "$1" == "archive" ]; then
+    if [ "$(type -t onArchiveStart)" == "function" ]; then
+        onArchiveStart $*
+    fi
+    ./system/archive.sh $*
+    res=$?
+    if [ "$(type -t onArchiveEnd)" == "function" ]; then
+        onArchiveEnd $res
+    fi
+    exit
+fi
 if [ $IGNORE_MECHANICAL_HDD -eq 0 ]; then
     drive=$(df -T . | awk '/^\/dev/ {print $1}')
     drive=$(lsblk -no pkname $drive)
