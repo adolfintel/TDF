@@ -22,6 +22,8 @@ BLOCK_NETWORK=1
 BLOCK_NETWORK_PREFER_FIREJAIL=0
 BLOCK_BROWSER=1
 BLOCK_ZDRIVE=0
+BLOCK_EXTERNAL_DRIVES=1
+BLOCK_SERIAL_DEVICES=1
 USE_FAKE_HOMEDIR=0
 WINE_PREFER_SYSTEM=0
 KILL_WINE_BEFORE=0
@@ -473,12 +475,23 @@ removeBrokenSymlinks(){
 }
 removeUnnecessarySymlinks(){
     driveC=$(realpath "$WINEPREFIX/dosdevices/c:")
-    for f in $WINEPREFIX/dosdevices/*; do
-        rp=$(realpath "$f")
-        if [ "$rp" != "$driveC" -a "$rp" != "/" ] || [ $BLOCK_ZDRIVE -eq 1 -a "$rp" == "/" ] ; then
-            unlink "$f"
-        fi
-    done
+        for f in "$WINEPREFIX"/dosdevices/* ; do
+            if [[ $(basename "$f") =~ (com)[0-9]* ]]; then
+                if [ $BLOCK_SERIAL_DEVICES -eq 1 ]; then
+                    unlink "$f"
+                fi
+            else
+                if [ $BLOCK_EXTERNAL_DRIVES -eq 1 ]; then
+                    rp=$(realpath "$f")
+                    if [ "$rp" != "$driveC" -a "$rp" != "/" ] ; then
+                        unlink "$f"
+                    fi
+                fi
+            fi
+        done
+    if [ $BLOCK_ZDRIVE -eq 1 ]; then
+        unlink "$WINEPREFIX/dosdevices/z:"
+    fi
 }
 repairDriveCIfNeeded(){
     link=$(realpath "$WINEPREFIX/dosdevices/c:")
