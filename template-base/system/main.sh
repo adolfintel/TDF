@@ -368,7 +368,7 @@ applyMsisIfNeeded(){
             if [ ! -f "$WINEPREFIX/.winemono-installed" ]; then
                 installMonoMSI
             else
-                $winemonoVer="$(cat "$WINEPREFIX/.winemono-installed")"
+                winemonoVer="$(cat "$WINEPREFIX/.winemono-installed")"
                 if [ "$winemonoVer" != "$LAUNCHER_VERSION" ]; then
                     uninstallMonoMSI
                     installMonoMSI
