@@ -22,7 +22,7 @@ BLOCK_NETWORK=1
 BLOCK_NETWORK_PREFER_FIREJAIL=0
 BLOCK_BROWSER=1
 BLOCK_ZDRIVE=0
-BLOCK_EXTERNAL_DRIVES=0
+BLOCK_EXTERNAL_DRIVES=1
 USE_FAKE_HOMEDIR=0
 WINE_PREFER_SYSTEM=0
 KILL_WINE_BEFORE=0
@@ -92,7 +92,7 @@ if [ $USE_WINEGECKO -eq 0 ]; then
     export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;mshtml="
 fi
 export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winemenubuilder.exe=d"
-if [ $BLOCK_EXTERNAL_DRIVES -eq 1 ]; then
+if [ $BLOCK_EXTERNAL_DRIVES -ge 2 ]; then
     export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winedevice.exe=d"
 fi
 if [ $USE_FAKE_HOMEDIR -eq 1 ]; then
@@ -481,7 +481,7 @@ removeUnnecessarySymlinks(){
             if [[ $(basename "$f") =~ (com)[0-9]* ]]; then
                 unlink "$f"
             else
-                if [ $BLOCK_EXTERNAL_DRIVES -eq 1 ]; then
+                if [ $BLOCK_EXTERNAL_DRIVES -ge 1 ]; then
                     rp=$(realpath "$f")
                     if [ "$rp" != "$driveC" -a "$rp" != "/" ] ; then
                         unlink "$f"
