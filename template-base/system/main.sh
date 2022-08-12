@@ -22,8 +22,7 @@ BLOCK_NETWORK=1
 BLOCK_NETWORK_PREFER_FIREJAIL=0
 BLOCK_BROWSER=1
 BLOCK_ZDRIVE=0
-BLOCK_EXTERNAL_DRIVES=1
-BLOCK_SERIAL_DEVICES=1
+BLOCK_EXTERNAL_DRIVES=0
 USE_FAKE_HOMEDIR=0
 WINE_PREFER_SYSTEM=0
 KILL_WINE_BEFORE=0
@@ -93,6 +92,9 @@ if [ $USE_WINEGECKO -eq 0 ]; then
     export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;mshtml="
 fi
 export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winemenubuilder.exe=d"
+if [ $BLOCK_EXTERNAL_DRIVES -eq 1 ]; then
+    export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winedevice.exe=d"
+fi
 if [ $USE_FAKE_HOMEDIR -eq 1 ]; then
     export HOME="$(pwd)/zzhome"
     if [ ! -d "$HOME" ]; then
@@ -477,9 +479,7 @@ removeUnnecessarySymlinks(){
     driveC=$(realpath "$WINEPREFIX/dosdevices/c:")
         for f in "$WINEPREFIX"/dosdevices/* ; do
             if [[ $(basename "$f") =~ (com)[0-9]* ]]; then
-                if [ $BLOCK_SERIAL_DEVICES -eq 1 ]; then
-                    unlink "$f"
-                fi
+                unlink "$f"
             else
                 if [ $BLOCK_EXTERNAL_DRIVES -eq 1 ]; then
                     rp=$(realpath "$f")
@@ -502,6 +502,7 @@ repairDriveCIfNeeded(){
         ln -s "$target" "$link"
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
+            touch "$WINEPREFIX/.abort"
             zenity --error --width 500 --text "Virtual C drive is broken and attempts to repair it failed.\n\nPlease check $link"
             exit
         fi
@@ -519,6 +520,7 @@ repairDriveZIfNeeded(){
         ln -s "$target" "$link"
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
+            touch "$WINEPREFIX/.abort"
             zenity --error --width 500 --text "Z drive is broken and attempts to repair it failed.\n\nPlease check $link"
             exit
         fi
@@ -526,17 +528,7 @@ repairDriveZIfNeeded(){
 }
 blockBrowserIfNeeded(){
     if [ $BLOCK_BROWSER -eq 1 ]; then
-        if [ -f "$WINEPREFIX/drive_c/windows/system32/winebrowser.exe" ]; then
-            rm -f "$WINEPREFIX/drive_c/windows/syswow64/winebrowser.exe"
-            rm -f "$WINEPREFIX/drive_c/windows/system32/winebrowser.exe"
-        fi
-    else
-        if [ ! -f "$WINEPREFIX/drive_c/windows/system32/winebrowser.exe" ]; then
-            wineboot -u
-            wait
-            wineserver -k
-            wait
-        fi
+        export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winebrowser.exe=d"
     fi
 }
 killWine(){
@@ -666,6 +658,7 @@ if [ -d "$WINEPREFIX" ]; then
             exit
         fi
     fi
+    rm -f "$WINEPREFIX/.abort"
     (
         echo "1"
         removeBrokenSymlinks
@@ -697,6 +690,10 @@ if [ -d "$WINEPREFIX" ]; then
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
     ) | zenity --progress --no-cancel --text="Launching..." --width=200 --auto-close --auto-kill
     wait
+    if [ -f "$WINEPREFIX/.abort" ]; then
+        rm -f "$WINEPREFIX/.abort"
+        exit
+    fi
     if [ $manualInit -eq 1 ]; then
         if [ ! -z "$2" ]; then
             justRunManualCommand $2
