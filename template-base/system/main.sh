@@ -125,7 +125,7 @@ if [ $USE_GAMESCOPE -ge 1 ]; then
     else
         export PATH="$(pwd)/system/gamescope:$PATH"
     fi
-    gamescope -f -- true
+    gamescope -f -- sleep 0.1
     if [ $? -ne 0 ]; then 
         gamescopePrefix=""
     fi
@@ -134,7 +134,7 @@ else
 fi
 if [ $USE_GAMESCOPE -eq 2 ]; then
     if [ -z "$gamescopePrefix" ]; then
-        zenity --info --width 400 --text "Gamescope is required for this game but it's not working"
+        zenity --error --width 400 --text "Gamescope is required for this game but it's not working"
         exit
     fi
 fi
