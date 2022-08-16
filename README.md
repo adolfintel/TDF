@@ -14,7 +14,7 @@ light sandboxing of the windows processes.
 
 ## Requirements
 
-- Linux Kernel 6.16+ and Wine dependencies installed (tested on Manjaro, Arch Linux and similar)
+- Linux Kernel 5.16+ and Wine dependencies installed (tested on Manjaro, Arch Linux and similar)
 - some basic conf file editing skills, and troubleshooting skills
 
 ## Compiling from source
@@ -31,7 +31,7 @@ vkd3d and DXVK will be compiled. Make sure you have the necessary dependencies.
 1. Extract the `tar` archive to a folder. This will be your game's folder.
 2. run the `run.sh` script and wait for the initialization to complete
 3. a windows CMD prompt will open. Use this to install your game, for example by launching `explorer` and then picking an `exe` setup file. If your game has no setup, exit and manually copy the file into the wine prefix in the `zzprefix` folder
-4. after installing, edit `run.sh` and enter the path of the folder where the executable is, the executable name, and optionally any arguments
+4. after installing, edit `vars.conf` and enter the path of the folder where the executable is, the executable name, and optionally any arguments
 5. run `run.sh` and the game should play
 
 ### Archive mode
