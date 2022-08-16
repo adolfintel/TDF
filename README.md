@@ -17,7 +17,7 @@ light sandboxing of the windows processes.
 - Linux Kernel 5.16+ and Wine dependencies installed (tested on Manjaro, Arch Linux and similar)
 - some basic conf file editing skills, and troubleshooting skills
 
-## Compiling from source
+## Building from source
 
 Clone the repo then run `makeTemplate.sh`
 
@@ -26,9 +26,11 @@ create a `tar` archive with the timestamp of the template compilation.
 
 vkd3d and DXVK will be compiled. Make sure you have the necessary dependencies.
 
+At the end of the process, a file called `template-YYYYMMDD.tar.zst` will be created.
+
 ## Usage
 
-1. Extract the `tar` archive to a folder. This will be your game's folder.
+1. Extract the `template-YYYYMMDD.tar.zst` archive to a folder. This will be your game's folder
 2. run the `run.sh` script and wait for the initialization to complete
 3. a windows CMD prompt will open. Use this to install your game, for example by launching `explorer` and then picking an `exe` setup file. If your game has no setup, exit and manually copy the file into the wine prefix in the `zzprefix` folder
 4. after installing, edit `vars.conf` and enter the path of the folder where the executable is, the executable name, and optionally any arguments
