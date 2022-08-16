@@ -3,6 +3,21 @@ fail(){
     echo "Build failed: $1"
     exit 1
 }
+depsCheckFailed=0
+for d in "dxvk" "dxvk-async" "futex2test" "gamescope" "prebuilts" "vkd3d"; do
+    sh "$d/checkDeps.sh"
+    if [ $? -ne 0 ]; then
+        depsCheckFailed=1;
+    fi
+done
+zstd --version > /dev/null
+if [ $? -ne 0 ]; then
+    echo "zstd not installed"
+    depsCheckFailed=1
+fi
+if [ $depsCheckFailed -ne 0 ]; then
+    fail "deps-check"
+fi
 version=$(date +"%Y%m%d")
 dir="template-$version"
 rm -rf "$dir"
@@ -74,7 +89,7 @@ if [ "$1" == "nocompress" ]; then
 else
     tar -I 'zstd --ultra -22' -cvf "$dir.tar.zst" "$dir"
 fi
-if [ $? -ne 0 ]; then fail 6; fi
+if [ $? -ne 0 ]; then fail "compress"; fi
 echo "Cleaning up"
 rm -rf "$dir"
 echo "All done"
