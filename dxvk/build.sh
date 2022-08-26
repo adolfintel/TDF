@@ -21,7 +21,7 @@ else
     mkdir repo
     cd repo
     if [ $? -ne 0 ]; then exit 1; fi
-    git clone https://github.com/doitsujin/dxvk
+    git clone --recursive https://github.com/doitsujin/dxvk
     if [ $? -ne 0 ]; then exit 1; fi
     if [ -e "../branch.txt" ]; then
         cd dxvk
