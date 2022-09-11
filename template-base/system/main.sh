@@ -679,8 +679,6 @@ if [ -d "$WINEPREFIX" ]; then
         echo "65"
         hideCrashesIfNeeded
         echo "70"
-        blockBrowserIfNeeded
-        echo "75"
         applyCorefontsIfNeeded
         echo "85"
         deIntegrateIfNeeded
@@ -694,6 +692,7 @@ if [ -d "$WINEPREFIX" ]; then
         rm -f "$WINEPREFIX/.abort"
         exit
     fi
+    blockBrowserIfNeeded
     if [ $manualInit -eq 1 ]; then
         if [ ! -z "$2" ]; then
             justRunManualCommand $2
@@ -725,8 +724,6 @@ else
         echo "65"
         hideCrashesIfNeeded
         echo "70"
-        blockBrowserIfNeeded
-        echo "75"
         applyCorefontsIfNeeded
         echo "85"
         deIntegrateIfNeeded
@@ -736,6 +733,7 @@ else
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
     ) | zenity --progress --no-cancel --text="Initializing a new wineprefix, this may take a while" --width=500 --auto-close --auto-kill
     wait
+    blockBrowserIfNeeded
     if [ $manualInit -eq 1 ]; then
         if [ ! -z "$2" ]; then
             justRunManualCommand $2
