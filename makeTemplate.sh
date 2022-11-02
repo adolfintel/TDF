@@ -83,6 +83,7 @@ rm -rf build
 cd ..
 cd vcredist
 ./build.sh
+if [ $? -ne 0 ]; then fail "vcredist"; fi
 mv build/* "../$dir/system/vcredist"
 rm -rf build
 cd ..
