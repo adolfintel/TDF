@@ -12,6 +12,7 @@ USE_DXVK_ASYNC=1
 USE_VKD3D=1
 USE_WINEMONO=0
 USE_WINEGECKO=0
+USE_VCREDIST=1
 USE_GAMESCOPE=0
 GAMESCOPE_PREFER_SYSTEM=1
 USE_GAMEMODE=1
@@ -350,21 +351,21 @@ applyDllsIfNeeded(){
 applyMsisIfNeeded(){
     msi_dir="system/msi"
     if [ -e "$msi_dir" ]; then
+        installMonoMSI(){
+            yes | cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
+            wine msiexec /i "C:\\winemono.msi"
+            wait
+            wineserver -k
+            wait
+            echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.winemono-installed"
+        }
+        uninstallMonoMSI(){
+            wine msiexec /uninstall "C:\\winemono.msi"
+            wait
+            wineserver -k
+            wait
+        }
         if [ $USE_WINEMONO -eq 1 ]; then
-            installMonoMSI(){
-                yes | cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
-                wine msiexec /i "C:\\winemono.msi"
-                wait
-                wineserver -k
-                wait
-                echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.winemono-installed"
-            }
-            uninstallMonoMSI(){
-                wine msiexec /uninstall "C:\\winemono.msi"
-                wait
-                wineserver -k
-                wait
-            }
             if [ ! -f "$WINEPREFIX/.winemono-installed" ]; then
                 installMonoMSI
             else
@@ -380,30 +381,30 @@ applyMsisIfNeeded(){
                 rm -f "$WINEPREFIX/.winemono-installed"
                 rm -f "$WINEPREFIX/drive_c/winemono.msi"
             fi
-        fi    
+        fi
+        installGeckoMSI(){
+            if [ "$WINEARCH" == "win32" ]; then
+                yes | cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
+                wine msiexec /i "C:\\winegecko32.msi"
+            else
+                yes | cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
+                wine msiexec /i "C:\\winegecko32.msi"
+                yes | cp "$msi_dir/winegecko64.msi" "$WINEPREFIX/drive_c/winegecko64.msi"
+                wine msiexec /i "C:\\winegecko64.msi"
+            fi
+            wait
+            wineserver -k
+            wait
+            echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.winegecko-installed"
+        }
+        uninstallGeckoMSI(){
+            wine msiexec /uninstall "C:\\winegecko32.msi"
+            wine msiexec /uninstall "C:\\winegecko64.msi"
+            wait
+            wineserver -k
+            wait
+        }
         if [ $USE_WINEGECKO -eq 1 ]; then
-            installGeckoMSI(){
-                if [ "$WINEARCH" == "win32" ]; then
-                    yes | cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
-                    wine msiexec /i "C:\\winegecko32.msi"
-                else
-                    yes | cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
-                    wine msiexec /i "C:\\winegecko32.msi"
-                    yes | cp "$msi_dir/winegecko64.msi" "$WINEPREFIX/drive_c/winegecko64.msi"
-                    wine msiexec /i "C:\\winegecko64.msi"
-                fi
-                wait
-                wineserver -k
-                wait
-                echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.winegecko-installed"
-            }
-            uninstallGeckoMSI(){
-                wine msiexec /uninstall "C:\\winegecko32.msi"
-                wine msiexec /uninstall "C:\\winegecko64.msi"
-                wait
-                wineserver -k
-                wait
-            }
             if [ ! -f "$WINEPREFIX/.winegecko-installed" ]; then
                 installGeckoMSI
             else
@@ -421,6 +422,52 @@ applyMsisIfNeeded(){
                 rm -f "$WINEPREFIX/drive_c/winegecko64.msi"
             fi
         fi
+    fi
+}
+applyVCRedistsIfNeeded(){
+    vc_dir="system/vcredist"
+    if [ -e "$vc_dir" ]; then
+        installVCRedists(){
+            if [ $WINEARCH == "win32" ]; then
+                yes | cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
+                wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
+            else
+                yes | cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
+                yes | cp "$vc_dir/vc_redist.x64.exe" "$WINEPREFIX/drive_c/vc_redist.x64.exe"
+                wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
+                wine "C:\\vc_redist.x64.exe" /install /quiet /norestart
+            fi
+            wait
+            wineserver -k
+            wait
+            echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.vcredist-installed"
+        }
+        uninstallVCRedists(){
+            wine "C:\\vc_redist.x86.exe" /uninstall /quiet /norestart
+            wine "C:\\vc_redist.x64.exe" /uninstall /quiet /norestart
+            wait
+            wineserver -k -w
+            wait
+        }
+        if [ $USE_VCREDIST -eq 1 ]; then
+            if [ ! -f "$WINEPREFIX/.vcredist-installed" ]; then
+                installVCRedists
+            else
+                vcredistVer="$(cat "$WINEPREFIX/.vcredist-installed")"
+                if [ "$vcredistVer" != "$LAUNCHER_VERSION" ]; then
+                    uninstallVCRedists
+                    installVCRedists
+                fi
+            fi
+        else
+            if [ -f "$WINEPREFIX/.vcredist-installed" ]; then
+                uninstallVCRedists
+                rm -f "$WINEPREFIX/.vcredist-installed"
+                rm -f "$WINEPREFIX/drive_c/vc_redist.x86.exe"
+                rm -f "$WINEPREFIX/drive_c/vc_redist.x64.exe"
+            fi
+        fi    
+        
     fi
 }
 deIntegrateIfNeeded(){
@@ -672,17 +719,19 @@ if [ -d "$WINEPREFIX" ]; then
         wineserver -k
         wait
         export WINEDLLOVERRIDES="$realOverrides"
-        echo "40"
+        echo "30"
         applyDllsIfNeeded
-        echo "50"
+        echo "40"
         applyMsisIfNeeded
-        echo "65"
+        echo "55"
         hideCrashesIfNeeded
-        echo "70"
+        echo "60"
         applyCorefontsIfNeeded
-        echo "85"
+        echo "70"
         deIntegrateIfNeeded
-        echo "90"
+        echo "75"
+        applyVCRedistsIfNeeded
+        echo "85"
         removeUnnecessarySymlinks
         echo "100"
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
@@ -717,17 +766,19 @@ else
         wineserver -k
         wait
         export WINEDLLOVERRIDES="$realOverrides"
-        echo "40"
+        echo "30"
         applyDllsIfNeeded
-        echo "50"
+        echo "40"
         applyMsisIfNeeded
-        echo "65"
+        echo "55"
         hideCrashesIfNeeded
-        echo "70"
+        echo "60"
         applyCorefontsIfNeeded
-        echo "85"
+        echo "70"
         deIntegrateIfNeeded
-        echo "90"
+        echo "75"
+        applyVCRedistsIfNeeded
+        echo "85"
         removeUnnecessarySymlinks
         echo "100"
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"

@@ -4,7 +4,7 @@ fail(){
     exit 1
 }
 depsCheckFailed=0
-for d in "dxvk" "dxvk-async" "futex2test" "gamescope" "prebuilts" "vkd3d"; do
+for d in "dxvk" "dxvk-async" "futex2test" "gamescope" "prebuilts" "vkd3d" "vcredist"; do
     sh "$d/checkDeps.sh"
     if [ $? -ne 0 ]; then
         depsCheckFailed=1;
@@ -79,6 +79,11 @@ cd prebuilts
 ./build.sh $5
 if [ $? -ne 0 ]; then fail "prebuilts"; fi
 mv build/* "../$dir/system/"
+rm -rf build
+cd ..
+cd vcredist
+./build.sh
+mv build/* "../$dir/system/vcredist"
 rm -rf build
 cd ..
 echo "v$version" > "$dir/system/version"
