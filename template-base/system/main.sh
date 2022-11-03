@@ -78,6 +78,12 @@ if [ -d "confs" ]; then
         source "$confToUse"
     fi
 fi
+game_workingDir=$( echo ${game_workingDir//\//\\} )
+game_exe=$( echo ${game_exe//\//\\} )
+if [ -z "$game_workingDir" ]; then
+    game_workingDir=$( echo ${game_exe%\\*} )
+    game_exe=$( echo ${game_exe##*\\} )
+fi
 if [ $WINE_PREFER_SYSTEM -eq 1 ]; then
     command -v wine > /dev/null
     if [ $?-ne 0 ]; then
@@ -183,7 +189,7 @@ launchCommandPrompt(){
     fi
     zenity --info --width 500 --text "A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet"
     justLaunchCommandPrompt
-    zenity --info --width 500 --text "Good, now edit vars.conf and set\n\ngame_workingDir: path to where you've installed the game\ngame_exe: name of the game's exe file\ngame_args: optional arguments for the exe"
+    zenity --info --width 500 --text "Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
 }
 justLaunchGame(){
     if [ $WINEESYNC -eq 1 ] || [ $WINEFSYNC -eq 1 ]; then
