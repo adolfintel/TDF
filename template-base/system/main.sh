@@ -41,6 +41,7 @@ additionalStartArgs=''
 export WINEPREFIX="$(pwd)/zzprefix"
 export USER="wine"
 export DXVK_CONFIG_FILE="$(pwd)/system/dxvk.conf"
+SYSTEM_LANGUAGE=''
 
 alias zenity='zenity --title "Launcher $LAUNCHER_VERSION"'
 
@@ -188,7 +189,13 @@ launchCommandPrompt(){
         return
     fi
     zenity --info --width 500 --text "A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet"
+    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+        export LC_ALL="$SYSTEM_LANGUAGE"
+    fi
     justLaunchCommandPrompt
+    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+        export LC_ALL=C
+    fi
     zenity --info --width 500 --text "Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
 }
 justLaunchGame(){
@@ -196,12 +203,18 @@ justLaunchGame(){
         wineserver -k -w
         wait
     fi
+    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+        export LC_ALL="$SYSTEM_LANGUAGE"
+    fi
     if [ "$(type -t onGameStart)" == "function" ]; then
         onGameStart
     fi
     $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args
     if [ "$(type -t onGameEnd)" == "function" ]; then
         onGameEnd
+    fi
+    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+        export LC_ALL=C
     fi
 }
 launchGame(){
