@@ -42,6 +42,7 @@ export WINEPREFIX="$(pwd)/zzprefix"
 export USER="wine"
 export DXVK_CONFIG_FILE="$(pwd)/system/dxvk.conf"
 SYSTEM_LANGUAGE=''
+ENABLE_RELAY=0
 
 alias zenity='zenity --title "Launcher $LAUNCHER_VERSION"'
 
@@ -209,7 +210,14 @@ justLaunchGame(){
     if [ "$(type -t onGameStart)" == "function" ]; then
         onGameStart
     fi
-    $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args
+    if [ $ENABLE_RELAY -eq 1 ]; then
+        relayPath=$(zenity --file-selection --save --title="Where do you want to save the trace?" --filename="relay.txt")
+        if [ ! -z "$relayPath" ]; then
+            WINEDEBUG=+relay $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args > $relayPath 2>&1
+        fi
+    else
+        $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args
+    fi
     if [ "$(type -t onGameEnd)" == "function" ]; then
         onGameEnd
     fi
