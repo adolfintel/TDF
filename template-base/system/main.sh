@@ -40,7 +40,7 @@ gamescopeParameters="-f"
 additionalStartArgs=''
 export WINEPREFIX="$(pwd)/zzprefix"
 export USER="wine"
-export DXVK_CONFIG_FILE="$(pwd)/system/dxvk.conf"
+export DXVK_CONFIG_FILE="$WINEPREFIX/dxvk.conf"
 SYSTEM_LANGUAGE=''
 ENABLE_RELAY=0
 
@@ -285,6 +285,9 @@ applyDllsIfNeeded(){
     }
     if [ -e "$dxvk_dir" ]; then
         if [ $USE_DXVK -eq 1 ]; then
+            if [ ! -f "$DXVK_CONFIG_FILE" ]; then
+                touch "$DXVK_CONFIG_FILE"
+            fi
             if [ "$WINEARCH" == "win32" ]; then
                 copyIfDifferent "$dxvk_dir/x32/d3d9.dll" "$windows_dir/system32/d3d9.dll"
                 copyIfDifferent "$dxvk_dir/x32/d3d10.dll" "$windows_dir/system32/d3d10.dll"
