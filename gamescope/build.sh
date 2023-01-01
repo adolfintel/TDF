@@ -11,8 +11,11 @@ meson build/
 if [ $? -ne 0 ]; then exit 1; fi
 ninja -C build/
 if [ $? -ne 0 ]; then exit 1; fi
-cp build/gamescope ../build/gamescope
-if [ $? -ne 0 ]; then exit 1; fi
+cp build/src/gamescope ../build/gamescope
+if [ $? -ne 0 ]; then
+    cp build/gamescope ../build/gamescope
+    if [ $? -ne 0 ]; then exit 1; fi
+fi
 cd ..
 rm -rf gamescope
 exit 0
