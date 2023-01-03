@@ -8,7 +8,7 @@ game_exe=''
 game_args=''
 
 USE_DXVK=1
-USE_DXVK_ASYNC=1
+USE_DXVK_ASYNC=2
 USE_VKD3D=1
 USE_WINEMONO=0
 USE_WINEGECKO=0
@@ -267,6 +267,14 @@ launchGame(){
 }
 applyDllsIfNeeded(){
     windows_dir="$WINEPREFIX/drive_c/windows"
+    if [ $USE_DXVK_ASYNC -eq 2 ]; then
+        vulkaninfo | grep "VK_EXT_graphics_pipeline_library"
+        if [ $? -eq 0 ]; then
+            USE_DXVK_ASYNC=0
+        else
+            USE_DXVK_ASYNC=1
+        fi
+    fi
     dxvk_dir="system/dxvk"
     if [ $USE_DXVK_ASYNC -eq 1 ]; then
         dxvk_dir="$dxvk_dir-async"
