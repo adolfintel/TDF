@@ -56,8 +56,8 @@ manualInit=0
 if [ $1 == "manualInit" ]; then
     manualInit=1
 fi
-vulkaninfo | grep -e "PHYSICAL_DEVICE_TYPE_DISCRETE_GPU" -e "PHYSICAL_DEVICE_TYPE_INTEGRATED_GPU" -e "PHYSICAL_DEVICE_TYPE_VIRTUAL_GPU" > /dev/null
-if [ $? -ne 0 ]; then
+./system/vkgpltest
+if [ $? -eq 0 ] || [ $? -gt 2 ] || [ $? -lt 0 ]; then
     zenity --error --width 500 --text "Couldn't find a GPU with Vulkan support, make sure the drivers are installed"
     exit
 fi
@@ -295,8 +295,8 @@ launchGame(){
 applyDllsIfNeeded(){
     windows_dir="$WINEPREFIX/drive_c/windows"
     if [ $USE_DXVK_ASYNC -eq 2 ]; then
-        vulkaninfo | grep "VK_EXT_graphics_pipeline_library"
-        if [ $? -eq 0 ]; then
+        ./system/vkgpltest
+        if [ $? -eq 2 ]; then
             USE_DXVK_ASYNC=0
         else
             USE_DXVK_ASYNC=1

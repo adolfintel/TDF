@@ -4,7 +4,7 @@ fail(){
     exit 1
 }
 depsCheckFailed=0
-for d in "dxvk" "dxvk-async" "futex2test" "gamescope" "prebuilts" "vkd3d" "vcredist"; do
+for d in "dxvk" "dxvk-async" "futex2test" "vkgpltest" "gamescope" "prebuilts" "vkd3d" "vcredist"; do
     sh "$d/checkDeps.sh"
     if [ $? -ne 0 ]; then
         depsCheckFailed=1;
@@ -72,6 +72,12 @@ cd ..
 cd futex2test
 ./build.sh
 if [ $? -ne 0 ]; then fail "futex2test"; fi
+mv build/* "../$dir/system/"
+rm -rf build
+cd ..
+cd vkgpltest
+./build.sh
+if [ $? -ne 0 ]; then fail "vkgpltest"; fi
 mv build/* "../$dir/system/"
 rm -rf build
 cd ..
