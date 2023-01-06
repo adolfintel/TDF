@@ -15,7 +15,6 @@ USE_WINEGECKO=0
 USE_VCREDIST=1
 USE_GAMESCOPE=0
 GAMESCOPE_PREFER_SYSTEM=1
-GAMESCOPE_MAX_RETRIES=3
 USE_GAMEMODE=1
 USE_MANGOHUD=0
 USE_COREFONTS=1
@@ -135,20 +134,8 @@ if [ $USE_GAMESCOPE -ge 1 ]; then
     else
         export PATH="$(pwd)/system/gamescope:$PATH"
     fi
-    gsok=1
-    retries=$GAMESCOPE_MAX_RETRIES
-    while [ $retries -ge 0 ]; do
-        gamescope -f -- sleep 0.1
-        gserr=$?
-        if [ $gserr -eq 0 ]; then
-            break
-        elif [ $gserr -ne 139 ]; then
-            gsok=0
-            break
-        fi
-        retries=$((retries - 1))
-    done
-    if [ $gsok -ne 1 ]; then 
+    gamescope -f -- sleep 0.1
+    if [ $? -ne 0 ]; then 
         gamescopePrefix=""
     fi
 else
@@ -226,24 +213,10 @@ justLaunchGame(){
     if [ $ENABLE_RELAY -eq 1 ]; then
         relayPath=$(zenity --file-selection --save --title="Where do you want to save the trace?" --filename="relay.txt")
         if [ ! -z "$relayPath" ]; then
-            retries=$GAMESCOPE_MAX_RETRIES
-            while [ $retries -ge 0 ]; do
-                WINEDEBUG=+relay $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args > $relayPath 2>&1
-                if [ $? -ne 139 ]; then
-                    break
-                fi
-                retries=$((retries - 1))
-            done
+            WINEDEBUG=+relay $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args > $relayPath 2>&1
         fi
     else
-        retries=$GAMESCOPE_MAX_RETRIES
-        while [ $retries -ge 0 ]; do
-            $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args
-            if [ $? -ne 139 ]; then
-                break
-            fi
-            retries=$((retries - 1))
-        done
+        $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args
     fi
     if [ "$(type -t onGameEnd)" == "function" ]; then
         onGameEnd
