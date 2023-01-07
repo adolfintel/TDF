@@ -5,6 +5,7 @@ mkdir build
 git clone https://github.com/Plagman/gamescope
 if [ $? -ne 0 ]; then exit 1; fi
 cd gamescope
+git rm --force subprojects/stb
 git submodule update --init
 if [ $? -ne 0 ]; then exit 1; fi
 meson build/
