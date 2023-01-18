@@ -466,6 +466,9 @@ applyVCRedistsIfNeeded(){
     vc_dir="system/vcredist"
     if [ -e "$vc_dir" ]; then
         installVCRedists(){
+            wineserver -k -w
+            wait
+            mv "$WINEPREFIX/dosdevices/z:" "$WINEPREFIX/.templink"
             if [ $WINEARCH == "win32" ]; then
                 yes | cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
                 wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
@@ -478,6 +481,7 @@ applyVCRedistsIfNeeded(){
             wait
             wineserver -k
             wait
+            mv "$WINEPREFIX/.templink" "$WINEPREFIX/dosdevices/z:"
             echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.vcredist-installed"
         }
         uninstallVCRedists(){
