@@ -18,6 +18,7 @@ GAMESCOPE_PREFER_SYSTEM=1
 USE_GAMEMODE=1
 USE_MANGOHUD=0
 USE_COREFONTS=1
+USE_MICROSOFT_MFPLAT=0
 HIDE_CRASHES=1
 BLOCK_NETWORK=1
 BLOCK_NETWORK_PREFER_FIREJAIL=0
@@ -280,6 +281,7 @@ applyDllsIfNeeded(){
         dxvk_dir="$dxvk_dir-async"
     fi
     vkd3d_dir="system/vkd3d"
+    mfplat_dir="system/mfplat"
     overrideDll() {
         wine reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /d 'native,builtin' /f
     }
@@ -382,6 +384,111 @@ applyDllsIfNeeded(){
                 wineserver -k
                 wait
                 rm -f "$WINEPREFIX/.vkd3d-installed"
+            fi
+        fi
+    fi
+    if [ -e "$mfplat_dir" ]; then
+        if [ $USE_MICROSOFT_MFPLAT -eq 1 ]; then
+            if [ "$WINEARCH" == "win32" ]; then
+                copyIfDifferent "$mfplat_dir/syswow64/colorcnv.dll" "$windows_dir/system32/colorcnv.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mf.dll" "$windows_dir/system32/mf.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mferror.dll" "$windows_dir/system32/mferror.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mfplat.dll" "$windows_dir/system32/mfplat.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mfplay.dll" "$windows_dir/system32/mfplay.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mfreadwrite.dll" "$windows_dir/system32/mfreadwrite.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2adec.dll" "$windows_dir/system32/msmpeg2adec.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2vdec.dll" "$windows_dir/system32/msmpeg2vdec.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/sqmapi.dll" "$windows_dir/system32/sqmapi.dll"
+            else
+                copyIfDifferent "$mfplat_dir/syswow64/colorcnv.dll" "$windows_dir/syswow64/colorcnv.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mf.dll" "$windows_dir/syswow64/mf.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mferror.dll" "$windows_dir/syswow64/mferror.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mfplat.dll" "$windows_dir/syswow64/mfplat.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mfplay.dll" "$windows_dir/syswow64/mfplay.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/mfreadwrite.dll" "$windows_dir/syswow64/mfreadwrite.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2adec.dll" "$windows_dir/syswow64/msmpeg2adec.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2vdec.dll" "$windows_dir/syswow64/msmpeg2vdec.dll"
+                copyIfDifferent "$mfplat_dir/syswow64/sqmapi.dll" "$windows_dir/syswow64/sqmapi.dll"
+                copyIfDifferent "$mfplat_dir/system32/colorcnv.dll" "$windows_dir/system32/colorcnv.dll"
+                copyIfDifferent "$mfplat_dir/system32/mf.dll" "$windows_dir/system32/mf.dll"
+                copyIfDifferent "$mfplat_dir/system32/mferror.dll" "$windows_dir/system32/mferror.dll"
+                copyIfDifferent "$mfplat_dir/system32/mfplat.dll" "$windows_dir/system32/mfplat.dll"
+                copyIfDifferent "$mfplat_dir/system32/mfplay.dll" "$windows_dir/system32/mfplay.dll"
+                copyIfDifferent "$mfplat_dir/system32/mfreadwrite.dll" "$windows_dir/system32/mfreadwrite.dll"
+                copyIfDifferent "$mfplat_dir/system32/msmpeg2adec.dll" "$windows_dir/system32/msmpeg2adec.dll"
+                copyIfDifferent "$mfplat_dir/system32/msmpeg2vdec.dll" "$windows_dir/system32/msmpeg2vdec.dll"
+                copyIfDifferent "$mfplat_dir/system32/sqmapi.dll" "$windows_dir/system32/sqmapi.dll"
+            fi
+            mfplatVer="$(cat "$WINEPREFIX/.msmfplat-installed")"
+            if [ "$mfplatVer" != "$LAUNCHER_VERSION" ]; then
+                overrideDll "colorcnv"
+                overrideDll "mf"
+                overrideDll "mferror"
+                overrideDll "mfplat"
+                overrideDll "mfplay"
+                overrideDll "mfreadwrite"
+                overrideDll "msmpeg2adec"
+                overrideDll "msmpeg2vdec"
+                overrideDll "sqmapi"
+                if [ "$WINEARCH" == "win32" ]; then
+                    wine reg import "$mfplat_dir/mf.reg"
+                    wine reg import "$mfplat_dir/wmf.reg"
+                    wine regsvr32 colorcnv.dll
+                    wine regsvr32 msmpeg2adec.dll
+                    wine regsvr32 msmpeg2vdec.dll
+                else
+                    wine reg import "$mfplat_dir/mf.reg" /reg:32
+                    wine reg import "$mfplat_dir/wmf.reg" /reg:32
+                    wine reg import "$mfplat_dir/mf.reg" /reg:64
+                    wine reg import "$mfplat_dir/wmf.reg" /reg:64
+                    wine regsvr32 colorcnv.dll
+                    wine regsvr32 msmpeg2adec.dll
+                    wine regsvr32 msmpeg2vdec.dll
+                    wine64 regsvr32 colorcnv.dll
+                    wine64 regsvr32 msmpeg2adec.dll
+                    wine64 regsvr32 msmpeg2vdec.dll
+                fi
+                wait
+                wineserver -k
+                wait
+                echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.msmfplat-installed"
+                rm -f "regsvr32_d3d9.log"
+            fi
+        else
+            if [ -f "$WINEPREFIX/.msmfplat-installed" ]; then
+                rm -f "$windows_dir/system32/colorcnv.dll"
+                rm -f "$windows_dir/system32/mf.dll"
+                rm -f "$windows_dir/system32/mferror.dll"
+                rm -f "$windows_dir/system32/mfplat.dll"
+                rm -f "$windows_dir/system32/mfplay.dll"
+                rm -f "$windows_dir/system32/mfreadwrite.dll"
+                rm -f "$windows_dir/system32/msmpeg2adec.dll"
+                rm -f "$windows_dir/system32/msmpeg2vdec.dll"
+                rm -f "$windows_dir/system32/sqmapi.dll"
+                rm -f "$windows_dir/syswow64/colorcnv.dll"
+                rm -f "$windows_dir/syswow64/mf.dll"
+                rm -f "$windows_dir/syswow64/mferror.dll"
+                rm -f "$windows_dir/syswow64/mfplat.dll"
+                rm -f "$windows_dir/syswow64/mfplay.dll"
+                rm -f "$windows_dir/syswow64/mfreadwrite.dll"
+                rm -f "$windows_dir/syswow64/msmpeg2adec.dll"
+                rm -f "$windows_dir/syswow64/msmpeg2vdec.dll"
+                rm -f "$windows_dir/syswow64/sqmapi.dll"
+                wineboot -u
+                wait
+                unoverrideDll "colorcnv"
+                unoverrideDll "mf"
+                unoverrideDll "mferror"
+                unoverrideDll "mfplat"
+                unoverrideDll "mfplay"
+                unoverrideDll "mfreadwrite"
+                unoverrideDll "msmpeg2adec"
+                unoverrideDll "msmpeg2vdec"
+                unoverrideDll "sqmapi"
+                wait
+                wineserver -k
+                wait
+                rm -f "$WINEPREFIX/.msmfplat-installed"
             fi
         fi
     fi
