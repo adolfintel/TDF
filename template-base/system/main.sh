@@ -647,6 +647,10 @@ deIntegrateIfNeeded(){
     deIntegrate "Music"
     deIntegrate "Videos"
     deIntegrate "Templates"
+    if [ -L "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Microsoft/Windows/Templates" ]; then
+        unlink "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Microsoft/Windows/Templates"
+        mkdir "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Microsoft/Windows/Templates"
+    fi
 }
 hideCrashesIfNeeded(){
     if [ $HIDE_CRASHES -eq 1 ]; then
