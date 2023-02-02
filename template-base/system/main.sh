@@ -1,4 +1,5 @@
 #!/bin/bash
+shopt -s expand_aliases
 export LC_ALL=C
 
 LAUNCHER_VERSION="$(cat system/version)"
@@ -44,8 +45,13 @@ export USER="wine"
 export DXVK_CONFIG_FILE="$WINEPREFIX/dxvk.conf"
 SYSTEM_LANGUAGE=''
 ENABLE_RELAY=0
+ZENITY_PREFER_SYSTEM=1
 
-alias zenity='zenity --title "Launcher $LAUNCHER_VERSION"'
+alias zenity='zenity --title="Launcher $LAUNCHER_VERSION"'
+
+if [ $ZENITY_PREFER_SYSTEM -eq 1 ] && [ -f "/usr/bin/zenity" ]; then
+    alias zenity='/usr/bin/zenity --title="Launcher $LAUNCHER_VERSION"'
+fi
 
 if [ -z $1 ]; then
     echo "This script should not be run directly, use run.sh instead"
@@ -58,7 +64,7 @@ if [ $1 == "manualInit" ]; then
 fi
 ./system/vkgpltest
 if [ $? -eq 0 ] || [ $? -gt 2 ] || [ $? -lt 0 ]; then
-    zenity --error --width 500 --text "Couldn't find a GPU with Vulkan support, make sure the drivers are installed"
+    zenity --error --width=500 --text="Couldn't find a GPU with Vulkan support, make sure the drivers are installed"
     exit
 fi
 if [ -f "vars.conf" ]; then
@@ -73,7 +79,7 @@ if [ -d "confs" ]; then
         fi
     done
     if [ ${#confs[@]} -ne 0 ]; then
-        confToUse=$(zenity --list --width 400 --hide-header --text "Choose a game to launch" --column="Game" "${confs[@]}")
+        confToUse=$(zenity --list --width=400 --hide-header --text="Choose a game to launch" --column="Game" "${confs[@]}")
         if [ -z "$confToUse" ]; then
             exit
         fi
@@ -144,7 +150,7 @@ else
 fi
 if [ $USE_GAMESCOPE -eq 2 ]; then
     if [ -z "$gamescopePrefix" ]; then
-        zenity --error --width 400 --text "Gamescope is required for this game but it's not working"
+        zenity --error --width=400 --text="Gamescope is required for this game but it's not working"
         exit
     fi
 fi
@@ -174,7 +180,7 @@ if [ $WINEFSYNC -eq 1 ]; then
 fi
 wine --version
 if [ $? -ne 0 ]; then
-    zenity --error --width 500 --text "Failed to load Wine\nThis is usually caused by missing libraries (especially 32 bit libs) or broken permissions"
+    zenity --error --width=500 --text="Failed to load Wine\nThis is usually caused by missing libraries (especially 32 bit libs) or broken permissions"
     exit
 fi
 if [ "$(type -t customChecks)" == "function" ]; then
@@ -190,7 +196,7 @@ launchCommandPrompt(){
     if [ $manualInit -eq 1 ]; then
         return
     fi
-    zenity --info --width 500 --text "A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet"
+    zenity --info --width=500 --text="A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet"
     if [ ! -z "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL="$SYSTEM_LANGUAGE"
     fi
@@ -198,7 +204,7 @@ launchCommandPrompt(){
     if [ ! -z "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL=C
     fi
-    zenity --info --width 500 --text "Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
+    zenity --info --width=500 --text="Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
 }
 justLaunchGame(){
     if [ $WINEESYNC -eq 1 ] || [ $WINEFSYNC -eq 1 ]; then
@@ -240,7 +246,7 @@ launchGame(){
             else
                 (
                     justLaunchGame
-                ) | zenity --progress --no-cancel --text="Game running" --width=200 --auto-kill --auto-close
+                ) | zenity --progress --no-cancel --text="Game running" --width=250 --auto-kill --auto-close
             fi
             wait
             playedTime=$((SECONDS - startedAt))
@@ -257,13 +263,13 @@ launchGame(){
                 hh="0$hh"
             fi
             if [ $SHOW_PLAY_TIME -eq 1 ]; then
-                zenity --info --width 300 --text "Played for $hh:$mm:$ss"
+                zenity --info --width=300 --text="Played for $hh:$mm:$ss"
             fi
         else
-            zenity --error --width 500 --text "Configuration error: the specified game_exe does not exist"
+            zenity --error --width=500 --text="Configuration error: the specified game_exe does not exist"
         fi
     else
-        zenity --error --width 500 --text "Configuration error: the specified game_workingDir does not exist"
+        zenity --error --width=500 --text="Configuration error: the specified game_workingDir does not exist"
     fi
 }
 applyDllsIfNeeded(){
@@ -703,7 +709,7 @@ repairDriveCIfNeeded(){
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
             touch "$WINEPREFIX/.abort"
-            zenity --error --width 500 --text "Virtual C drive is broken and attempts to repair it failed.\n\nPlease check $link"
+            zenity --error --width=500 --text="Virtual C drive is broken and attempts to repair it failed.\n\nPlease check $link"
             exit
         fi
     fi
@@ -721,7 +727,7 @@ repairDriveZIfNeeded(){
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
             touch "$WINEPREFIX/.abort"
-            zenity --error --width 500 --text "Z drive is broken and attempts to repair it failed.\n\nPlease check $link"
+            zenity --error --width=500 --text="Z drive is broken and attempts to repair it failed.\n\nPlease check $link"
             exit
         fi
     fi
@@ -841,7 +847,7 @@ if [ $? -ne 0 ]; then
     if [ -e "$WINEPREFIX/.initialized" ]; then
         prefixVersion=$(cat "$WINEPREFIX/.initialized")
         if [ "$prefixVersion" == "$LAUNCHER_VERSION" ]; then
-            zenity --info --width 500 --text "This wineprefix is already running\nA command prompt will now be opened inside it"
+            zenity --info --width=500 --text="This wineprefix is already running\nA command prompt will now be opened inside it"
             justLaunchCommandPrompt
         fi
     fi
@@ -888,7 +894,7 @@ if [ -d "$WINEPREFIX" ]; then
         removeUnnecessarySymlinks
         echo "100"
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
-    ) | zenity --progress --no-cancel --text="Launching..." --width=200 --auto-close --auto-kill
+    ) | zenity --progress --no-cancel --text="Launching..." --width=250 --auto-close --auto-kill
     wait
     if [ -f "$WINEPREFIX/.abort" ]; then
         rm -f "$WINEPREFIX/.abort"
