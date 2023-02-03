@@ -46,15 +46,15 @@ SYSTEM_LANGUAGE=''
 ENABLE_RELAY=0
 ZENITY_PREFER_SYSTEM=1
 
+if [ -z $1 ]; then
+    echo "This script should not be run directly, use run.sh instead"
+    exit
+fi
+
 alias zenity='zenity --title="Launcher $LAUNCHER_VERSION"'
 
 if [ $ZENITY_PREFER_SYSTEM -eq 1 ] && [ -f "/usr/bin/zenity" ]; then
     alias zenity='/usr/bin/zenity --title="Launcher $LAUNCHER_VERSION"'
-fi
-
-if [ -z $1 ]; then
-    echo "This script should not be run directly, use run.sh instead"
-    exit
 fi
 
 manualInit=0
@@ -282,8 +282,11 @@ applyDllsIfNeeded(){
     if [ $USE_DXVK_ASYNC -eq 1 ]; then
         dxvk_dir="$dxvk_dir-async"
     fi
+    dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi")
     vkd3d_dir="system/vkd3d"
+    vkd3d_dlls=("d3d12")
     mfplat_dir="system/mfplat"
+    mfplat_dlls=("colorcnv" "mf" "mferror" "mfplat" "mfplay" "mfreadwrite" "msmpeg2adec" "msmpeg2vdec" "sqmapi")
     overrideDll() {
         wine reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /d 'native,builtin' /f
     }
@@ -301,33 +304,19 @@ applyDllsIfNeeded(){
                 touch "$DXVK_CONFIG_FILE"
             fi
             if [ "$WINEARCH" == "win32" ]; then
-                copyIfDifferent "$dxvk_dir/x32/d3d9.dll" "$windows_dir/system32/d3d9.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d10.dll" "$windows_dir/system32/d3d10.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d10_1.dll" "$windows_dir/system32/d3d10_1.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d10core.dll" "$windows_dir/system32/d3d10core.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d11.dll" "$windows_dir/system32/d3d11.dll"
-                copyIfDifferent "$dxvk_dir/x32/dxgi.dll" "$windows_dir/system32/dxgi.dll"
+                for d in "${dxvk_dlls[@]}"; do
+                    copyIfDifferent "$dxvk_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"
+                done
             else
-                copyIfDifferent "$dxvk_dir/x32/d3d9.dll" "$windows_dir/syswow64/d3d9.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d10.dll" "$windows_dir/syswow64/d3d10.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d10_1.dll" "$windows_dir/syswow64/d3d10_1.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d10core.dll" "$windows_dir/syswow64/d3d10core.dll"
-                copyIfDifferent "$dxvk_dir/x32/d3d11.dll" "$windows_dir/syswow64/d3d11.dll"
-                copyIfDifferent "$dxvk_dir/x32/dxgi.dll" "$windows_dir/syswow64/dxgi.dll"
-                copyIfDifferent "$dxvk_dir/x64/d3d9.dll" "$windows_dir/system32/d3d9.dll"
-                copyIfDifferent "$dxvk_dir/x64/d3d10.dll" "$windows_dir/system32/d3d10.dll"
-                copyIfDifferent "$dxvk_dir/x64/d3d10_1.dll" "$windows_dir/system32/d3d10_1.dll"
-                copyIfDifferent "$dxvk_dir/x64/d3d10core.dll" "$windows_dir/system32/d3d10core.dll"
-                copyIfDifferent "$dxvk_dir/x64/d3d11.dll" "$windows_dir/system32/d3d11.dll"
-                copyIfDifferent "$dxvk_dir/x64/dxgi.dll" "$windows_dir/system32/dxgi.dll"
+                for d in "${dxvk_dlls[@]}"; do
+                    copyIfDifferent "$dxvk_dir/x32/$d.dll" "$windows_dir/syswow64/$d.dll"
+                    copyIfDifferent "$dxvk_dir/x64/$d.dll" "$windows_dir/system32/$d.dll"
+                done
             fi
             if [ ! -f "$WINEPREFIX/.dxvk-installed" ]; then
-                overrideDll "d3d9"
-                overrideDll "d3d10"
-                overrideDll "d3d10_1"
-                overrideDll "d3d10core"
-                overrideDll "d3d11"
-                overrideDll "dxgi"
+                for d in "${dxvk_dlls[@]}"; do
+                    overrideDll "$d"
+                done
                 wait
                 wineserver -k
                 wait
@@ -335,24 +324,15 @@ applyDllsIfNeeded(){
             fi
         else
             if [ -f "$WINEPREFIX/.dxvk-installed" ]; then
-                rm -f "$windows_dir/system32/d3d9.dll"
-                rm -f "$windows_dir/system32/d3d10.dll"
-                rm -f "$windows_dir/system32/d3d10core.dll"
-                rm -f "$windows_dir/system32/d3d10_1.dll"
-                rm -f "$windows_dir/system32/d3d11.dll"
-                rm -f "$windows_dir/syswow64/d3d9.dll"
-                rm -f "$windows_dir/syswow64/d3d10.dll"
-                rm -f "$windows_dir/syswow64/d3d10core.dll"
-                rm -f "$windows_dir/syswow64/d3d10_1.dll"
-                rm -f "$windows_dir/syswow64/d3d11.dll"
+                for d in "${dxvk_dlls[@]}"; do
+                    rm -f "$windows_dir/system32/$d.dll"
+                    rm -f "$windows_dir/syswow64/$d.dll"
+                done
                 wineboot -u
                 wait
-                unoverrideDll "d3d9"
-                unoverrideDll "d3d10"
-                unoverrideDll "d3d10_1"
-                unoverrideDll "d3d10core"
-                unoverrideDll "d3d11"
-                unoverrideDll "dxgi"
+                for d in "${dxvk_dlls[@]}"; do
+                    unoverrideDll "$d"
+                done
                 wait
                 wineserver -k
                 wait
@@ -363,13 +343,19 @@ applyDllsIfNeeded(){
     if [ -e "$vkd3d_dir" ]; then
         if [ $USE_VKD3D -eq 1 ]; then
             if [ "$WINEARCH" == "win32" ]; then    
-                copyIfDifferent "$vkd3d_dir/x86/d3d12.dll" "$windows_dir/system32/d3d12.dll"
+                for d in "${vkd3d_dlls[@]}"; do
+                    copyIfDifferent "$vkd3d_dir/x86/$d.dll" "$windows_dir/system32/$d.dll"
+                done
             else
-                copyIfDifferent "$vkd3d_dir/x86/d3d12.dll" "$windows_dir/syswow64/d3d12.dll"
-                copyIfDifferent "$vkd3d_dir/x64/d3d12.dll" "$windows_dir/system32/d3d12.dll"
+                for d in "${vkd3d_dlls[@]}"; do
+                    copyIfDifferent "$vkd3d_dir/x86/$d.dll" "$windows_dir/syswow64/$d.dll"
+                    copyIfDifferent "$vkd3d_dir/x64/$d.dll" "$windows_dir/system32/$d.dll"
+                done
             fi
             if [ ! -f "$WINEPREFIX/.vkd3d-installed" ]; then
-                overrideDll "d3d12"
+                for d in "${vkd3d_dlls[@]}"; do
+                    overrideDll "$d"
+                done
                 wait
                 wineserver -k
                 wait
@@ -377,11 +363,15 @@ applyDllsIfNeeded(){
             fi
         else
             if [ -f "$WINEPREFIX/.vkd3d-installed" ]; then
-                rm -f "$windows_dir/system32/d3d12.dll"
-                rm -f "$windows_dir/syswow64/d3d12.dll"
+                for d in "${vkd3d_dlls[@]}"; do
+                    rm -f "$windows_dir/system32/$d.dll"
+                    rm -f "$windows_dir/syswow64/$d.dll"
+                done
                 wineboot -u
                 wait
-                unoverrideDll "d3d12"
+                for d in "${vkd3d_dlls[@]}"; do
+                    unoverrideDll "$d"
+                done
                 wait
                 wineserver -k
                 wait
@@ -392,46 +382,20 @@ applyDllsIfNeeded(){
     if [ -e "$mfplat_dir" ]; then
         if [ $USE_MICROSOFT_MFPLAT -eq 1 ]; then
             if [ "$WINEARCH" == "win32" ]; then
-                copyIfDifferent "$mfplat_dir/syswow64/colorcnv.dll" "$windows_dir/system32/colorcnv.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mf.dll" "$windows_dir/system32/mf.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mferror.dll" "$windows_dir/system32/mferror.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mfplat.dll" "$windows_dir/system32/mfplat.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mfplay.dll" "$windows_dir/system32/mfplay.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mfreadwrite.dll" "$windows_dir/system32/mfreadwrite.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2adec.dll" "$windows_dir/system32/msmpeg2adec.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2vdec.dll" "$windows_dir/system32/msmpeg2vdec.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/sqmapi.dll" "$windows_dir/system32/sqmapi.dll"
+                for d in "${mfplat_dlls[@]}"; do
+                    copyIfDifferent "$mfplat_dir/syswow64/$d.dll" "$windows_dir/system32/$d.dll"
+                done
             else
-                copyIfDifferent "$mfplat_dir/syswow64/colorcnv.dll" "$windows_dir/syswow64/colorcnv.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mf.dll" "$windows_dir/syswow64/mf.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mferror.dll" "$windows_dir/syswow64/mferror.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mfplat.dll" "$windows_dir/syswow64/mfplat.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mfplay.dll" "$windows_dir/syswow64/mfplay.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/mfreadwrite.dll" "$windows_dir/syswow64/mfreadwrite.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2adec.dll" "$windows_dir/syswow64/msmpeg2adec.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/msmpeg2vdec.dll" "$windows_dir/syswow64/msmpeg2vdec.dll"
-                copyIfDifferent "$mfplat_dir/syswow64/sqmapi.dll" "$windows_dir/syswow64/sqmapi.dll"
-                copyIfDifferent "$mfplat_dir/system32/colorcnv.dll" "$windows_dir/system32/colorcnv.dll"
-                copyIfDifferent "$mfplat_dir/system32/mf.dll" "$windows_dir/system32/mf.dll"
-                copyIfDifferent "$mfplat_dir/system32/mferror.dll" "$windows_dir/system32/mferror.dll"
-                copyIfDifferent "$mfplat_dir/system32/mfplat.dll" "$windows_dir/system32/mfplat.dll"
-                copyIfDifferent "$mfplat_dir/system32/mfplay.dll" "$windows_dir/system32/mfplay.dll"
-                copyIfDifferent "$mfplat_dir/system32/mfreadwrite.dll" "$windows_dir/system32/mfreadwrite.dll"
-                copyIfDifferent "$mfplat_dir/system32/msmpeg2adec.dll" "$windows_dir/system32/msmpeg2adec.dll"
-                copyIfDifferent "$mfplat_dir/system32/msmpeg2vdec.dll" "$windows_dir/system32/msmpeg2vdec.dll"
-                copyIfDifferent "$mfplat_dir/system32/sqmapi.dll" "$windows_dir/system32/sqmapi.dll"
+                for d in "${mfplat_dlls[@]}"; do
+                    copyIfDifferent "$mfplat_dir/syswow64/$d.dll" "$windows_dir/syswow64/$d.dll"
+                    copyIfDifferent "$mfplat_dir/system32/$d.dll" "$windows_dir/system32/$d.dll"
+                done
             fi
             mfplatVer="$(cat "$WINEPREFIX/.msmfplat-installed")"
             if [ "$mfplatVer" != "$LAUNCHER_VERSION" ]; then
-                overrideDll "colorcnv"
-                overrideDll "mf"
-                overrideDll "mferror"
-                overrideDll "mfplat"
-                overrideDll "mfplay"
-                overrideDll "mfreadwrite"
-                overrideDll "msmpeg2adec"
-                overrideDll "msmpeg2vdec"
-                overrideDll "sqmapi"
+                for d in "${mfplat_dlls[@]}"; do
+                    overrideDll "$d"
+                done
                 if [ "$WINEARCH" == "win32" ]; then
                     wine reg import "$mfplat_dir/mf.reg"
                     wine reg import "$mfplat_dir/wmf.reg"
@@ -458,35 +422,15 @@ applyDllsIfNeeded(){
             fi
         else
             if [ -f "$WINEPREFIX/.msmfplat-installed" ]; then
-                rm -f "$windows_dir/system32/colorcnv.dll"
-                rm -f "$windows_dir/system32/mf.dll"
-                rm -f "$windows_dir/system32/mferror.dll"
-                rm -f "$windows_dir/system32/mfplat.dll"
-                rm -f "$windows_dir/system32/mfplay.dll"
-                rm -f "$windows_dir/system32/mfreadwrite.dll"
-                rm -f "$windows_dir/system32/msmpeg2adec.dll"
-                rm -f "$windows_dir/system32/msmpeg2vdec.dll"
-                rm -f "$windows_dir/system32/sqmapi.dll"
-                rm -f "$windows_dir/syswow64/colorcnv.dll"
-                rm -f "$windows_dir/syswow64/mf.dll"
-                rm -f "$windows_dir/syswow64/mferror.dll"
-                rm -f "$windows_dir/syswow64/mfplat.dll"
-                rm -f "$windows_dir/syswow64/mfplay.dll"
-                rm -f "$windows_dir/syswow64/mfreadwrite.dll"
-                rm -f "$windows_dir/syswow64/msmpeg2adec.dll"
-                rm -f "$windows_dir/syswow64/msmpeg2vdec.dll"
-                rm -f "$windows_dir/syswow64/sqmapi.dll"
+                for d in "${mfplat_dlls[@]}"; do
+                    rm -f "$windows_dir/system32/$d.dll"
+                    rm -f "$windows_dir/syswow64/$d.dll"
+                done
                 wineboot -u
                 wait
-                unoverrideDll "colorcnv"
-                unoverrideDll "mf"
-                unoverrideDll "mferror"
-                unoverrideDll "mfplat"
-                unoverrideDll "mfplay"
-                unoverrideDll "mfreadwrite"
-                unoverrideDll "msmpeg2adec"
-                unoverrideDll "msmpeg2vdec"
-                unoverrideDll "sqmapi"
+                for d in "${mfplat_dlls[@]}"; do
+                    unoverrideDll "$d"
+                done
                 wait
                 wineserver -k
                 wait
@@ -739,6 +683,7 @@ killWine(){
 applyCorefontsIfNeeded(){
     windows_dir="$WINEPREFIX/drive_c/windows"
     corefonts_dir="system/corefonts"
+    corefonts_info=("AndaleMo.TTF:Andale Mono" "Arial.TTF:Arial" "Arialbd.TTF:Arial Bold" "Arialbi.TTF:Arial Bold Italic" "Ariali.TTF:Arial Italic" "AriBlk.TTF:Arial Black" "Comic.TTF:Comic Sans MS" "Comicbd.TTF:Comic Sans MS Bold" "cour.ttf:Courier New" "courbd.ttf:Courier New Bold" "courbi.ttf:Courier New Bold Italic" "couri.ttf:Courier New Italic" "Georgia.TTF:Georgia" "Georgiab.TTF:Georgia Bold" "Georgiai.TTF:Georgia Italic" "Georgiaz.TTF:Georgia Bold Italic" "Impact.TTF:Impact" "Times.TTF:Times New Roman" "Timesbd.TTF:Times New Roman Bold" "Timesbi.TTF:Times New Roman Bold Italic" "Timesi.TTF:Times New Roman Italic" "trebuc.ttf:Trebuchet MS" "Trebucbd.ttf:Trebuchet MS Bold" "trebucbi.ttf:Trebuchet MS Bold Italic" "trebucit.ttf:Trebuchet MS Italic" "Verdana.TTF:Verdana" "Verdanab.TTF:Verdana Bold" "Verdanai.TTF:Verdana Italic" "Verdanaz.TTF:Verdana Bold Italic" "Webdings.TTF:Webdings")
     if [ -e "$corefonts_dir" ]; then
         if [ $USE_COREFONTS -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.corefonts-installed" ]; then
@@ -747,36 +692,14 @@ applyCorefontsIfNeeded(){
                     wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' /v '$2' /t REG_SZ /d '$1' /f
                     wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' /v '$2' /t REG_SZ /d '$1' /f
                 }
-                copyAndRegister "AndaleMo.TTF" "Andale Mono"
-                copyAndRegister "Arial.TTF" "Arial"
-                copyAndRegister "Arialbd.TTF" "Arial Bold"
-                copyAndRegister "Arialbi.TTF" "Arial Bold Italic"
-                copyAndRegister "Ariali.TTF" "Arial Italic"
-                copyAndRegister "AriBlk.TTF" "Arial Black"
-                copyAndRegister "Comic.TTF" "Comic Sans MS"
-                copyAndRegister "Comicbd.TTF" "Comic Sans MS Bold"
-                copyAndRegister "cour.ttf" "Courier New"
-                copyAndRegister "courbd.ttf" "Courier New Bold"
-                copyAndRegister "courbi.ttf" "Courier New Bold Italic"
-                copyAndRegister "couri.ttf" "Courier New Italic"
-                copyAndRegister "Georgia.TTF" "Georgia"
-                copyAndRegister "Georgiab.TTF" "Georgia Bold"
-                copyAndRegister "Georgiai.TTF" "Georgia Italic"
-                copyAndRegister "Georgiaz.TTF" "Georgia Bold Italic"
-                copyAndRegister "Impact.TTF" "Impact"
-                copyAndRegister "Times.TTF" "Times New Roman"
-                copyAndRegister "Timesbd.TTF" "Times New Roman Bold"
-                copyAndRegister "Timesbi.TTF" "Times New Roman Bold Italic"
-                copyAndRegister "Timesi.TTF" "Times New Roman Italic"
-                copyAndRegister "trebuc.ttf" "Trebuchet MS"
-                copyAndRegister "Trebucbd.ttf" "Trebuchet MS Bold"
-                copyAndRegister "trebucbi.ttf" "Trebuchet MS Bold Italic"
-                copyAndRegister "trebucit.ttf" "Trebuchet MS Italic"
-                copyAndRegister "Verdana.TTF" "Verdana"
-                copyAndRegister "Verdanab.TTF" "Verdana Bold"
-                copyAndRegister "Verdanai.TTF" "Verdana Italic"
-                copyAndRegister "Verdanaz.TTF" "Verdana Bold Italic"
-                copyAndRegister "Webdings.TTF" "Webdings"
+                oldIFS=$IFS
+                IFS=':'
+                for f in "${corefonts_info[@]}"; do
+                    for d in $f; do
+                        copyAndRegister ${d[0]} ${d[1]}
+                    done
+                done
+                IFS=$oldIFS
                 wait
                 wineserver -k
                 wait
@@ -791,36 +714,14 @@ applyCorefontsIfNeeded(){
                     wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' /v '$2' /f
                     wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' /v '$2' /f
                 }
-                deleteAndUnregister "AndaleMo.TTF" "Andale Mono"
-                deleteAndUnregister "Arial.TTF" "Arial"
-                deleteAndUnregister "Arialbd.TTF" "Arial Bold"
-                deleteAndUnregister "Arialbi.TTF" "Arial Bold Italic"
-                deleteAndUnregister "Ariali.TTF" "Arial Italic"
-                deleteAndUnregister "AriBlk.TTF" "Arial Black"
-                deleteAndUnregister "Comic.TTF" "Comic Sans MS"
-                deleteAndUnregister "Comicbd.TTF" "Comic Sans MS Bold"
-                deleteAndUnregister "cour.ttf" "Courier New"
-                deleteAndUnregister "courbd.ttf" "Courier New Bold"
-                deleteAndUnregister "courbi.ttf" "Courier New Bold Italic"
-                deleteAndUnregister "couri.ttf" "Courier New Italic"
-                deleteAndUnregister "Georgia.TTF" "Georgia"
-                deleteAndUnregister "Georgiab.TTF" "Georgia Bold"
-                deleteAndUnregister "Georgiai.TTF" "Georgia Italic"
-                deleteAndUnregister "Georgiaz.TTF" "Georgia Bold Italic"
-                deleteAndUnregister "Impact.TTF" "Impact"
-                deleteAndUnregister "Times.TTF" "Times New Roman"
-                deleteAndUnregister "Timesbd.TTF" "Times New Roman Bold"
-                deleteAndUnregister "Timesbi.TTF" "Times New Roman Bold Italic"
-                deleteAndUnregister "Timesi.TTF" "Times New Roman Italic"
-                deleteAndUnregister "trebuc.ttf" "Trebuchet MS"
-                deleteAndUnregister "Trebucbd.ttf" "Trebuchet MS Bold"
-                deleteAndUnregister "trebucbi.ttf" "Trebuchet MS Bold Italic"
-                deleteAndUnregister "trebucit.ttf" "Trebuchet MS Italic"
-                deleteAndUnregister "Verdana.TTF" "Verdana"
-                deleteAndUnregister "Verdanab.TTF" "Verdana Bold"
-                deleteAndUnregister "Verdanai.TTF" "Verdana Italic"
-                deleteAndUnregister "Verdanaz.TTF" "Verdana Bold Italic"
-                deleteAndUnregister "Webdings.TTF" "Webdings"
+                oldIFS=$IFS
+                IFS=':'
+                for f in "${corefonts_info[@]}"; do
+                    for d in $f; do
+                        deleteAndUnregister ${d[0]} ${d[1]}
+                    done
+                done
+                IFS=$oldIFS
                 wait
                 wineserver -k
                 wait
