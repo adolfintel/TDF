@@ -15,7 +15,6 @@ USE_WINEMONO=0
 USE_WINEGECKO=0
 USE_VCREDIST=1
 USE_GAMESCOPE=0
-GAMESCOPE_PREFER_SYSTEM=1
 USE_GAMEMODE=1
 USE_MANGOHUD=0
 USE_COREFONTS=1
@@ -133,17 +132,14 @@ if [ $BLOCK_NETWORK -eq 0 ]; then
 fi
 gamescopePrefix="gamescope $gamescopeParameters -- "
 if [ $USE_GAMESCOPE -ge 1 ]; then
-    if [ $GAMESCOPE_PREFER_SYSTEM -eq 1 ]; then
-        command -v gamescope > /dev/null
-        if [ $? -ne 0 ]; then
-            export PATH="$(pwd)/system/gamescope:$PATH"
-        fi
-    else
-        export PATH="$(pwd)/system/gamescope:$PATH"
-    fi
-    gamescope -f -- sleep 0.1
-    if [ $? -ne 0 ]; then 
+    command -v gamescope > /dev/null
+    if [ $? -ne 0 ]; then
         gamescopePrefix=""
+    else
+        gamescope -f -- sleep 0.1
+        if [ $? -ne 0 ]; then 
+            gamescopePrefix=""
+        fi
     fi
 else
     gamescopePrefix=""

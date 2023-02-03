@@ -24,17 +24,6 @@ if [ $? -ne 0 ]; then exit 1; fi
 mv steam-runtime steamrt
 if [ $? -ne 0 ]; then exit 1; fi
 rm -f steam-runtime.tar.xz
-echo "Downloading seatd"
-wget -O seatd.tar.zst https://archlinux.org/packages/community/x86_64/seatd/download
-if [ $? -ne 0 ]; then exit 1; fi
-rm -rf temp
-mkdir temp
-tar -xf seatd.tar.zst --directory temp
-if [ $? -ne 0 ]; then exit 1; fi
-mv temp/usr/lib/*.so.* steamrt/lib/x86_64-linux-gnu
-if [ $? -ne 0 ]; then exit 1; fi
-rm -f seatd.tar.zst
-rm -rf temp
 rm -rf msi
 mkdir msi
 cd msi
