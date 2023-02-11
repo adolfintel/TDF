@@ -38,4 +38,8 @@ else
     cd ..
     rm -rf repo
 fi
+wget https://raw.githubusercontent.com/doitsujin/dxvk/master/dxvk.conf -O dxvk.conf.template
+if [ $? -ne 0 ]; then exit 1; fi
+mv dxvk.conf.template build/
+if [ $? -ne 0 ]; then exit 1; fi
 exit 0

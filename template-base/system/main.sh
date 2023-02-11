@@ -301,7 +301,7 @@ applyDllsIfNeeded(){
     if [ -e "$dxvk_dir" ]; then
         if [ $USE_DXVK -eq 1 ]; then
             if [ ! -f "$DXVK_CONFIG_FILE" ]; then
-                touch "$DXVK_CONFIG_FILE"
+                cp -f "$dxvk_dir/dxvk.conf.template" "$DXVK_CONFIG_FILE"
             fi
             if [ "$WINEARCH" == "win32" ]; then
                 for d in "${dxvk_dlls[@]}"; do
