@@ -10,6 +10,7 @@ game_args=''
 
 USE_DXVK=1
 USE_DXVK_ASYNC=2
+USE_D8VK=0
 USE_VKD3D=1
 USE_WINEMONO=0
 USE_WINEGECKO=0
@@ -42,9 +43,11 @@ additionalStartArgs=''
 export WINEPREFIX="$(pwd)/zzprefix"
 export USER="wine"
 export DXVK_CONFIG_FILE="$WINEPREFIX/dxvk.conf"
+export D8VK_CONFIG_FILE="$WINEPREFIX/d8vk.conf"
 SYSTEM_LANGUAGE=''
 ENABLE_RELAY=0
 ZENITY_PREFER_SYSTEM=1
+DETAILED_ZENITY_OUTPUT=1
 
 if [ -z $1 ]; then
     echo "This script should not be run directly, use run.sh instead"
@@ -56,6 +59,12 @@ alias zenity='zenity --title="Launcher $LAUNCHER_VERSION"'
 if [ $ZENITY_PREFER_SYSTEM -eq 1 ] && [ -f "/usr/bin/zenity" ]; then
     alias zenity='/usr/bin/zenity --title="Launcher $LAUNCHER_VERSION"'
 fi
+
+outputDetail(){
+    if [ $DETAILED_ZENITY_OUTPUT -eq 1 ];then
+        echo "#$1"
+    fi
+}
 
 manualInit=0
 if [ $1 == "manualInit" ]; then
@@ -192,7 +201,7 @@ launchCommandPrompt(){
     if [ $manualInit -eq 1 ]; then
         return
     fi
-    zenity --info --width=500 --text="A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet"
+    zenity --info --width=500 --text="A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet" &
     if [ ! -z "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL="$SYSTEM_LANGUAGE"
     fi
@@ -203,10 +212,6 @@ launchCommandPrompt(){
     zenity --info --width=500 --text="Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
 }
 justLaunchGame(){
-    if [ $WINEESYNC -eq 1 ] || [ $WINEFSYNC -eq 1 ]; then
-        wineserver -k -w
-        wait
-    fi
     if [ ! -z "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL="$SYSTEM_LANGUAGE"
     fi
@@ -269,6 +274,7 @@ launchGame(){
     fi
 }
 applyDllsIfNeeded(){
+    outputDetail "Copying DLLs..."
     windows_dir="$WINEPREFIX/drive_c/windows"
     if [ $USE_DXVK_ASYNC -eq 2 ]; then
         ./system/vkgpltest
@@ -283,10 +289,14 @@ applyDllsIfNeeded(){
         dxvk_dir="$dxvk_dir-async"
     fi
     dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi")
+    d8vk_dir="system/d8vk"
+    d8vk_dlls=("d3d8" "d3d9" "d3d10core" "d3d11" "dxgi")
     vkd3d_dir="system/vkd3d"
     vkd3d_dlls=("d3d12")
     mfplat_dir="system/mfplat"
     mfplat_dlls=("colorcnv" "mf" "mferror" "mfplat" "mfplay" "mfreadwrite" "msmpeg2adec" "msmpeg2vdec" "sqmapi")
+    toOverride=()
+    toUnoverride=()
     overrideDll() {
         wine reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /d 'native,builtin' /f
     }
@@ -298,8 +308,48 @@ applyDllsIfNeeded(){
             yes | cp "$1" "$2"
         fi
     }
+    if [ -e "$d8vk_dir" ]; then
+        if [ $USE_D8VK -eq 1 ]; then
+            outputDetail "Installing d8vk..."
+            USE_DXVK=0
+            USE_VKD3D=0
+            if [ ! -f "$D8VK_CONFIG_FILE" ]; then
+                cp -f "$d8vk_dir/d8vk.conf.template" "$D8VK_CONFIG_FILE"
+                export DXVK_CONFIG_FILE="$D8VK_CONFIG_FILE"
+            fi
+            if [ "$WINEARCH" == "win32" ]; then
+                for d in "${d8vk_dlls[@]}"; do
+                    copyIfDifferent "$d8vk_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"
+                done
+            else
+                for d in "${d8vk_dlls[@]}"; do
+                    copyIfDifferent "$d8vk_dir/x32/$d.dll" "$windows_dir/syswow64/$d.dll"
+                    copyIfDifferent "$d8vk_dir/x64/$d.dll" "$windows_dir/system32/$d.dll"
+                done
+            fi
+            if [ ! -f "$WINEPREFIX/.d8vk-installed" ]; then
+                for d in "${d8vk_dlls[@]}"; do
+                    toOverride+=("$d")
+                done
+                touch "$WINEPREFIX/.d8vk-installed"
+            fi
+        else
+            outputDetail "Removing d8vk..."
+            if [ -f "$WINEPREFIX/.d8vk-installed" ]; then
+                for d in "${d8vk_dlls[@]}"; do
+                    rm -f "$windows_dir/system32/$d.dll"
+                    rm -f "$windows_dir/syswow64/$d.dll"
+                    toUnoverride+=("$d")
+                done
+                wineboot -u
+                wait
+                rm -f "$WINEPREFIX/.d8vk-installed"
+            fi
+        fi
+    fi
     if [ -e "$dxvk_dir" ]; then
         if [ $USE_DXVK -eq 1 ]; then
+            outputDetail "Installing dxvk..."
             if [ ! -f "$DXVK_CONFIG_FILE" ]; then
                 cp -f "$dxvk_dir/dxvk.conf.template" "$DXVK_CONFIG_FILE"
             fi
@@ -315,26 +365,19 @@ applyDllsIfNeeded(){
             fi
             if [ ! -f "$WINEPREFIX/.dxvk-installed" ]; then
                 for d in "${dxvk_dlls[@]}"; do
-                    overrideDll "$d"
+                    toOverride+=("$d")
                 done
-                wait
-                wineserver -k
-                wait
                 touch "$WINEPREFIX/.dxvk-installed"
             fi
         else
+            outputDetail "Removing dxvk..."
             if [ -f "$WINEPREFIX/.dxvk-installed" ]; then
                 for d in "${dxvk_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
                     rm -f "$windows_dir/syswow64/$d.dll"
+                    toUnoverride+=("$d")
                 done
                 wineboot -u
-                wait
-                for d in "${dxvk_dlls[@]}"; do
-                    unoverrideDll "$d"
-                done
-                wait
-                wineserver -k
                 wait
                 rm -f "$WINEPREFIX/.dxvk-installed"
             fi
@@ -342,6 +385,7 @@ applyDllsIfNeeded(){
     fi
     if [ -e "$vkd3d_dir" ]; then
         if [ $USE_VKD3D -eq 1 ]; then
+            outputDetail "Installing vkd3d..."
             if [ "$WINEARCH" == "win32" ]; then    
                 for d in "${vkd3d_dlls[@]}"; do
                     copyIfDifferent "$vkd3d_dir/x86/$d.dll" "$windows_dir/system32/$d.dll"
@@ -354,26 +398,19 @@ applyDllsIfNeeded(){
             fi
             if [ ! -f "$WINEPREFIX/.vkd3d-installed" ]; then
                 for d in "${vkd3d_dlls[@]}"; do
-                    overrideDll "$d"
+                    toOverride+=("$d")
                 done
-                wait
-                wineserver -k
-                wait
                 touch "$WINEPREFIX/.vkd3d-installed"
             fi
         else
+            outputDetail "Removing vkd3d..."
             if [ -f "$WINEPREFIX/.vkd3d-installed" ]; then
                 for d in "${vkd3d_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
                     rm -f "$windows_dir/syswow64/$d.dll"
+                    toUnoverride+=("$d")
                 done
                 wineboot -u
-                wait
-                for d in "${vkd3d_dlls[@]}"; do
-                    unoverrideDll "$d"
-                done
-                wait
-                wineserver -k
                 wait
                 rm -f "$WINEPREFIX/.vkd3d-installed"
             fi
@@ -381,6 +418,7 @@ applyDllsIfNeeded(){
     fi
     if [ -e "$mfplat_dir" ]; then
         if [ $USE_MICROSOFT_MFPLAT -eq 1 ]; then
+            outputDetail "Installing MS mfplat..."
             if [ "$WINEARCH" == "win32" ]; then
                 for d in "${mfplat_dlls[@]}"; do
                     copyIfDifferent "$mfplat_dir/syswow64/$d.dll" "$windows_dir/system32/$d.dll"
@@ -393,9 +431,6 @@ applyDllsIfNeeded(){
             fi
             mfplatVer="$(cat "$WINEPREFIX/.msmfplat-installed")"
             if [ "$mfplatVer" != "$LAUNCHER_VERSION" ]; then
-                for d in "${mfplat_dlls[@]}"; do
-                    overrideDll "$d"
-                done
                 if [ "$WINEARCH" == "win32" ]; then
                     wine reg import "$mfplat_dir/mf.reg"
                     wine reg import "$mfplat_dir/wmf.reg"
@@ -414,30 +449,33 @@ applyDllsIfNeeded(){
                     wine64 regsvr32 msmpeg2adec.dll
                     wine64 regsvr32 msmpeg2vdec.dll
                 fi
-                wait
-                wineserver -k
-                wait
+                for d in "${mfplat_dlls[@]}"; do
+                    toOverride+=("$d")
+                done
                 echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.msmfplat-installed"
                 rm -f "regsvr32_d3d9.log"
             fi
         else
+            outputDetail "Removing MS mfplat..."
             if [ -f "$WINEPREFIX/.msmfplat-installed" ]; then
                 for d in "${mfplat_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
                     rm -f "$windows_dir/syswow64/$d.dll"
+                    toUnoverride+=("$d")
                 done
                 wineboot -u
-                wait
-                for d in "${mfplat_dlls[@]}"; do
-                    unoverrideDll "$d"
-                done
-                wait
-                wineserver -k
                 wait
                 rm -f "$WINEPREFIX/.msmfplat-installed"
             fi
         fi
     fi
+    outputDetail "Registering DLLs..."
+    for d in "${toUnoverride[@]}"; do
+        unoverrideDll "$d"
+    done
+    for d in "${toOverride[@]}"; do
+        overrideDll "$d"
+    done
 }
 applyMsisIfNeeded(){
     msi_dir="system/msi"
@@ -446,28 +484,27 @@ applyMsisIfNeeded(){
             yes | cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
             wine msiexec /i "C:\\winemono.msi"
             wait
-            wineserver -k
-            wait
             echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.winemono-installed"
         }
         uninstallMonoMSI(){
             wine msiexec /uninstall "C:\\winemono.msi"
             wait
-            wineserver -k
-            wait
         }
         if [ $USE_WINEMONO -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.winemono-installed" ]; then
+                outputDetail "Installing winemono..."
                 installMonoMSI
             else
                 winemonoVer="$(cat "$WINEPREFIX/.winemono-installed")"
                 if [ "$winemonoVer" != "$LAUNCHER_VERSION" ]; then
+                    outputDetail "Updating winemono..."
                     uninstallMonoMSI
                     installMonoMSI
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.winemono-installed" ]; then
+                outputDetail "Removing winemono..."
                 uninstallMonoMSI
                 rm -f "$WINEPREFIX/.winemono-installed"
                 rm -f "$WINEPREFIX/drive_c/winemono.msi"
@@ -484,29 +521,28 @@ applyMsisIfNeeded(){
                 wine msiexec /i "C:\\winegecko64.msi"
             fi
             wait
-            wineserver -k
-            wait
             echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.winegecko-installed"
         }
         uninstallGeckoMSI(){
             wine msiexec /uninstall "C:\\winegecko32.msi"
             wine msiexec /uninstall "C:\\winegecko64.msi"
             wait
-            wineserver -k
-            wait
         }
         if [ $USE_WINEGECKO -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.winegecko-installed" ]; then
+                outputDetail "Installing winegecko..."
                 installGeckoMSI
             else
                 $winegeckoVer="$(cat "$WINEPREFIX/.winegecko-installed")"
                 if [ "$winegeckoVer" != "$LAUNCHER_VERSION" ]; then
+                    outputDetail "Updating winegecko..."
                     uninstallGeckoMSI
                     installGeckoMSI
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.winegecko-installed" ]; then
+                outputDetail "Removing winegecko..."
                 uninstallGeckoMSI
                 rm -f "$WINEPREFIX/.winegecko-installed"
                 rm -f "$WINEPREFIX/drive_c/winegecko32.msi"
@@ -532,30 +568,37 @@ applyVCRedistsIfNeeded(){
                 wine "C:\\vc_redist.x64.exe" /install /quiet /norestart
             fi
             wait
-            wineserver -k
+            wineserver -k -w
             wait
             mv "$WINEPREFIX/.templink" "$WINEPREFIX/dosdevices/z:"
             echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.vcredist-installed"
         }
         uninstallVCRedists(){
+            wineserver -k -w
+            wait
+            mv "$WINEPREFIX/dosdevices/z:" "$WINEPREFIX/.templink"
             wine "C:\\vc_redist.x86.exe" /uninstall /quiet /norestart
             wine "C:\\vc_redist.x64.exe" /uninstall /quiet /norestart
             wait
             wineserver -k -w
             wait
+            mv "$WINEPREFIX/.templink" "$WINEPREFIX/dosdevices/z:"
         }
         if [ $USE_VCREDIST -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.vcredist-installed" ]; then
+                outputDetail "Installing vcredist..."
                 installVCRedists
             else
                 vcredistVer="$(cat "$WINEPREFIX/.vcredist-installed")"
                 if [ "$vcredistVer" != "$LAUNCHER_VERSION" ]; then
+                    outputDetail "Updating vcredist..."
                     uninstallVCRedists
                     installVCRedists
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.vcredist-installed" ]; then
+                outputDetail "Removing vcredist..."
                 uninstallVCRedists
                 rm -f "$WINEPREFIX/.vcredist-installed"
                 rm -f "$WINEPREFIX/drive_c/vc_redist.x86.exe"
@@ -566,6 +609,7 @@ applyVCRedistsIfNeeded(){
     fi
 }
 deIntegrateIfNeeded(){
+    outputDetail "Removing integrations..."
     prefixVersion=$(cat "$WINEPREFIX/.initialized")
     if [ "$prefixVersion" != "$LAUNCHER_VERSION" ]; then
         if [ $WINEARCH == "win32" ]; then
@@ -599,29 +643,28 @@ deIntegrateIfNeeded(){
     fi
 }
 hideCrashesIfNeeded(){
+    outputDetail "Configuring winedbg..."
     if [ $HIDE_CRASHES -eq 1 ]; then
         export WINEDEBUG=-all
         if [ ! -f "$WINEPREFIX/.crash-hidden" ]; then
             wine reg add 'HKEY_CURRENT_USER\Software\Wine\WineDbg' /v 'ShowCrashDialog' /t REG_DWORD /d 0 /f
-            wineserver -k
-            wait
             touch "$WINEPREFIX/.crash-hidden"
         fi
     else
         if [ -f "$WINEPREFIX/.crash-hidden" ]; then
             wine reg delete 'HKEY_CURRENT_USER\Software\Wine\WineDbg' /v 'ShowCrashDialog' /f
-            wineserver -k
-            wait
             rm -f "$WINEPREFIX/.crash-hidden"
         fi
     fi
 }
 removeBrokenSymlinks(){
+    outputDetail "Checking symlinks..."
     cd "$WINEPREFIX/dosdevices"
     find -L . -name . -o -type d -prune -o -type l -exec rm {} +
     cd ../..
 }
 removeUnnecessarySymlinks(){
+    outputDetail "Removing symlinks..."
     driveC=$(realpath "$WINEPREFIX/dosdevices/c:")
         for f in "$WINEPREFIX"/dosdevices/* ; do
             if [[ $(basename "$f") =~ (com)[0-9]* ]]; then
@@ -640,6 +683,7 @@ removeUnnecessarySymlinks(){
     fi
 }
 repairDriveCIfNeeded(){
+    outputDetail "Checking symlinks..."
     link=$(realpath "$WINEPREFIX/dosdevices/c:")
     target=$(realpath "$WINEPREFIX/drive_c")
     if [ "$link" != "$target" ]; then
@@ -655,6 +699,7 @@ repairDriveCIfNeeded(){
     fi
 }
 repairDriveZIfNeeded(){
+    outputDetail "Checking symlinks..."
     if [ $BLOCK_ZDRIVE -eq 1 ]; then
         return
     fi
@@ -673,12 +718,15 @@ repairDriveZIfNeeded(){
     fi
 }
 blockBrowserIfNeeded(){
+    outputDetail "Configuring winebrowser..."
     if [ $BLOCK_BROWSER -eq 1 ]; then
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winebrowser.exe=d"
     fi
 }
 killWine(){
-    ls -l /proc/*/exe 2>/dev/null | grep -E 'wine(64)?-preloader|wineserver' | perl -pe 's;^.*/proc/(\d+)/exe.*$;$1;g;' | xargs -n 1 kill -9
+    #ls -l /proc/*/exe 2>/dev/null | grep -E 'wine(64)?-preloader|wineserver' | perl -pe 's;^.*/proc/(\d+)/exe.*$;$1;g;' | xargs -n 1 kill -9
+    wineserver -k -w
+    wait
 }
 applyCorefontsIfNeeded(){
     windows_dir="$WINEPREFIX/drive_c/windows"
@@ -686,11 +734,12 @@ applyCorefontsIfNeeded(){
     corefonts_info=("AndaleMo.TTF:Andale Mono" "Arial.TTF:Arial" "Arialbd.TTF:Arial Bold" "Arialbi.TTF:Arial Bold Italic" "Ariali.TTF:Arial Italic" "AriBlk.TTF:Arial Black" "Comic.TTF:Comic Sans MS" "Comicbd.TTF:Comic Sans MS Bold" "cour.ttf:Courier New" "courbd.ttf:Courier New Bold" "courbi.ttf:Courier New Bold Italic" "couri.ttf:Courier New Italic" "Georgia.TTF:Georgia" "Georgiab.TTF:Georgia Bold" "Georgiai.TTF:Georgia Italic" "Georgiaz.TTF:Georgia Bold Italic" "Impact.TTF:Impact" "Times.TTF:Times New Roman" "Timesbd.TTF:Times New Roman Bold" "Timesbi.TTF:Times New Roman Bold Italic" "Timesi.TTF:Times New Roman Italic" "trebuc.ttf:Trebuchet MS" "Trebucbd.ttf:Trebuchet MS Bold" "trebucbi.ttf:Trebuchet MS Bold Italic" "trebucit.ttf:Trebuchet MS Italic" "Verdana.TTF:Verdana" "Verdanab.TTF:Verdana Bold" "Verdanai.TTF:Verdana Italic" "Verdanaz.TTF:Verdana Bold Italic" "Webdings.TTF:Webdings")
     if [ -e "$corefonts_dir" ]; then
         if [ $USE_COREFONTS -eq 1 ]; then
+            outputDetail "Installing corefonts..."
             if [ ! -f "$WINEPREFIX/.corefonts-installed" ]; then
+                commands=""
                 copyAndRegister(){
                     cp -f "$corefonts_dir/$1" "$windows_dir/Fonts"
-                    wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' /v '$2' /t REG_SZ /d '$1' /f
-                    wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' /v '$2' /t REG_SZ /d '$1' /f
+                    commands="$commands /v '$2' /t REG_SZ /d '$1' "
                 }
                 oldIFS=$IFS
                 IFS=':'
@@ -700,19 +749,19 @@ applyCorefontsIfNeeded(){
                     done
                 done
                 IFS=$oldIFS
-                wait
-                wineserver -k
-                wait
+                wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' $commands /f
+                wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' /v '$2' /t REG_SZ /d '$1' $commands /f
                 touch "$WINEPREFIX/.corefonts-installed"
             fi
         else
+            outputDetail "Removing corefonts..."
             if [ -f "$WINEPREFIX/.corefonts-installed" ]; then
+                commands=""
                 deleteAndUnregister(){
                     windows_dir="$WINEPREFIX/drive_c/windows"
                     corefonts_dir="system/corefonts"
                     rm -f "$windows_dir/Fonts/$1"
-                    wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' /v '$2' /f
-                    wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' /v '$2' /f
+                    commands="$commands /v '$2'"
                 }
                 oldIFS=$IFS
                 IFS=':'
@@ -722,9 +771,8 @@ applyCorefontsIfNeeded(){
                     done
                 done
                 IFS=$oldIFS
-                wait
-                wineserver -k
-                wait
+                wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' $commands /f
+                wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' $commands /f
                 rm -f "$WINEPREFIX/.corefonts-installed"
             fi
         fi
@@ -744,8 +792,10 @@ if [ $? -ne 0 ]; then
     if [ -e "$WINEPREFIX/.initialized" ]; then
         prefixVersion=$(cat "$WINEPREFIX/.initialized")
         if [ "$prefixVersion" == "$LAUNCHER_VERSION" ]; then
-            zenity --info --width=500 --text="This wineprefix is already running\nA command prompt will now be opened inside it"
-            justLaunchCommandPrompt
+            zenity --question --width=400 --text="This wineprefix is already running\nOpen a command prompt inside it?"
+            if [ $? -eq 0 ]; then
+                justLaunchCommandPrompt
+            fi
         fi
     fi
     exit
@@ -768,11 +818,10 @@ if [ -d "$WINEPREFIX" ]; then
         repairDriveCIfNeeded
         repairDriveZIfNeeded
         echo "10"
+        outputDetail "Starting wine..."
         realOverrides="$WINEDLLOVERRIDES"
         export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
         wineboot
-        wait
-        wineserver -k
         wait
         export WINEDLLOVERRIDES="$realOverrides"
         echo "30"
@@ -789,6 +838,11 @@ if [ -d "$WINEPREFIX" ]; then
         applyVCRedistsIfNeeded
         echo "85"
         removeUnnecessarySymlinks
+        echo "90"
+        wait
+        outputDetail "Starting..."
+        wineserver -k -w
+        wait
         echo "100"
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
     ) | zenity --progress --no-cancel --text="Launching..." --width=250 --auto-close --auto-kill
@@ -811,6 +865,7 @@ if [ -d "$WINEPREFIX" ]; then
 else
     (
         echo "10"
+        outputDetail "Starting wine..."
         realOverrides="$WINEDLLOVERRIDES"
         export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
         wineboot -i
@@ -819,8 +874,6 @@ else
         while ! test -f "$WINEPREFIX/system.reg"; do
             sleep 1
         done
-        wineserver -k
-        wait
         export WINEDLLOVERRIDES="$realOverrides"
         echo "30"
         applyDllsIfNeeded
@@ -836,6 +889,11 @@ else
         applyVCRedistsIfNeeded
         echo "85"
         removeUnnecessarySymlinks
+        echo "95"
+        wait
+        outputDetail "Starting..."
+        wineserver -k -w
+        wait
         echo "100"
         echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.initialized"
     ) | zenity --progress --no-cancel --text="Initializing a new wineprefix, this may take a while" --width=500 --auto-close --auto-kill

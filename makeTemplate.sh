@@ -4,7 +4,7 @@ fail(){
     exit 1
 }
 depsCheckFailed=0
-for d in "dxvk" "dxvk-async" "futex2test" "vkgpltest" "prebuilts" "vkd3d" "vcredist" "mfplat"; do
+for d in "dxvk" "dxvk-async" "d8vk" "futex2test" "vkgpltest" "prebuilts" "vkd3d" "vcredist" "mfplat"; do
     sh "$d/checkDeps.sh"
     if [ $? -ne 0 ]; then
         depsCheckFailed=1;
@@ -48,6 +48,19 @@ if [ $? -ne 0 ]; then
     fi
 fi
 mv build/* "../$dir/system/dxvk"
+rm -rf build
+cd ..
+cd d8vk
+d8vkFallbacked=0
+./build.sh master
+if [ $? -ne 0 ]; then
+    d8vkFallbacked=1
+    ./build.sh stable
+    if [ $? -ne 0 ]; then
+        fail "d8vk"
+    fi
+fi
+mv build/* "../$dir/system/d8vk"
 rm -rf build
 cd ..
 cd vkd3d
@@ -110,6 +123,9 @@ if [ $dxvkAsyncFallbacked -eq 1 ]; then
 fi
 if [ $dxvkFallbacked -eq 1 ]; then
     echo "WARNING: dxvk build failed, using latest prebuilt binary"
+fi
+if [ $d8vkFallbacked -eq 1 ]; then
+    echo "WARNING: d8vk build failed, using latest prebuilt binary"
 fi
 if [ $vkd3dFallbacked -eq 1 ]; then
     echo "WARNING: vkd3d-proton build failed, using latest prebuilt binary"
