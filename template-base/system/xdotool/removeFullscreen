@@ -1,0 +1,2 @@
+#!/bin/bash
+xdotool windowstate --remove FULLSCREEN $1

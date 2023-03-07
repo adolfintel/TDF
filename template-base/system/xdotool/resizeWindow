@@ -1,0 +1,2 @@
+#!/bin/bash
+xdotool windowsize $1 $2 $3

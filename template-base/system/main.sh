@@ -16,6 +16,7 @@ USE_WINEMONO=0
 USE_WINEGECKO=0
 USE_VCREDIST=1
 USE_GAMESCOPE=0
+GAMESCOPE_PREFER_SYSTEM=1
 USE_GAMEMODE=1
 USE_MANGOHUD=0
 USE_COREFONTS=1
@@ -24,21 +25,23 @@ HIDE_CRASHES=1
 BLOCK_NETWORK=1
 BLOCK_NETWORK_PREFER_FIREJAIL=0
 BLOCK_BROWSER=1
-BLOCK_ZDRIVE=0
+BLOCK_ZDRIVE=2
 BLOCK_EXTERNAL_DRIVES=1
 USE_FAKE_HOMEDIR=0
 WINE_PREFER_SYSTEM=0
+WINE_DPI=-1
 KILL_WINE_BEFORE=0
 KILL_WINE_AFTER=0
 IGNORE_EXIST_CHECKS=0
 HIDE_GAME_RUNNING_DIALOG=0
 SHOW_PLAY_TIME=0
 export DXVK_ASYNC=1
+#export VKD3D_FEATURE_LEVEL=12_2
 export VKD3D_CONFIG=dxr11
 export WINEARCH=win64
 export WINEESYNC=0
 export WINEFSYNC=1
-gamescopeParameters="-f"
+export WINE_LARGE_ADDRESS_AWARE=1
 additionalStartArgs=''
 export WINEPREFIX="$(pwd)/zzprefix"
 export USER="wine"
@@ -48,16 +51,17 @@ SYSTEM_LANGUAGE=''
 ENABLE_RELAY=0
 ZENITY_PREFER_SYSTEM=1
 DETAILED_ZENITY_OUTPUT=1
+LAUNCHER_TITLE="Launcher"
 
 if [ -z $1 ]; then
     echo "This script should not be run directly, use run.sh instead"
     exit
 fi
 
-alias zenity='zenity --title="Launcher $LAUNCHER_VERSION"'
+alias zenity='zenity --title="$LAUNCHER_TITLE"'
 
 if [ $ZENITY_PREFER_SYSTEM -eq 1 ] && [ -f "/usr/bin/zenity" ]; then
-    alias zenity='/usr/bin/zenity --title="Launcher $LAUNCHER_VERSION"'
+    alias zenity='/usr/bin/zenity --title="$LAUNCHER_TITLE"'
 fi
 
 outputDetail(){
@@ -74,6 +78,9 @@ fi
 if [ $? -eq 0 ] || [ $? -gt 2 ] || [ $? -lt 0 ]; then
     zenity --error --width=500 --text="Couldn't find a GPU with Vulkan support, make sure the drivers are installed"
     exit
+fi
+if [ -e "system/xdotool" ]; then
+    export PATH="$PATH:$(pwd)/system/xdotool"
 fi
 if [ -f "vars.conf" ]; then
     source "./vars.conf"
@@ -102,10 +109,7 @@ if [ -z "$game_workingDir" ]; then
     game_exe=$( echo ${game_exe##*\\} )
 fi
 if [ $WINE_PREFER_SYSTEM -eq 1 ]; then
-    command -v wine > /dev/null
-    if [ $?-ne 0 ]; then
-        export PATH="$(pwd)/system/wine/bin:$PATH"
-    fi
+    export PATH="$PATH:$(pwd)/system/wine/bin"
 else
     export PATH="$(pwd)/system/wine/bin:$PATH"
 fi
@@ -139,25 +143,16 @@ fi
 if [ $BLOCK_NETWORK -eq 0 ]; then
     debotnetPrefix=""
 fi
-gamescopePrefix="gamescope $gamescopeParameters -- "
 if [ $USE_GAMESCOPE -ge 1 ]; then
-    command -v gamescope > /dev/null
-    if [ $? -ne 0 ]; then
-        gamescopePrefix=""
+    gamescopePrefix="./system/gamescope/runInsideGS.sh"
+    if [ $GAMESCOPE_PREFER_SYSTEM -eq 1 ]; then
+        export PATH="$PATH:$(pwd)/system/gamescope"
     else
-        gamescope -f -- sleep 0.1
-        if [ $? -ne 0 ]; then 
-            gamescopePrefix=""
-        fi
+        export PATH="$(pwd)/system/gamescope:$PATH"
     fi
+    export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(pwd)/system/gamescope"
 else
     gamescopePrefix=""
-fi
-if [ $USE_GAMESCOPE -eq 2 ]; then
-    if [ -z "$gamescopePrefix" ]; then
-        zenity --error --width=400 --text="Gamescope is required for this game but it's not working"
-        exit
-    fi
 fi
 gamemodePrefix="gamemoderun "
 if [ $USE_GAMEMODE -eq 1 ]; then
@@ -217,6 +212,11 @@ justLaunchGame(){
     fi
     if [ "$(type -t onGameStart)" == "function" ]; then
         onGameStart
+    fi
+    if [ "$(type -t whileGameRunning)" == "function" ]; then
+        (
+            whileGameRunning
+        ) &
     fi
     if [ $ENABLE_RELAY -eq 1 ]; then
         relayPath=$(zenity --file-selection --save --title="Where do you want to save the trace?" --filename="relay.txt")
@@ -533,7 +533,7 @@ applyMsisIfNeeded(){
                 outputDetail "Installing winegecko..."
                 installGeckoMSI
             else
-                $winegeckoVer="$(cat "$WINEPREFIX/.winegecko-installed")"
+                winegeckoVer="$(cat "$WINEPREFIX/.winegecko-installed")"
                 if [ "$winegeckoVer" != "$LAUNCHER_VERSION" ]; then
                     outputDetail "Updating winegecko..."
                     uninstallGeckoMSI
@@ -642,6 +642,31 @@ deIntegrateIfNeeded(){
         mkdir "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Microsoft/Windows/Templates"
     fi
 }
+applyDpi(){
+    outputDetail "Configuring scaling..."
+    if [ $WINE_DPI -eq -1 ]; then
+        if [ $XDG_SESSION_TYPE == "x11" ]; then
+            WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
+        else #TODO: wayland support
+            $WINE_DPI=0
+        fi
+    fi
+    if [ "$WINE_DPI" -ne 0 ]; then
+        currentDpi=0
+        if [ -e "$WINEPREFIX/.dpi" ]; then
+            currentDpi=$(cat "$WINEPREFIX/.dpi")
+        fi
+        if [ "$WINE_DPI" != "$currentDpi" ]; then
+            wine reg add 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts' /v 'LogPixels' /t REG_DWORD /d "$WINE_DPI" /f
+            echo "$WINE_DPI" > "$WINEPREFIX/.dpi"
+        fi
+    else
+        if [ -e "$WINEPREFIX/.dpi" ]; then
+            wine reg delete 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts' /v 'LogPixels' /f
+            rm -f "$WINEPREFIX/.dpi"
+        fi
+    fi
+}
 hideCrashesIfNeeded(){
     outputDetail "Configuring winedbg..."
     if [ $HIDE_CRASHES -eq 1 ]; then
@@ -678,7 +703,7 @@ removeUnnecessarySymlinks(){
                 fi
             fi
         done
-    if [ $BLOCK_ZDRIVE -eq 1 ]; then
+    if [[ $BLOCK_ZDRIVE -eq 1  || ( "$1" == "game"  && $BLOCK_ZDRIVE -eq 2 ) ]]; then
         unlink "$WINEPREFIX/dosdevices/z:"
     fi
 }
@@ -700,7 +725,7 @@ repairDriveCIfNeeded(){
 }
 repairDriveZIfNeeded(){
     outputDetail "Checking symlinks..."
-    if [ $BLOCK_ZDRIVE -eq 1 ]; then
+    if [ $BLOCK_ZDRIVE -ge 1 ]; then
         return
     fi
     link=$(realpath "$WINEPREFIX/dosdevices/z:")
@@ -835,12 +860,14 @@ if [ -d "$WINEPREFIX" ]; then
         echo "70"
         deIntegrateIfNeeded
         echo "75"
+        applyDpi
+        echo "80"
         applyVCRedistsIfNeeded
-        echo "85"
-        removeUnnecessarySymlinks
         echo "90"
+        removeUnnecessarySymlinks "game"
+        echo "95"
         wait
-        outputDetail "Starting..."
+        outputDetail "Launching game..."
         wineserver -k -w
         wait
         echo "100"
@@ -886,9 +913,11 @@ else
         echo "70"
         deIntegrateIfNeeded
         echo "75"
+        applyDpi
+        echo "80"
         applyVCRedistsIfNeeded
-        echo "85"
-        removeUnnecessarySymlinks
+        echo "90"
+        removeUnnecessarySymlinks "init"
         echo "95"
         wait
         outputDetail "Starting..."

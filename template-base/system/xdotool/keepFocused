@@ -1,0 +1,16 @@
+#!/bin/bash
+timeout=30
+if [ ! -z "$3" ]; then
+    timeout="$3"
+fi
+eval $(waitForWindow "$1" "$2" $timeout)
+ok=1
+while [ $ok -eq 1 ]; do
+    ok=0
+    eval $(waitForWindow "$1" "$2" 1)
+    for id in "${WINDOWS[@]}"; do
+        ok=1
+        focusWindow $id
+    done
+    sleep 1
+done

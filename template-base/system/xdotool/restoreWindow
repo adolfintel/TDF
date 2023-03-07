@@ -1,0 +1,3 @@
+#!/bin/bash
+xdotool windowstate --remove MAXIMIZED_VERT $1
+xdotool windowstate --remove MAXIMIZED_HORZ $1

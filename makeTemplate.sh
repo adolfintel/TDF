@@ -4,7 +4,7 @@ fail(){
     exit 1
 }
 depsCheckFailed=0
-for d in "dxvk" "dxvk-async" "d8vk" "futex2test" "vkgpltest" "prebuilts" "vkd3d" "vcredist" "mfplat"; do
+for d in "dxvk-async" "dxvk" "d8vk" "vkd3d" "gamescope" "xdotool" "futex2test" "vkgpltest"  "prebuilts" "vcredist" "mfplat"; do
     sh "$d/checkDeps.sh"
     if [ $? -ne 0 ]; then
         depsCheckFailed=1;
@@ -74,6 +74,20 @@ if [ $? -ne 0 ]; then
     fi
 fi
 mv build/* "../$dir/system/vkd3d"
+rm -rf build
+cd ..
+cd gamescope
+./build.sh
+if [ $? -ne 0 ]; then
+    fail "gamescope"
+fi
+mv build/* "../$dir/system/gamescope"
+rm -rf build
+cd ..
+cd xdotool
+./build.sh
+if [ $? -ne 0 ]; then fail "xdotool"; fi
+mv build/* "../$dir/system/xdotool/"
 rm -rf build
 cd ..
 cd futex2test

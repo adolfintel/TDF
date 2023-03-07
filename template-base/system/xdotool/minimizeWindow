@@ -1,0 +1,2 @@
+#!/bin/bash
+xdotool windowminimize $1
