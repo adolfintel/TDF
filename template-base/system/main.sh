@@ -648,7 +648,7 @@ applyDpi(){
         if [ $XDG_SESSION_TYPE == "x11" ]; then
             WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
         else #TODO: wayland support
-            $WINE_DPI=0
+            WINE_DPI=0
         fi
     fi
     if [ "$WINE_DPI" -ne 0 ]; then
