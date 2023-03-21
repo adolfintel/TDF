@@ -292,7 +292,7 @@ applyDllsIfNeeded(){
     d8vk_dir="system/d8vk"
     d8vk_dlls=("d3d8" "d3d9" "d3d10core" "d3d11" "dxgi")
     vkd3d_dir="system/vkd3d"
-    vkd3d_dlls=("d3d12")
+    vkd3d_dlls=("d3d12" "d3d12core")
     mfplat_dir="system/mfplat"
     mfplat_dlls=("colorcnv" "mf" "mferror" "mfplat" "mfplay" "mfreadwrite" "msmpeg2adec" "msmpeg2vdec" "sqmapi")
     toOverride=()
