@@ -25,9 +25,14 @@ rm -f "$dir.tar.zst"
 mkdir "$dir"
 cp -r "template-base"/* "$dir"
 cd dxvk-async
-./build.sh stable
+dxvkAsyncFallbacked=0
+./build.sh master
 if [ $? -ne 0 ]; then
-    fail "dxvk-async"
+    dxvkAsyncFallbacked=1
+    ./build.sh stable
+    if [ $? -ne 0 ]; then
+        fail "dxvk-async"
+    fi
 fi
 mv build/* "../$dir/system/dxvk-async"
 rm -rf build
@@ -127,6 +132,9 @@ if [ $? -ne 0 ]; then fail "compress"; fi
 echo "Cleaning up"
 rm -rf "$dir"
 echo "All done"
+if [ $dxvkAsyncFallbacked -eq 1 ]; then
+    echo "WARNING: dxvk-gplasync build failed, using latest prebuilt binary"
+fi
 if [ $dxvkFallbacked -eq 1 ]; then
     echo "WARNING: dxvk build failed, using latest prebuilt binary"
 fi

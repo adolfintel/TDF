@@ -288,7 +288,7 @@ applyDllsIfNeeded(){
     if [ $USE_DXVK_ASYNC -eq 1 ]; then
         dxvk_dir="$dxvk_dir-async"
     fi
-    dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi")
+    dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi" "dxvk_config")
     d8vk_dir="system/d8vk"
     d8vk_dlls=("d3d8" "d3d9" "d3d10core" "d3d11" "dxgi")
     vkd3d_dir="system/vkd3d"
