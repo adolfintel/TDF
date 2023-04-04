@@ -34,8 +34,9 @@ if [ $? -ne 0 ]; then exit 1; fi
 wget -O winemono.msi "$url"
 if [ $? -ne 0 ]; then exit 1; fi
 echo "Downloading winegecko"
-wget -O winegecko32.msi https://dl.winehq.org/wine/wine-gecko/2.47.3/wine-gecko-2.47.3-x86.msi
+ver=$(curl --silent "https://dl.winehq.org/wine/wine-gecko/?C=M;O=D" | grep "indexcolicon" | sed 1,2d | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | head -n 1 | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##')
+wget -O winegecko32.msi "https://dl.winehq.org/wine/wine-gecko/$ver/wine-gecko-$ver-x86.msi"
 if [ $? -ne 0 ]; then exit 1; fi
-wget -O winegecko64.msi https://dl.winehq.org/wine/wine-gecko/2.47.3/wine-gecko-2.47.3-x86_64.msi
+wget -O winegecko64.msi "https://dl.winehq.org/wine/wine-gecko/$ver/wine-gecko-$ver-x86_64.msi"
 if [ $? -ne 0 ]; then exit 1; fi
 exit 0
