@@ -2,7 +2,7 @@
 if [ "$1" == "stable" ]; then
     echo "Downloading dxvk-gplasync (stable build)"
     rm -rf build repo
-    wget -O dxvk.tar.gz "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/dxvk-gplasync.tar.gz?inline=false"
+    wget -O dxvk.tar.gz "https://gitlab.com/Ph42oN/dxvk-gplasync/-/raw/main/dxvk-gplasync-2.1-2.tar.gz?inline=false"
     if [ $? -ne 0 ]; then exit 1; fi
     mkdir build
     tar -xf dxvk.tar.gz --directory build
@@ -30,7 +30,7 @@ else
     git clone https://gitlab.com/Ph42oN/dxvk-gplasync/
     if [ $? -ne 0 ]; then exit 1; fi
     cd dxvk
-    patch -Np1 < ../dxvk-gplasync/dxvk-gplasync.patch
+    patch -Np1 < ../dxvk-gplasync/dxvk-gplasync-2.1-2.patch
     if [ $? -ne 0 ]; then exit 1; fi
     sh package-release.sh master ../build --no-package
     if [ $? -ne 0 ]; then exit 1; fi
