@@ -15,9 +15,9 @@ mechanicalDriveMessage="Running from a mechanical hard drive is not recommended,
 source "vars.conf"
 if [ "$1" == "archive" ]; then
     if [ "$(type -t onArchiveStart)" == "function" ]; then
-        onArchiveStart $*
+        onArchiveStart "$@"
     fi
-    ./system/archive.sh $*
+    ./system/archive.sh "$@"
     res=$?
     if [ "$(type -t onArchiveEnd)" == "function" ]; then
         onArchiveEnd $res
@@ -26,8 +26,8 @@ if [ "$1" == "archive" ]; then
 fi
 if [ $IGNORE_MECHANICAL_HDD -eq 0 ]; then
     drive=$(df -T . | awk '/^\/dev/ {print $1}')
-    drive=$(lsblk -no pkname $drive)
-    isMechanical="$(cat /sys/block/$drive/queue/rotational)"
+    drive=$(lsblk -no pkname "$drive")
+    isMechanical="$(cat /sys/block/"$drive"/queue/rotational)"
     if [ "$isMechanical" == "1" ]; then
         mustShowHDDWarning=1
     else
@@ -42,8 +42,8 @@ if [ $USE_STEAMRT -eq 1 ] && [ -e "./system/steamrt" ]; then
         ./system/steamrt/run.sh zenity --warning --width 400 --text "$mechanicalDriveMessage"
     fi
     ./system/steamrt/setup.sh
-    if [ ! -z "$1" ]; then 
-        ./system/steamrt/run.sh ./system/main.sh $*
+    if [ -n "$1" ]; then 
+        ./system/steamrt/run.sh ./system/main.sh "$@"
     else
         ./system/steamrt/run.sh ./system/main.sh normal
     fi
@@ -52,8 +52,8 @@ else
     if [ $mustShowHDDWarning -eq 1 ]; then
         zenity --warning --width 400 --text "$mechanicalDriveMessage"
     fi
-    if [ ! -z "$1" ]; then 
-        ./system/main.sh $*
+    if [ -n "$1" ]; then 
+        ./system/main.sh "$@"
     else
         ./system/main.sh normal
     fi

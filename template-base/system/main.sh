@@ -197,17 +197,17 @@ launchCommandPrompt(){
         return
     fi
     zenity --info --width=500 --text="A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet" &
-    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+    if [ -n "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL="$SYSTEM_LANGUAGE"
     fi
     justLaunchCommandPrompt
-    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+    if [ -n "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL=C
     fi
     zenity --info --width=500 --text="Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
 }
 justLaunchGame(){
-    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+    if [ -n "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL="$SYSTEM_LANGUAGE"
     fi
     if [ "$(type -t onGameStart)" == "function" ]; then
@@ -220,8 +220,8 @@ justLaunchGame(){
     fi
     if [ $ENABLE_RELAY -eq 1 ]; then
         relayPath=$(zenity --file-selection --save --title="Where do you want to save the trace?" --filename="relay.txt")
-        if [ ! -z "$relayPath" ]; then
-            WINEDEBUG=+relay $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args > $relayPath 2>&1
+        if [ -n "$relayPath" ]; then
+            WINEDEBUG=+relay $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args > "$relayPath" 2>&1
         fi
     else
         $gamemodePrefix $gamescopePrefix $mangohudPrefix $debotnetPrefix wine start /D "$game_workingDir" /WAIT $additionalStartArgs "$game_exe" $game_args
@@ -229,7 +229,7 @@ justLaunchGame(){
     if [ "$(type -t onGameEnd)" == "function" ]; then
         onGameEnd
     fi
-    if [ ! -z "$SYSTEM_LANGUAGE" ]; then
+    if [ -n "$SYSTEM_LANGUAGE" ]; then
         export LC_ALL=C
     fi
 }
@@ -298,14 +298,14 @@ applyDllsIfNeeded(){
     toOverride=()
     toUnoverride=()
     overrideDll() {
-        wine reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /d 'native,builtin' /f
+        wine reg add 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v "$1" /d 'native,builtin' /f
     }
     unoverrideDll() {
-        wine reg delete 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v $1 /f
+        wine reg delete 'HKEY_CURRENT_USER\Software\Wine\DllOverrides' /v "$1" /f
     }
     copyIfDifferent(){
         if ! cmp "$1" "$2" > /dev/null 2>&1; then
-            yes | cp "$1" "$2"
+            \cp "$1" "$2"
         fi
     }
     if [ -e "$d8vk_dir" ]; then
@@ -481,7 +481,7 @@ applyMsisIfNeeded(){
     msi_dir="system/msi"
     if [ -e "$msi_dir" ]; then
         installMonoMSI(){
-            yes | cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
+            \cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
             wine msiexec /i "C:\\winemono.msi"
             wait
             echo "$LAUNCHER_VERSION" > "$WINEPREFIX/.winemono-installed"
@@ -512,12 +512,12 @@ applyMsisIfNeeded(){
         fi
         installGeckoMSI(){
             if [ "$WINEARCH" == "win32" ]; then
-                yes | cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
+                \cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
                 wine msiexec /i "C:\\winegecko32.msi"
             else
-                yes | cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
+                \cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
                 wine msiexec /i "C:\\winegecko32.msi"
-                yes | cp "$msi_dir/winegecko64.msi" "$WINEPREFIX/drive_c/winegecko64.msi"
+                \cp "$msi_dir/winegecko64.msi" "$WINEPREFIX/drive_c/winegecko64.msi"
                 wine msiexec /i "C:\\winegecko64.msi"
             fi
             wait
@@ -559,11 +559,11 @@ applyVCRedistsIfNeeded(){
             wait
             mv "$WINEPREFIX/dosdevices/z:" "$WINEPREFIX/.templink"
             if [ $WINEARCH == "win32" ]; then
-                yes | cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
+                \cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
                 wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
             else
-                yes | cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
-                yes | cp "$vc_dir/vc_redist.x64.exe" "$WINEPREFIX/drive_c/vc_redist.x64.exe"
+                \cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
+                \cp "$vc_dir/vc_redist.x64.exe" "$WINEPREFIX/drive_c/vc_redist.x64.exe"
                 wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
                 wine "C:\\vc_redist.x64.exe" /install /quiet /norestart
             fi
@@ -645,7 +645,7 @@ deIntegrateIfNeeded(){
 applyDpi(){
     outputDetail "Configuring scaling..."
     if [ $WINE_DPI -eq -1 ]; then
-        if [ $XDG_SESSION_TYPE == "x11" ]; then
+        if [ "$XDG_SESSION_TYPE" == "x11" ]; then
             WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
         else #TODO: wayland support
             WINE_DPI=0
@@ -697,7 +697,7 @@ removeUnnecessarySymlinks(){
             else
                 if [ $BLOCK_EXTERNAL_DRIVES -ge 1 ]; then
                     rp=$(realpath "$f")
-                    if [ "$rp" != "$driveC" -a "$rp" != "/" ] ; then
+                    if [ "$rp" != "$driveC" ] && [ "$rp" != "/" ] ; then
                         unlink "$f"
                     fi
                 fi
@@ -770,7 +770,7 @@ applyCorefontsIfNeeded(){
                 IFS=':'
                 for f in "${corefonts_info[@]}"; do
                     for d in $f; do
-                        copyAndRegister ${d[0]} ${d[1]}
+                        copyAndRegister "${d[0]}" "${d[1]}"
                     done
                 done
                 IFS=$oldIFS
@@ -792,7 +792,7 @@ applyCorefontsIfNeeded(){
                 IFS=':'
                 for f in "${corefonts_info[@]}"; do
                     for d in $f; do
-                        deleteAndUnregister ${d[0]} ${d[1]}
+                        deleteAndUnregister "${d[0]}" "${d[1]}"
                     done
                 done
                 IFS=$oldIFS
@@ -804,10 +804,10 @@ applyCorefontsIfNeeded(){
     fi
 }
 RANDOM=$(date +%s%N | cut -b10-19)
-flockid=$(( $RANDOM % 10000 + 400 ))
+flockid=$(( RANDOM % 10000 + 400 ))
 if [ -f "$WINEPREFIX/.flockid" ]; then
     flockid=$(cat "$WINEPREFIX/.flockid")
-    flockid=$(( $flockid ))
+    flockid=$(( flockid ))
 else
     echo $flockid > "$WINEPREFIX/.flockid"
 fi
@@ -829,7 +829,7 @@ if [ $KILL_WINE_BEFORE -eq 1 ]; then
     killWine
 fi
 if [ -d "$WINEPREFIX" ]; then
-    if [ ! -z $WINEARCH ]; then
+    if [ -n "$WINEARCH" ]; then
         architecture=$(cat "$WINEPREFIX/system.reg" | grep -m 1 '#arch' | cut -d '=' -f2)
         if [ "$architecture" != "$WINEARCH" ]; then
             zenity --error --width=500 --text="WINEARCH mismatch\n\nThis wineprefix:$architecture\nRequested:$WINEARCH\n\nWINEARCH cannot be changed after initialization"
@@ -880,8 +880,8 @@ if [ -d "$WINEPREFIX" ]; then
     fi
     blockBrowserIfNeeded
     if [ $manualInit -eq 1 ]; then
-        if [ ! -z "$2" ]; then
-            justRunManualCommand $2
+        if [ -n "$2" ]; then
+            justRunManualCommand "$2"
         fi
     fi
     if [ -z "$game_exe" ]; then
@@ -929,8 +929,8 @@ else
     wait
     blockBrowserIfNeeded
     if [ $manualInit -eq 1 ]; then
-        if [ ! -z "$2" ]; then
-            justRunManualCommand $2
+        if [ -n "$2" ]; then
+            justRunManualCommand "$2"
         fi
     else
         launchCommandPrompt
