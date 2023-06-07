@@ -19,31 +19,17 @@ else
     rm -rf build repo
     mkdir build
     mkdir repo
+    before="$(pwd)"
     cd repo
-    if [ $? -ne 0 ]; then exit 1; fi
-    git clone --recursive https://github.com/doitsujin/dxvk
-    if [ $? -ne 0 ]; then exit 1; fi
-    if [ -e "../branch.txt" ]; then
-        cd dxvk
-        git checkout $(cat "../../branch.txt")
-        if [ $? -ne 0 ]; then exit 1; fi
-        cd ..
-    fi
     git clone https://gitlab.com/Ph42oN/dxvk-gplasync/
+    if [ $? -ne 0 ]; then exit 1; fi
     cd dxvk-gplasync
-    filename=$(ls *.patch | tail -n 1)
-    cd ..
+    sh build-gplasync.sh
+    cd "$before"
+    mv repo/dxvk-gplasync/dxvk-gplasync-/* build/
     if [ $? -ne 0 ]; then exit 1; fi
-    cd dxvk
-    patch -Np1 < "../dxvk-gplasync/$filename"
-    if [ $? -ne 0 ]; then exit 1; fi
-    sh package-release.sh master ../build --no-package
-    if [ $? -ne 0 ]; then exit 1; fi
-    cd ..
-    cp -r "build/dxvk-master/x"* ../build
-    if [ $? -ne 0 ]; then exit 1; fi
-    cd ..
     rm -rf repo
+    if [ $? -ne 0 ]; then exit 1; fi
 fi
 wget https://raw.githubusercontent.com/doitsujin/dxvk/master/dxvk.conf -O dxvk.conf.template
 if [ $? -ne 0 ]; then exit 1; fi
