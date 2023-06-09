@@ -3,7 +3,7 @@ if [ "$1" == "stable" ]; then
     echo "Downloading dxvk-gplasync (stable build)"
     rm -rf build repo
     git clone https://gitlab.com/Ph42oN/dxvk-gplasync/
-    filename=$(ls dxvk-gplasync/*.tar.gz | tail -n 1)
+    filename=$(ls dxvk-gplasync/releases/*.tar.gz | tail -n 1)
     if [ $? -ne 0 ]; then exit 1; fi
     mkdir build
     tar -xf "$filename" --directory build
