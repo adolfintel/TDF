@@ -4,7 +4,7 @@ cd ..
 archivePath="$(realpath "$folderPath")"
 FROMSIZE=`du -sk --apparent-size $folderPath | cut -f 1`
 echo "Archiving $((FROMSIZE/1024)) MBytes:"
-CHECKPOINT=`echo ${FROMSIZE}/50 | bc`
+CHECKPOINT="$((FROMSIZE/50))"
 echo "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░"
 if [ "$2" == "nocompress" ]; then
     archivePath="$archivePath.tar"
