@@ -1,9 +1,0 @@
-#!/bin/bash
-n=1
-if [ ! -z "$1" ]; then
-    n="$1"
-fi
-for i in $(seq 1 $n); do
-    xdotool key alt+enter
-    sleep 0.5
-done

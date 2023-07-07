@@ -1,3 +1,0 @@
-#!/bin/bash
-xdotool key $1
-sleep 0.5

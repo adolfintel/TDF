@@ -1,3 +1,0 @@
-#!/bin/bash
-xdotool windowfocus $1
-xdotool windowactivate $1

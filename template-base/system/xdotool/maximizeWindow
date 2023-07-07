@@ -1,3 +1,0 @@
-#!/bin/bash
-xdotool windowstate --add MAXIMIZED_VERT $1
-xdotool windowstate --add MAXIMIZED_HORZ $1

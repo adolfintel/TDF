@@ -82,6 +82,7 @@ if [ $? -eq 0 ] || [ $? -gt 2 ] || [ $? -lt 0 ]; then
 fi
 if [ -e "system/xdotool" ]; then
     export PATH="$PATH:$(pwd)/system/xdotool"
+    source "$(pwd)/system/xdotool/xdotoolfuncts.sh"
 fi
 if [ -f "vars.conf" ]; then
     source "./vars.conf"

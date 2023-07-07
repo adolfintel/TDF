@@ -1,3 +1,0 @@
-#!/bin/bash
-xdotool windowstate --add FULLSCREEN $1
-focusWindow $1

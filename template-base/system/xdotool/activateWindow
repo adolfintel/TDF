@@ -1,2 +1,0 @@
-#!/bin/bash
-xdotool windowactivate $1

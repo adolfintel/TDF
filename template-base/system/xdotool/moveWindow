@@ -1,2 +1,0 @@
-#!/bin/bash
-xdotool windowmove $1 $2 $3
