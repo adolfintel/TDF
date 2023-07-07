@@ -27,6 +27,7 @@ BLOCK_NETWORK_PREFER_FIREJAIL=0
 BLOCK_BROWSER=1
 BLOCK_ZDRIVE=2
 BLOCK_EXTERNAL_DRIVES=1
+BLOCK_SYMLINKS_IN_CDRIVE=1
 USE_FAKE_HOMEDIR=0
 WINE_PREFER_SYSTEM=0
 WINE_DPI=-1
@@ -133,11 +134,11 @@ else
         rm -rf "$(pwd)/zzhome"
     fi
 fi
-debotnetPrefix="unshare -nr "
+debotnetPrefix="unshare -nc "
 if [ $BLOCK_NETWORK_PREFER_FIREJAIL -eq 1 ]; then
     command -v firejail > /dev/null
     if [ $? -eq 0 ]; then
-        debotnetPrefix="firejail --net=none "
+        debotnetPrefix="firejail --noprofile --net=none "
     fi
 fi
 if [ $BLOCK_NETWORK -eq 0 ]; then
@@ -641,6 +642,11 @@ deIntegrateIfNeeded(){
         unlink "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Microsoft/Windows/Templates"
         mkdir "$WINEPREFIX/drive_c/users/$USER/AppData/Roaming/Microsoft/Windows/Templates"
     fi
+    if [[ $BLOCK_SYMLINKS_IN_CDRIVE -eq 1 ]]; then
+        (
+            find -L "$WINEPREFIX/drive_c/" -xtype l -exec rm {} +
+        ) &
+    fi
 }
 applyDpi(){
     outputDetail "Configuring scaling..."
@@ -690,21 +696,25 @@ removeBrokenSymlinks(){
 }
 removeUnnecessarySymlinks(){
     outputDetail "Removing symlinks..."
+    chmod 777 "$WINEPREFIX/dosdevices"
     driveC=$(realpath "$WINEPREFIX/dosdevices/c:")
-        for f in "$WINEPREFIX"/dosdevices/* ; do
-            if [[ $(basename "$f") =~ (com)[0-9]* ]]; then
-                unlink "$f"
-            else
-                if [ $BLOCK_EXTERNAL_DRIVES -ge 1 ]; then
-                    rp=$(realpath "$f")
-                    if [ "$rp" != "$driveC" ] && [ "$rp" != "/" ] ; then
-                        unlink "$f"
-                    fi
+    for f in "$WINEPREFIX"/dosdevices/* ; do
+        if [[ $(basename "$f") =~ (com)[0-9]* ]]; then
+            unlink "$f"
+        else
+            if [ $BLOCK_EXTERNAL_DRIVES -ge 1 ]; then
+                rp=$(realpath "$f")
+                if [ "$rp" != "$driveC" ] && [ "$rp" != "/" ] ; then
+                    unlink "$f"
                 fi
             fi
-        done
-    if [[ $BLOCK_ZDRIVE -eq 1  || ( "$1" == "game"  && $BLOCK_ZDRIVE -eq 2 ) ]]; then
+        fi
+    done
+    if [[ $BLOCK_ZDRIVE -ge 1  || ( "$1" == "game"  && $BLOCK_ZDRIVE -eq 2 ) ]]; then
         unlink "$WINEPREFIX/dosdevices/z:"
+    fi
+    if [[ $BLOCK_ZDRIVE -ge 1 || $BLOCK_EXTERNAL_DRIVES -ge 1 ]]; then
+        chmod 555 "$WINEPREFIX/dosdevices"
     fi
 }
 repairDriveCIfNeeded(){
@@ -731,9 +741,13 @@ repairDriveZIfNeeded(){
     link=$(realpath "$WINEPREFIX/dosdevices/z:")
     target="/"
     if [ "$link" != "$target" ]; then
+        chmod 777 "$WINEPREFIX/dosdevices"
         link="$WINEPREFIX/dosdevices/z:"
         rm -rf "$link"
         ln -s "$target" "$link"
+        if [[ $BLOCK_ZDRIVE -ge 1 || $BLOCK_EXTERNAL_DRIVES -ge 1 ]]; then
+            chmod 555 "$WINEPREFIX/dosdevices"
+        fi
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
             touch "$WINEPREFIX/.abort"
