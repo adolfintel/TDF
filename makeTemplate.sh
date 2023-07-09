@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 fail(){
     echo "Build failed: $1"
     exit 1

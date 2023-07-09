@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 if [ "$1" == "stable" ]; then
     echo "Downloading vkd3d-proton (stable build)"
     rm -rf build

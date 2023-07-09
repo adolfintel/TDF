@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 echo "Building Gamescope (master)"
 rm -rf gamescope seatd build

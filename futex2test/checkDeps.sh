@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 failed=0
 command -v gcc > /dev/null
 if [ $? -ne 0 ]; then

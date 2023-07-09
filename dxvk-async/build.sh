@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/usr/bin/env bash
 set -e
 if [ "$1" == "stable" ]; then
     echo "Downloading dxvk-gplasync (stable build)"
