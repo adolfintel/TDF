@@ -1,10 +1,10 @@
-#!/bin/bash
+#!/usr/bin/env bash
 
 WINDOWS=()
 WINDOW=""
 
 function activateWindow(){
-    xdotool windowactivate $1
+    xdotool windowactivate "$1"
 }
 
 function pressKey(){
@@ -13,14 +13,14 @@ function pressKey(){
         n="$2"
     fi
     for i in $(seq 1 $n); do
-        xdotool key $1
+        xdotool key "$1"
         sleep 0.5
     done
 }
 
 function focusWindow(){
-    xdotool windowfocus $1
-    xdotool windowactivate $1
+    xdotool windowfocus "$1"
+    xdotool windowactivate "$1"
     if [ $? -ne 0 ]; then
         return 1
     else
@@ -29,34 +29,34 @@ function focusWindow(){
 }
 
 function makeFullscreen(){
-    xdotool windowstate --add FULLSCREEN $1
+    xdotool windowstate --add FULLSCREEN "$1"
     focusWindow $1
 }
 
 function removeFullscreen(){
-    xdotool windowstate --remove FULLSCREEN $1
+    xdotool windowstate --remove FULLSCREEN "$1"
 }
 
 function maximizeWindow(){
-    xdotool windowstate --add MAXIMIZED_VERT $1
-    xdotool windowstate --add MAXIMIZED_HORZ $1
+    xdotool windowstate --add MAXIMIZED_VERT "$1"
+    xdotool windowstate --add MAXIMIZED_HORZ "$1"
 }
 
 function minimizeWindow(){
-    xdotool windowminimize $1
+    xdotool windowminimize "$1"
 }
 
 function restoreWindow(){
-    xdotool windowstate --remove MAXIMIZED_VERT $1
-    xdotool windowstate --remove MAXIMIZED_HORZ $1
+    xdotool windowstate --remove MAXIMIZED_VERT "$1"
+    xdotool windowstate --remove MAXIMIZED_HORZ "$1"
 }
 
 function moveWindow(){
-    xdotool windowmove $1 $2 $3
+    xdotool windowmove "$1" "$2" "$3"
 }
 
 function resizeWindow(){
-    xdotool windowsize $1 $2 $3
+    xdotool windowsize "$1" "$2" "$3"
 }
 
 function altEnter(){
@@ -122,31 +122,33 @@ function waitForWindow(){
 function keepWindowFocused(){
     local timeout=30
     if [ ! -z "$3" ]; then
-        local timeout="$3"
+        timeout="$3"
     fi
-    waitForWindow "$1" "$2" $timeout
+    waitForWindow "$1" "$2" "$timeout"
     local ok=1
     while [ $ok -eq 1 ]; do
         ok=0
         waitForWindow "$1" "$2" 1
         for id in "${WINDOWS[@]}"; do
             ok=1
-            focusWindow $id
+            focusWindow "$id"
         done
         sleep 1
     done
 }
 
 function keepWindowFocusedById(){
-    local timeout=30
-    if [ ! -z "$2" ]; then
-        local timeout="$2"
-    fi
+    local first=1
     while true; do
-        focusWindow $1
+        focusWindow "$1"
         if [ $? -ne 0 ]; then
-            return 1;
+            if [ $first -eq 1 ]; then
+                return 1
+            else
+                return 0
+            fi
         fi
+        first=0
         sleep 1
     done
 }

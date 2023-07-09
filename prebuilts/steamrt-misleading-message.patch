@@ -1,0 +1,35 @@
+From 2c3bf9eefb984166f7d098470f0448bb28f07971 Mon Sep 17 00:00:00 2001
+From: Federico Dossena <info@fdossena.com>
+Date: Sat, 8 Jul 2023 18:53:45 +0200
+Subject: [PATCH] Don't make it look like it's updating from the internet
+
+---
+ setup.sh | 6 +++---
+ 1 file changed, 3 insertions(+), 3 deletions(-)
+
+diff --git a/setup.sh b/setup.sh
+index 60c1d73..22e753c 100755
+--- a/setup.sh
++++ b/setup.sh
+@@ -507,15 +507,15 @@ check_pins ()
+ 
+     if [[ $pins_need_redoing == "yes" ]]
+     then
+-        log "Updating Steam runtime environment..."
++        log "Preparing Steam runtime environment..."
+         # Is always set at this point, but may be empty if the host lacks zenity
+         if [ -n "${STEAM_ZENITY}" ]; then
+-            pin_newer_runtime_libs "$steam_runtime_path" | "${STEAM_ZENITY}" --progress --auto-close --percentage=0 --no-cancel --width 400 --title="Steam setup" --text="Updating Steam runtime environment..."
++            pin_newer_runtime_libs "$steam_runtime_path" | "${STEAM_ZENITY}" --progress --auto-close --percentage=0 --no-cancel --width 400 --title="Steam setup" --text="Preparing Steam runtime environment..."
+         else
+             pin_newer_runtime_libs "$steam_runtime_path" "false"
+         fi
+     else
+-        log "Steam runtime environment up-to-date!"
++        log "Steam runtime environment ready!"
+     fi
+ }
+ 
+-- 
+2.41.0
+

@@ -21,7 +21,6 @@ fi
 version=$(date +"%Y%m%d")
 dir="template-$version"
 rm -rf "$dir"
-rm -f "$dir.tar.zst"
 mkdir "$dir"
 cp -r "template-base"/* "$dir"
 cd dxvk-async
@@ -127,14 +126,12 @@ mv build/* "../$dir/system/corefonts"
 rm -rf build
 cd ..
 echo "v$version" > "$dir/system/version"
-echo "Compressing template"
+echo "Compressing template, this will take a few minutes"
 chmod -R 777 "$dir"
-if [ "$1" == "nocompress" ]; then
-    tar -cvf "$dir.tar" "$dir"
-else
-    tar -I 'zstd --ultra -22' -cvf "$dir.tar.zst" "$dir"
-fi
+cd "$dir"
+./run.sh archive $1
 if [ $? -ne 0 ]; then fail "compress"; fi
+cd ..
 echo "Cleaning up"
 rm -rf "$dir"
 echo "All done"

@@ -24,6 +24,8 @@ else
     git clone --recursive https://github.com/HansKristian-Work/vkd3d-proton
     if [ $? -ne 0 ]; then exit 1; fi
     cd vkd3d-proton
+    #git checkout wave-heuristics
+    #git submodule update
     sh package-release.sh master ../build --no-package
     if [ $? -ne 0 ]; then exit 1; fi
     cd ..
@@ -32,3 +34,4 @@ else
     cd ..
     rm -rf repo
 fi
+exit 0

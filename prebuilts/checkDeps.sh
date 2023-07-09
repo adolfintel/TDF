@@ -1,28 +1,48 @@
 #!/bin/bash
 failed=0
-curl --version > /dev/null
+command -v curl > /dev/null
 if [ $? -ne 0 ]; then
     echo "curl not installed"
     failed=1
 fi
-wget --version > /dev/null
+command -v wget > /dev/null
 if [ $? -ne 0 ]; then
     echo "wget not installed"
     failed=1
 fi
-grep --version > /dev/null
+command -v grep > /dev/null
 if [ $? -ne 0 ]; then
     echo "GNU grep not installed"
     failed=1
 fi
-sed --version > /dev/null
+command -v sed > /dev/null
 if [ $? -ne 0 ]; then
     echo "GNU sed not installed"
     failed=1
 fi
-tar --version > /dev/null
+command -v sort > /dev/null
+if [ $? -ne 0 ]; then
+    echo "GNU sort not installed"
+    failed=1
+fi
+command -v tar > /dev/null
 if [ $? -ne 0 ]; then
     echo "GNU tar not installed"
+    failed=1
+fi
+command -v xz > /dev/null
+if [ $? -ne 0 ]; then
+    echo "xz not installed"
+    failed=1
+fi
+command -v zstd > /dev/null
+if [ $? -ne 0 ]; then
+    echo "zstd not installed"
+    failed=1
+fi
+command -v patch > /dev/null
+if [ $? -ne 0 ]; then
+    echo "GNU patch not installed"
     failed=1
 fi
 exit $failed
