@@ -52,7 +52,7 @@ TDF_VKD3D=1
 export VKD3D_CONFIG=dxr11 #enables dx12 ray tracing on supported cards
 
 # --- VARIABLES - Sandboxing ---
-TDF_BLOCK_NETWORK=1 #0=allow network access, 1=block with unshare -nc, 2=block firejail if available, unshare -nc if it's not
+TDF_BLOCK_NETWORK=1 #0=allow network access, 1=block with unshare -nc, 2=block with firejail if available, unshare -nc if it's not
 TDF_BLOCK_BROWSER=1
 TDF_BLOCK_ZDRIVE=1
 TDF_BLOCK_EXTERNAL_DRIVES=1
@@ -94,10 +94,10 @@ function killWine {
     wait
 }
 function _realRunManualCommand {
-    $_blockNetworkCommand wine start /WAIT $1
+    eval "$_blockNetworkCommand wine start /WAIT \"$1\""
 }
 function _realRunCommandPrompt {
-    $_blockNetworkCommand wine start /D "C:\\Windows\\System32" /WAIT "cmd.exe"
+    eval "$_blockNetworkCommand wine start /D \"C:\Windows\System32\" /WAIT \"cmd.exe\""
 }
 function _runCommandPrompt {
     zenity --info --width=500 --text="A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet" &
@@ -122,11 +122,12 @@ function _realRunGame {
             whileGameRunning
         ) &
     fi
-    local command='$_gamemodeCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D "$game_workingDir" /WAIT $TDF_START_ARGS "$game_exe" $game_args'
+    local command="$_gamemodeCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
     if [ $TDF_WINE_DEBUG_RELAY -eq 1 ]; then
         local relayPath=$(zenity --file-selection --save --title="Where do you want to save the trace?" --filename="relay.txt")
         if [ -n "$relayPath" ]; then
-            command="WINEDEBUG=+relay $command > \"$relayPath\" 2>&1"
+            export WINEDEBUG="$WINEDEBUG,+relay"
+            command="$command > \"$relayPath\" 2>&1"
         fi
     fi
     eval $command
@@ -779,6 +780,12 @@ function _tdfmain {
         game_workingDir="${game_exe%\\*}"
         game_exe="${game_exe##*\\}"
     fi
+    if [ "$(type -t customChecks)" == "function" ]; then
+        customChecks
+        if [ $? -ne 0 ]; then
+            exit
+        fi
+    fi
     if [ "$TDF_WINE_PREFERRED_VERSION" == "ge" ]; then
         export PATH="$(pwd)/system/wine-ge/bin:$PATH:$(pwd)/system/wine-stable/bin"
     elif [ "$TDF_WINE_PREFERRED_VERSION" == "stable" ]; then
@@ -857,12 +864,6 @@ function _tdfmain {
     if [ $? -ne 0 ]; then
         zenity --error --width=500 --text="Failed to load Wine\nThis is usually caused by missing libraries (especially 32 bit libs) or broken permissions"
         exit
-    fi
-    if [ "$(type -t customChecks)" == "function" ]; then
-        customChecks
-        if [ $? -ne 0 ]; then
-            exit
-        fi
     fi
     if [ "$TDF_WINE_SYNC" = "fsync" ]; then
         ./system/futex2test

@@ -102,7 +102,7 @@ mv build/* "../$dir/system/"
 rm -rf build
 cd ..
 cd prebuilts
-./build.sh $5
+./build.sh
 if [ $? -ne 0 ]; then fail "prebuilts"; fi
 mv build/* "../$dir/system/"
 rm -rf build
