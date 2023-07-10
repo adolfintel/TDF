@@ -28,5 +28,8 @@ if [ $? -ne 0 ]; then
     exit 1
 else
     echo -e "\nDone!"
+    toSize=$( du -sk "$archivePath" | cut -f 1 )
+    ratio=$(( (100 * toSize) / fromSize ))
+    echo "Final size: $((toSize/1024)) MBytes ($ratio% compression ratio)"
     exit 0
 fi
