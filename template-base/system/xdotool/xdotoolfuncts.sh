@@ -3,9 +3,7 @@
 WINDOWS=()
 WINDOW=""
 
-function activateWindow(){
-    xdotool windowactivate "$1"
-}
+TDF_XDOTOOL_ONLY_VISIBLE=0
 
 function pressKey(){
     local n=1
@@ -42,13 +40,17 @@ function maximizeWindow(){
     xdotool windowstate --add MAXIMIZED_HORZ "$1"
 }
 
+function restoreWindow(){
+    xdotool windowstate --remove MAXIMIZED_VERT "$1"
+    xdotool windowstate --remove MAXIMIZED_HORZ "$1"
+}
+
 function minimizeWindow(){
     xdotool windowminimize "$1"
 }
 
-function restoreWindow(){
-    xdotool windowstate --remove MAXIMIZED_VERT "$1"
-    xdotool windowstate --remove MAXIMIZED_HORZ "$1"
+function activateWindow(){
+    xdotool windowactivate "$1"
 }
 
 function moveWindow(){
@@ -59,16 +61,15 @@ function resizeWindow(){
     xdotool windowsize "$1" "$2" "$3"
 }
 
-function altEnter(){
-    pressKey "alt+enter"
-}
-
 function waitForWindow(){
     local timeout=30
     if [ ! -z "$3" ]; then
         timeout="$3"
     fi
-    local args="--shell --onlyvisible"
+    local args="--shell"
+    if [ $TDF_XDOTOOL_ONLY_VISIBLE -eq 1 ]; then
+        args="$args --onlyvisible"
+    fi
     for i in $(seq 1 $timeout); do
         local idE=()
         local idN=()

@@ -8,9 +8,9 @@ function saveGamma(){
         return 1
     fi
     local primaryDisplay="$(xrandr | grep "primary" | cut -d ' ' -f1)"
-    if [ ! -z "$primaryDisplay" ]; then
-        g=$(xrandr --verbose | sed -n "/$primaryDisplay/,/Gamma/p" | grep "Gamma")
-        if [ ! -z "$g" ]; then
+    if [ -n "$primaryDisplay" ]; then
+        local g=$(xrandr --verbose | sed -n "/$primaryDisplay/,/Gamma/p" | grep "Gamma")
+        if [ -n "$g" ]; then
             _savedGamma=$(echo "$g" | cut -d ':' -f2):$(echo "$g" | cut -d ':' -f3):$(echo "$g" | cut -d ':' -f4)
         fi
     fi
@@ -33,6 +33,7 @@ function restoreGamma(){
 
 function defaultGamma(){
     setGamma "1:1:1"
+    return $?
 }
 
 saveGamma

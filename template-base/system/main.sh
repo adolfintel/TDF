@@ -13,9 +13,9 @@ game_workingDir=''
 
 # --- VARIABLES - TDF stuff ---
 TDF_VERSION="$(cat system/version)"
-TDF_ZENITY_PREFER_SYSTEM=1
-TDF_DETAILED_PROGRESS=1
 TDF_TITLE="Launcher"
+TDF_DETAILED_PROGRESS=1
+TDF_ZENITY_PREFER_SYSTEM=1
 TDF_MULTIPLE_INSTANCES="askcmd" #deny=exit without error messages, error=show an error message and close, askcmd=ask the user if they want to run cmd inside the running prefix, cmd=run command prompt inside the running prefix, allow=allow multiple instances of the game
 TDF_IGNORE_EXIST_CHECKS=0
 TDF_HIDE_GAME_RUNNING_DIALOG=0
@@ -34,7 +34,6 @@ TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, 
 TDF_WINE_DEBUG_RELAY=0
 TDF_WINEMONO=0
 TDF_WINEGECKO=0
-TDF_VCREDIST=1
 export WINE_LARGE_ADDRESS_AWARE=1
 export WINEPREFIX="$(pwd)/zzprefix"
 export USER="wine"
@@ -68,6 +67,7 @@ TDF_GAMESCOPE_PARAMETERS='' #if not changed in config, this will become -f -r 60
 TDF_GAMEMODE=1
 TDF_MANGOHUD=0
 TDF_COREFONTS=1
+TDF_VCREDIST=1
 TDF_MSMFPLAT=0
 
 # Note: there are a few other variables defined elsewhere, see the documentation for a complete list
@@ -76,20 +76,28 @@ alias zenity='zenity --title="$TDF_TITLE"'
 if [ $TDF_ZENITY_PREFER_SYSTEM -eq 1 ] && [ -f "/usr/bin/zenity" ]; then
     alias zenity='/usr/bin/zenity --title="$TDF_TITLE"'
 fi
-function outputDetail {
+function isProcessRunning {
+    ps -e | grep "$1" > /dev/null
+    if [ $? -eq 0 ]; then
+        return 1
+    else
+        return 0
+    fi
+}
+function _outputDetail {
     if [ $TDF_DETAILED_PROGRESS -eq 1 ];then
         echo "#$1"
     fi
 }
-function dosdevices_unprotect {
+function _dosdevices_unprotect {
     chmod 777 "$WINEPREFIX/dosdevices"
 }
-function dosdevices_protect {
+function _dosdevices_protect {
     if [[ -n "$1" || $TDF_BLOCK_ZDRIVE -ge 1 || $TDF_BLOCK_EXTERNAL_DRIVES -ge 1 ]]; then
         chmod 555 "$WINEPREFIX/dosdevices"
     fi
 }
-function killWine {
+function _killWine {
     wineserver -k -w
     wait
 }
@@ -182,7 +190,7 @@ function _runGame {
     fi
 }
 function _applyDLLs {
-    outputDetail "Copying DLLs..."
+    _outputDetail "Copying DLLs..."
     local windows_dir="$WINEPREFIX/drive_c/windows"
     if [ $TDF_DXVK_ASYNC -eq 2 ]; then
         ./system/vkgpltest
@@ -218,7 +226,7 @@ function _applyDLLs {
     }
     if [ -d "$d8vk_dir" ]; then
         if [ $TDF_D8VK -eq 1 ]; then
-            outputDetail "Installing d8vk..."
+            _outputDetail "Installing d8vk..."
             TDF_DXVK=0
             TDF_VKD3D=0
             if [ ! -f "$D8VK_CONFIG_FILE" ]; then
@@ -242,7 +250,7 @@ function _applyDLLs {
                 touch "$WINEPREFIX/.d8vk-installed"
             fi
         else
-            outputDetail "Removing d8vk..."
+            _outputDetail "Removing d8vk..."
             if [ -f "$WINEPREFIX/.d8vk-installed" ]; then
                 for d in "${d8vk_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -257,7 +265,7 @@ function _applyDLLs {
     fi
     if [ -d "$dxvk_dir" ]; then
         if [ $TDF_DXVK -eq 1 ]; then
-            outputDetail "Installing dxvk..."
+            _outputDetail "Installing dxvk..."
             if [ ! -f "$DXVK_CONFIG_FILE" ]; then
                 cp -f "$dxvk_dir/dxvk.conf.template" "$DXVK_CONFIG_FILE"
             fi
@@ -278,7 +286,7 @@ function _applyDLLs {
                 touch "$WINEPREFIX/.dxvk-installed"
             fi
         else
-            outputDetail "Removing dxvk..."
+            _outputDetail "Removing dxvk..."
             if [ -f "$WINEPREFIX/.dxvk-installed" ]; then
                 for d in "${dxvk_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -293,7 +301,7 @@ function _applyDLLs {
     fi
     if [ -d "$vkd3d_dir" ]; then
         if [ $TDF_VKD3D -eq 1 ]; then
-            outputDetail "Installing vkd3d..."
+            _outputDetail "Installing vkd3d..."
             if [ "$WINEARCH" == "win32" ]; then    
                 for d in "${vkd3d_dlls[@]}"; do
                     copyIfDifferent "$vkd3d_dir/x86/$d.dll" "$windows_dir/system32/$d.dll"
@@ -311,7 +319,7 @@ function _applyDLLs {
                 touch "$WINEPREFIX/.vkd3d-installed"
             fi
         else
-            outputDetail "Removing vkd3d..."
+            _outputDetail "Removing vkd3d..."
             if [ -f "$WINEPREFIX/.vkd3d-installed" ]; then
                 for d in "${vkd3d_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -326,7 +334,7 @@ function _applyDLLs {
     fi
     if [ -d "$mfplat_dir" ]; then
         if [ $TDF_MSMFPLAT -eq 1 ]; then
-            outputDetail "Installing MS mfplat..."
+            _outputDetail "Installing MS mfplat..."
             if [ "$WINEARCH" == "win32" ]; then
                 for d in "${mfplat_dlls[@]}"; do
                     copyIfDifferent "$mfplat_dir/syswow64/$d.dll" "$windows_dir/system32/$d.dll"
@@ -364,7 +372,7 @@ function _applyDLLs {
                 rm -f "regsvr32_d3d9.log"
             fi
         else
-            outputDetail "Removing MS mfplat..."
+            _outputDetail "Removing MS mfplat..."
             if [ -f "$WINEPREFIX/.msmfplat-installed" ]; then
                 for d in "${mfplat_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -377,7 +385,7 @@ function _applyDLLs {
             fi
         fi
     fi
-    outputDetail "Registering DLLs..."
+    _outputDetail "Registering DLLs..."
     for d in "${toUnoverride[@]}"; do
         unoverrideDll "$d"
     done
@@ -402,19 +410,19 @@ function _applyMSIs {
         }
         if [ $TDF_WINEMONO -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.winemono-installed" ]; then
-                outputDetail "Installing winemono..."
+                _outputDetail "Installing winemono..."
                 installMonoMSI
             else
                 if ! cmp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi" > /dev/null 2>&1; then
                     \cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
-                    outputDetail "Updating winemono..."
+                    _outputDetail "Updating winemono..."
                     uninstallMonoMSI
                     installMonoMSI
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.winemono-installed" ]; then
-                outputDetail "Removing winemono..."
+                _outputDetail "Removing winemono..."
                 uninstallMonoMSI
             fi
         fi
@@ -441,7 +449,7 @@ function _applyMSIs {
         }
         if [ $TDF_WINEGECKO -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.winegecko-installed" ]; then
-                outputDetail "Installing winegecko..."
+                _outputDetail "Installing winegecko..."
                 installGeckoMSI
             else
                 local mustUpdate=0
@@ -454,14 +462,14 @@ function _applyMSIs {
                     fi
                 fi
                 if [ $mustUpdate -eq 1 ]; then
-                    outputDetail "Updating winegecko..."
+                    _outputDetail "Updating winegecko..."
                     uninstallGeckoMSI
                     installGeckoMSI
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.winegecko-installed" ]; then
-                outputDetail "Removing winegecko..."
+                _outputDetail "Removing winegecko..."
                 uninstallGeckoMSI
             fi
         fi
@@ -474,9 +482,9 @@ function _applyVCRedists {
             wineserver -k -w
             wait
             if [ -e "$WINEPREFIX/dosdevices/z:" ]; then
-                dosdevices_unprotect
+                _dosdevices_unprotect
                 mv "$WINEPREFIX/dosdevices/z:" "$WINEPREFIX/.templink"
-                dosdevices_protect "always"
+                _dosdevices_protect "always"
             fi
             if [ "$WINEARCH" == "win32" ]; then
                 \cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
@@ -491,9 +499,9 @@ function _applyVCRedists {
             wineserver -k -w
             wait
             if [ -e "$WINEPREFIX/.templink" ]; then
-                dosdevices_unprotect
+                _dosdevices_unprotect
                 mv "$WINEPREFIX/.templink" "$WINEPREFIX/dosdevices/z:"
-                dosdevices_protect
+                _dosdevices_protect
             fi
             echo "$TDF_VERSION" > "$WINEPREFIX/.vcredist-installed"
         }
@@ -501,9 +509,9 @@ function _applyVCRedists {
             wineserver -k -w
             wait
             if [ -e "$WINEPREFIX/dosdevices/z:" ]; then
-                dosdevices_unprotect
+                _dosdevices_unprotect
                 mv "$WINEPREFIX/dosdevices/z:" "$WINEPREFIX/.templink"
-                dosdevices_protect "always"
+                _dosdevices_protect "always"
             fi
             wine "C:\\vc_redist.x86.exe" /uninstall /quiet /norestart
             wine "C:\\vc_redist.x64.exe" /uninstall /quiet /norestart
@@ -511,9 +519,9 @@ function _applyVCRedists {
             wineserver -k -w
             wait
             if [ -e "$WINEPREFIX/.templink" ]; then
-                dosdevices_unprotect
+                _dosdevices_unprotect
                 mv "$WINEPREFIX/.templink" "$WINEPREFIX/dosdevices/z:"
-                dosdevices_protect
+                _dosdevices_protect
             fi
             rm -f "$WINEPREFIX/.vcredist-installed"
             rm -f "$WINEPREFIX/drive_c/vc_redist.x86.exe"
@@ -521,7 +529,7 @@ function _applyVCRedists {
         }
         if [ $TDF_VCREDIST -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.vcredist-installed" ]; then
-                outputDetail "Installing vcredist..."
+                _outputDetail "Installing vcredist..."
                 installVCRedists
             else
                 local mustUpdate=0
@@ -534,14 +542,14 @@ function _applyVCRedists {
                     fi
                 fi
                 if [ $mustUpdate -eq 1 ]; then
-                    outputDetail "Updating vcredist..."
+                    _outputDetail "Updating vcredist..."
                     uninstallVCRedists
                     installVCRedists
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.vcredist-installed" ]; then
-                outputDetail "Removing vcredist..."
+                _outputDetail "Removing vcredist..."
                 uninstallVCRedists
             fi
         fi    
@@ -549,7 +557,7 @@ function _applyVCRedists {
     fi
 }
 function _removeIntegrations {
-    outputDetail "Removing integrations..."
+    _outputDetail "Removing integrations..."
     local _pfxversion=$(cat "$WINEPREFIX/.initialized")
     if [ "$_pfxversion" != "$TDF_VERSION" ]; then
         if [ "$WINEARCH" == "win32" ]; then
@@ -586,7 +594,7 @@ function _removeIntegrations {
     fi
 }
 function _applyScaling {
-    outputDetail "Configuring scaling..."
+    _outputDetail "Configuring scaling..."
     if [ $TDF_WINE_DPI -eq -1 ]; then
         if [ "$XDG_SESSION_TYPE" == "x11" ]; then
             TDF_WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
@@ -611,7 +619,7 @@ function _applyScaling {
     fi
 }
 function _applyHideCrashes {
-    outputDetail "Configuring winedbg..."
+    _outputDetail "Configuring winedbg..."
     if [ $TDF_WINE_HIDE_CRASHES -eq 1 ]; then
         export WINEDEBUG=-all
         if [ ! -f "$WINEPREFIX/.crash-hidden" ]; then
@@ -626,17 +634,17 @@ function _applyHideCrashes {
     fi
 }
 function _removeBrokenDosdevices {
-    outputDetail "Checking symlinks..."
-    dosdevices_unprotect
+    _outputDetail "Checking symlinks..."
+    _dosdevices_unprotect
     local before="$(pwd)"
     cd "$WINEPREFIX/dosdevices"
     find -L . -name . -o -type d -prune -o -type l -exec rm {} +
     cd "$before"
-    dosdevices_protect
+    _dosdevices_protect
 }
 function _removeUnwantedDosdevices {
-    outputDetail "Removing symlinks..."
-    dosdevices_unprotect
+    _outputDetail "Removing symlinks..."
+    _dosdevices_unprotect
     local driveC=$(realpath "$WINEPREFIX/dosdevices/c:")
     for f in "$WINEPREFIX"/dosdevices/* ; do
         if [[ $(basename "$f") =~ (com)[0-9]* ]]; then
@@ -653,18 +661,18 @@ function _removeUnwantedDosdevices {
     if [[ $TDF_BLOCK_ZDRIVE -ge 2  || "$1" == "game"  && $TDF_BLOCK_ZDRIVE -eq 1 ]]; then
         unlink "$WINEPREFIX/dosdevices/z:"
     fi
-    dosdevices_protect
+    _dosdevices_protect
 }
 function _checkAndRepairCDrive {
-    outputDetail "Checking symlinks..."
+    _outputDetail "Checking symlinks..."
     local link=$(realpath "$WINEPREFIX/dosdevices/c:")
     local target=$(realpath "$WINEPREFIX/drive_c")
     if [ "$link" != "$target" ]; then
         link="$WINEPREFIX/dosdevices/c:"
-        dosdevices_unprotect
+        _dosdevices_unprotect
         rm -rf "$link"
         ln -s "$target" "$link"
-        dosdevices_protect
+        _dosdevices_protect
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
             touch "$WINEPREFIX/.abort"
@@ -674,18 +682,18 @@ function _checkAndRepairCDrive {
     fi
 }
 function _checkAndRepairZDrive {
-    outputDetail "Checking symlinks..."
+    _outputDetail "Checking symlinks..."
     if [ $TDF_BLOCK_ZDRIVE -ge 1 ]; then
         return
     fi
     local link=$(realpath "$WINEPREFIX/dosdevices/z:")
     local target="/"
     if [ "$link" != "$target" ]; then
-        dosdevices_unprotect
+        _dosdevices_unprotect
         link="$WINEPREFIX/dosdevices/z:"
         rm -rf "$link"
         ln -s "$target" "$link"
-        dosdevices_protect
+        _dosdevices_protect
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
             touch "$WINEPREFIX/.abort"
@@ -695,7 +703,7 @@ function _checkAndRepairZDrive {
     fi
 }
 function _applyBlockBrowser {
-    outputDetail "Configuring winebrowser..."
+    _outputDetail "Configuring winebrowser..."
     if [ $TDF_BLOCK_BROWSER -eq 1 ]; then
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winebrowser.exe=d"
     fi
@@ -706,7 +714,7 @@ function _applyCorefonts {
     local corefonts_info=("AndaleMo.TTF:Andale Mono" "Arial.TTF:Arial" "Arialbd.TTF:Arial Bold" "Arialbi.TTF:Arial Bold Italic" "Ariali.TTF:Arial Italic" "AriBlk.TTF:Arial Black" "Comic.TTF:Comic Sans MS" "Comicbd.TTF:Comic Sans MS Bold" "cour.ttf:Courier New" "courbd.ttf:Courier New Bold" "courbi.ttf:Courier New Bold Italic" "couri.ttf:Courier New Italic" "Georgia.TTF:Georgia" "Georgiab.TTF:Georgia Bold" "Georgiai.TTF:Georgia Italic" "Georgiaz.TTF:Georgia Bold Italic" "Impact.TTF:Impact" "Times.TTF:Times New Roman" "Timesbd.TTF:Times New Roman Bold" "Timesbi.TTF:Times New Roman Bold Italic" "Timesi.TTF:Times New Roman Italic" "trebuc.ttf:Trebuchet MS" "Trebucbd.ttf:Trebuchet MS Bold" "trebucbi.ttf:Trebuchet MS Bold Italic" "trebucit.ttf:Trebuchet MS Italic" "Verdana.TTF:Verdana" "Verdanab.TTF:Verdana Bold" "Verdanai.TTF:Verdana Italic" "Verdanaz.TTF:Verdana Bold Italic" "Webdings.TTF:Webdings")
     if [ -d "$corefonts_dir" ]; then
         if [ $TDF_COREFONTS -eq 1 ]; then
-            outputDetail "Installing corefonts..."
+            _outputDetail "Installing corefonts..."
             if [ ! -f "$WINEPREFIX/.corefonts-installed" ]; then
                 local commands=""
                 function copyAndRegister {
@@ -721,7 +729,7 @@ function _applyCorefonts {
                 touch "$WINEPREFIX/.corefonts-installed"
             fi
         else
-            outputDetail "Removing corefonts..."
+            _outputDetail "Removing corefonts..."
             if [ -f "$WINEPREFIX/.corefonts-installed" ]; then
                 local commands=""
                 function deleteAndUnregister {
@@ -754,6 +762,8 @@ function _tdfmain {
         export PATH="$PATH:$(pwd)/system/xdotool"
         source "$(pwd)/system/xdotool/xdotoolfuncts.sh"
     fi
+    XRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 1)
+    YRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 2)
     if [ -f "vars.conf" ]; then
         source "./vars.conf"
     fi
@@ -833,7 +843,7 @@ function _tdfmain {
             fi
             export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(pwd)/system/gamescope"
             if [ -z "$TDF_GAMESCOPE_PARAMETERS" ]; then
-                TDF_GAMESCOPE_PARAMETERS="-f -r 60 -w $(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 1) -h $(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 2)"
+                TDF_GAMESCOPE_PARAMETERS="-f -r 60 -w $XRES -h $YRES"
             fi
             _gamescopeCommand="gamescope $TDF_GAMESCOPE_PARAMETERS --"
             if [ -z "$INTEL_DEBUG" ]; then
@@ -930,7 +940,7 @@ function _tdfmain {
         fi
     fi
     if [ $TDF_WINE_KILL_BEFORE -eq 1 ]; then
-        killWine
+        _killWine
     fi
     if [ -d "$WINEPREFIX" ]; then
         if [ -n "$WINEARCH" ]; then
@@ -948,7 +958,7 @@ function _tdfmain {
                 _checkAndRepairCDrive
                 _checkAndRepairZDrive
                 echo "10"
-                outputDetail "Starting wine..."
+                _outputDetail "Starting wine..."
                 local _realOverrides="$WINEDLLOVERRIDES"
                 export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
                 wineboot
@@ -972,7 +982,7 @@ function _tdfmain {
                 echo "95"
                 wait
                 export WINEDLLOVERRIDES="$_realOverrides"
-                outputDetail "Launching game..."
+                _outputDetail "Launching game..."
                 wineserver -k -w
                 wait
                 echo "100"
@@ -999,7 +1009,7 @@ function _tdfmain {
     else
         (
             echo "10"
-            outputDetail "Starting wine..."
+            _outputDetail "Starting wine..."
             local _realOverrides="$WINEDLLOVERRIDES"
             export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
             wineboot -i
@@ -1027,7 +1037,7 @@ function _tdfmain {
             echo "95"
             wait
             export WINEDLLOVERRIDES="$_realOverrides"
-            outputDetail "Starting..."
+            _outputDetail "Starting..."
             wineserver -k -w
             wait
             echo "100"
@@ -1044,7 +1054,7 @@ function _tdfmain {
         fi
     fi
     if [ $TDF_WINE_KILL_AFTER -eq 1 ]; then
-        killWine
+        _killWine
     fi
 }
 

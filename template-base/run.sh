@@ -19,13 +19,16 @@ source "vars.conf"
 if [ "$1" == "archive" ]; then
     if [ "$(type -t onArchiveStart)" == "function" ]; then
         onArchiveStart "$@"
+        if [ $? -ne 0 ]; then
+            exit 1
+        fi
     fi
     ./system/archive.sh "$@"
     res=$?
     if [ "$(type -t onArchiveEnd)" == "function" ]; then
         onArchiveEnd $res
     fi
-    exit
+    exit 0
 fi
 if [ ! -x "./system/main.sh" ]; then
     chmod -R 777 .
@@ -41,3 +44,4 @@ else
     command="$command normal"
 fi
 eval "$command"
+exit 0
