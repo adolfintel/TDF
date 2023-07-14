@@ -26,7 +26,7 @@ This section explains how to use TDF to install, play and optionally package a g
 
 ### Requirements
 * A relatively recent PC that's fast enough to run modern games. An x86_64 CPU is required, as well as a GPU with support for Vulkan 1.3 or newer
-* Linux kernel 5.16 or newer is strongly recommended, but will work on older versions (tested as low as 4.19)
+* Linux kernel 5.16 or newer is strongly recommended, but it will work on older versions (tested as low as 4.19)
 * A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, X11, etc. installed, __both 32 and 64 bit versions__. Arch-based distros will work best.
 * An AMD graphics card with the latest Mesa 23.1 driver or newer is recommended, but it will also work on nVidia and Intel cards
 * An SSD is strongly recommended, with a file system like ext4 or btrfs. Do not use NTFS, FAT or exFAT
@@ -40,7 +40,7 @@ This section explains how to use TDF to install, play and optionally package a g
         * `vars.conf`: TDF's main configuration file for this instance, you'll use this to tell TDF where to find the game and to change emulation settings
         * `system`: a folder containing all the TDF files and scripts, leave it alone for now
         * `confs`: we'll talk about folder this later
-* Launch run.sh, it will automatically initialize everything for you and open a Windows command prompt
+* Launch `run.sh`, it will automatically initialize everything for you and open a Windows command prompt
     * Once everything is ready, the TDF instance folder will contain a new folder called zzprefix, this is your "fake Windows", inside it you'll find, among other things, a folder called drive_C, this is the fake C drive, you can enter it to copy game files, mods, etc. at any time
     * Depending on the system and the configuration, other folders may also be created, like zzhome and fontcache
     * If you're not familiar with the Windows command prompt, just type explorer and press enter to have a more familiar file manager interface, but don't close the command prompt until you're finished
@@ -50,8 +50,8 @@ This section explains how to use TDF to install, play and optionally package a g
     * Once you're done, close the command prompt
 * Edit vars.conf and place the location of the game's exe file in the game_exe variable
 * Launch run.sh again and hopefully the game will start
-    * From now on, you can just launch run.sh (or create links to it) to launch this game.
-    * About 85% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in vars.conf, which we'll discuss later
+    * From now on, you can just launch `run.sh` (or create links to it) to launch this game.
+    * About 85% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in `vars.conf`, which we'll discuss later
     * Online games that require anticheat software will usually not work (and that's probably for the best)
 
 TODO: VIDEO
@@ -212,7 +212,7 @@ Possible values:
 * `0` (default): don't install Wine Gecko
 * `1`: install Wine Gecko
 
-__`export WINEDLLOVERRIDES`__
+__`export WINEDLLOVERRIDES`__  
 Some game fixes and mods come in the form of DLLs that override one of Windows' DLL, usually `winmm`, `dinput8`, `version`, `d3d9`, etc.  
 Unlike Windows, which happily loads random DLLs from the game's folder, Wine prefers to use its own DLLs and overrides need to be specified manually.
 
@@ -234,7 +234,7 @@ export WINEDLLOVERRIDES="amd_ags_x64=b"
 
 Multiple overrides can be separated by a semicolon `;`.
 
-__`export WINE_CPU_TOPOLOGY`__
+__`export WINE_CPU_TOPOLOGY`__  
 This is not a TDF variable, but it allows you to set Wine to use specific CPU cores, similar to the `/AFFINITY` option of the `start` command, but more fine grained.
 
 Example:
@@ -249,7 +249,7 @@ Example:
 export WINE_CPU_TOPOLOGY=4:0,1,2,3"
 ```
 
-__`export WINEDEBUG`__
+__`export WINEDEBUG`__  
 Enables/disables some [Wine debug channels](https://wiki.winehq.org/Debug_Channels).
 
 By default, TDF sets this to `-all` improve performance, but you might want to enable one or more of these for troubleshooting, or restore the default Wine settings using `unset WINEDEBUG`.
@@ -706,7 +706,7 @@ Returns 0 if the operation succeeded, 1 if an error occurred.
 
 Note: this function only works on X11.
 
-__`isProcessRunning exe`__
+__`isProcessRunning exe`__  
 Determines whether there's a process with a name that contains the value in `exe` (case sensitive). Not limited to Wine executables.
 
 Returns 1 if a process was found, 0 otherwise.
@@ -811,7 +811,7 @@ The following components will be downloaded:
 * Microsoft mfplat: [mf-install](https://github.com/z0z0z/mf-install) from Github (will probably be removed in future versions of TDF)
 
 The following components will be built from source:  
-* Wine: using the [wine-tkg build](https://github.com/Frogging-Family/wine-tkg-git) with some custom config
+* Wine: latest master using the [wine-tkg build system](https://github.com/Frogging-Family/wine-tkg-git) with some custom config
 * DXVK: latest master from [Github](https://github.com/doitsujin/dxvk)
 * DXVK-gplasync: latest patch from [Gitlab](https://gitlab.com/Ph42oN/dxvk-gplasync) applied to the latest master of DXVK
 * D8VK: latest master from [Github](https://github.com/AlpyneDreams/d8vk)
