@@ -36,6 +36,7 @@ TDF_WINEMONO=0
 TDF_WINEGECKO=0
 export WINE_LARGE_ADDRESS_AWARE=1
 export WINEPREFIX="$(pwd)/zzprefix"
+export WINEDEBUG=-all
 export USER="wine"
 
 # --- VARIABLES - DXVK and D8VK ---
@@ -139,6 +140,8 @@ function _realRunGame {
         if [ -n "$relayPath" ]; then
             export WINEDEBUG="$WINEDEBUG,+relay"
             command="$command > \"$relayPath\" 2>&1"
+        else
+            exit
         fi
     fi
     eval $command
