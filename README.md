@@ -48,7 +48,7 @@ This section explains how to use TDF to install, play and optionally package a g
     * During the installation, you won't need to install things like DirectX, the Visual C++ Redistributables, etc. because TDF has already done it during the initialization
     * If you need to copy or modify some files inside the fake C drive, do it through the Linux file manager, it's easier
     * Once you're done, close the command prompt
-* Edit vars.conf and place the location of the game's exe file in the game_exe variable
+* Edit `vars.conf` and place the location of the game's exe file in the game_exe variable
 * Launch run.sh again and hopefully the game will start
     * From now on, you can just launch `run.sh` (or create links to it) to launch this game.
     * About 85% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in `vars.conf`, which we'll discuss later
