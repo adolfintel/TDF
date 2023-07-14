@@ -22,7 +22,7 @@ TDF_HIDE_GAME_RUNNING_DIALOG=0
 TDF_SHOW_PLAY_TIME=0
 
 # --- VARIABLES - Wine ---
-TDF_WINE_PREFERRED_VERSION="ge" #ge=wine-ge-proton, stable=regular wine, system=the version of wine that's installed on the system, or stable if there is none
+TDF_WINE_PREFERRED_VERSION="games" #games=game-optimized build, mainline=regular wine, system=the version of wine that's installed on the system, or mainline if not installed
 TDF_WINE_HIDE_CRASHES=1
 TDF_WINE_DPI=-1 #-1=use system dpi (xorg only, wayland will use wine's default), 0=let wine decide, number=use specified dpi
 TDF_WINE_KILL_BEFORE=0
@@ -57,11 +57,12 @@ TDF_BLOCK_ZDRIVE=1
 TDF_BLOCK_EXTERNAL_DRIVES=1
 TDF_BLOCK_SYMLINKS_IN_CDRIVE=1
 TDF_FAKE_HOMEDIR=0
+TDF_PROTECT_DOSDEVICES=0
 
 # --- VARIABLES - Gamescope ---
 TDF_GAMESCOPE=0
 TDF_GAMESCOPE_PREFER_SYSTEM=0
-TDF_GAMESCOPE_PARAMETERS='' #if not changed in config, this will become -f -r 60 -w WIDTH -h HEIGHT -- where WIDTH and HEIGHT are the resolution of the main display
+TDF_GAMESCOPE_PARAMETERS='' #if not changed in config, this will become -f -r 60 -w $XRES -h $YRES -- where $XRES and $YRES are the resolution of the main display
 
 # --- VARIABLES - Miscellaneous ---
 TDF_GAMEMODE=1
@@ -93,8 +94,10 @@ function _dosdevices_unprotect {
     chmod 777 "$WINEPREFIX/dosdevices"
 }
 function _dosdevices_protect {
-    if [[ -n "$1" || $TDF_BLOCK_ZDRIVE -ge 1 || $TDF_BLOCK_EXTERNAL_DRIVES -ge 1 ]]; then
-        chmod 555 "$WINEPREFIX/dosdevices"
+    if [ $TDF_PROTECT_DOSDEVICES -eq 1 ]; then
+        if [[ -n "$1" || $TDF_BLOCK_ZDRIVE -ge 1 || $TDF_BLOCK_EXTERNAL_DRIVES -ge 1 ]]; then
+            chmod 555 "$WINEPREFIX/dosdevices"
+        fi
     fi
 }
 function _killWine {
@@ -746,6 +749,18 @@ function _applyCorefonts {
         fi
     fi
 }
+function _applyFakeHomeDir {
+    if [ $TDF_FAKE_HOMEDIR -eq 1 ]; then
+        export HOME="$(pwd)/zzhome"
+        if [ ! -d "$HOME" ]; then
+            mkdir "$HOME"
+        fi
+    else
+        if [ -d "$(pwd)/zzhome" ]; then
+            rm -rf "$(pwd)/zzhome"
+        fi
+    fi
+}
 
 function _tdfmain {
     local _manualInit=0
@@ -790,18 +805,19 @@ function _tdfmain {
         game_workingDir="${game_exe%\\*}"
         game_exe="${game_exe##*\\}"
     fi
+    _applyFakeHomeDir
     if [ "$(type -t customChecks)" == "function" ]; then
         customChecks
         if [ $? -ne 0 ]; then
             exit
         fi
     fi
-    if [ "$TDF_WINE_PREFERRED_VERSION" == "ge" ]; then
-        export PATH="$(pwd)/system/wine-ge/bin:$PATH:$(pwd)/system/wine-stable/bin"
-    elif [ "$TDF_WINE_PREFERRED_VERSION" == "stable" ]; then
-        export PATH="$(pwd)/system/wine-stable/bin:$PATH:$(pwd)/system/wine-ge/bin"
+    if [ "$TDF_WINE_PREFERRED_VERSION" == "games" ]; then
+        export PATH="$(pwd)/system/wine-games/bin:$PATH:$(pwd)/system/wine-mainline/bin"
+    elif [ "$TDF_WINE_PREFERRED_VERSION" == "mainline" ]; then
+        export PATH="$(pwd)/system/wine-mainline/bin:$PATH:$(pwd)/system/wine-games/bin"
     elif [ "$TDF_WINE_PREFERRED_VERSION" == "system" ]; then
-        export PATH="$PATH:$(pwd)/system/wine-stable/bin:$(pwd)/system/wine-ge/bin"
+        export PATH="$PATH:$(pwd)/system/wine-mainline/bin:$(pwd)/system/wine-games/bin"
     fi
     if [ $TDF_WINEMONO -eq 0 ]; then
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;mscoree="
@@ -813,16 +829,7 @@ function _tdfmain {
     if [ $TDF_BLOCK_EXTERNAL_DRIVES -ge 2 ]; then
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winedevice.exe=d"
     fi
-    if [ $TDF_FAKE_HOMEDIR -eq 1 ]; then
-        export HOME="$(pwd)/zzhome"
-        if [ ! -d "$HOME" ]; then
-            mkdir "$HOME"
-        fi
-    else
-        if [ -d "$(pwd)/zzhome" ]; then
-            rm -rf "$(pwd)/zzhome"
-        fi
-    fi
+    _applyFakeHomeDir
     local _blockNetworkCommand="unshare -nc"
     if [ $TDF_BLOCK_NETWORK -eq 2 ]; then
         command -v firejail > /dev/null

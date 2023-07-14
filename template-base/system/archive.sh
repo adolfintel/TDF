@@ -3,7 +3,7 @@ folderPath="$(basename "$(pwd)")"
 cd ..
 archivePath="$(realpath "$folderPath")"
 fromSize=$( du -sk --apparent-size "$folderPath" | cut -f 1 )
-echo "Archiving  $((fromSize/1024)) MBytes"
+echo "Archiving $((fromSize/1024)) MBytes"
 checkpoint="$((fromSize/50))"
 command="tar -c --record-size=1K --checkpoint=$checkpoint --checkpoint-action=\"ttyout=█\" -f - \"$folderPath\""
 if [ "$2" == "nocompress" ]; then

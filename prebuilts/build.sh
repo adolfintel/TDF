@@ -3,26 +3,6 @@ set -e
 rm -rf build
 mkdir build
 cd build
-echo "Downloading wine-ge"
-rm -rf wine-ge temp
-url=$(curl --silent "https://api.github.com/repos/GloriousEggroll/wine-ge-custom/releases" | grep "browser_download_url" | grep "lutris-GE-Proton" | grep ".tar.xz" | sed -E 's/.*"([^"]+)".*/\1/' | sort -V -r | head -n 1)
-wget -O wine.tar.xz "$url"
-mkdir temp
-tar -xf wine.tar.xz --directory temp
-rm -rf wine.tar.xz
-mv temp/* wine-ge
-rm -rf wine-ge/share/{applications,man}
-rm -rf temp
-echo "Downloading wine stable"
-rm -rf wine-stable temp
-mkdir wine-stable
-wget -O wine.tar.zst "https://archlinux.org/packages/multilib/x86_64/wine/download/"
-mkdir temp
-tar -xf wine.tar.zst --directory temp
-rm -rf wine.tar.zst
-mv temp/usr/* wine-stable
-rm -rf wine-stable/include wine-stable/share/{applications,man,fontconfig}
-rm -rf temp
 echo "Downloading steamrt"
 rm -rf steamrt steam-runtime
 wget https://repo.steampowered.com/steamrt-images-scout/snapshots/latest-public-beta/steam-runtime.tar.xz
