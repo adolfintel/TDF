@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 shopt -s expand_aliases
-export LC_ALL=C
+export LC_ALL=C.UTF-8
 if [[ $# -eq 0 ]]; then
     echo "This script should not be run directly, use run.sh instead"
     exit
@@ -105,6 +105,18 @@ function _killWine {
     wineserver -k -w
     wait
 }
+function _applyLocale {
+    if [ -n "$TDF_WINE_LANGUAGE" ]; then
+        export LC_ALL="$TDF_WINE_LANGUAGE"
+    else
+        if [ -n "$LANG" ]; then
+            export LC_ALL="$LANG"
+        fi
+    fi
+}
+function _restoreLocale {
+    export LC_ALL=C.UTF-8
+}
 function _realRunManualCommand {
     eval "$_blockNetworkCommand wine start /WAIT \"$1\""
 }
@@ -113,19 +125,13 @@ function _realRunCommandPrompt {
 }
 function _runCommandPrompt {
     zenity --info --width=500 --text="A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet" &
-    if [ -n "$TDF_WINE_LANGUAGE" ]; then
-        export LC_ALL="$TDF_WINE_LANGUAGE"
-    fi
+    _applyLocale
     _realRunCommandPrompt
-    if [ -n "$TDF_WINE_LANGUAGE" ]; then
-        export LC_ALL=C
-    fi
+    _restoreLocale
     zenity --info --width=500 --text="Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
 }
 function _realRunGame {
-    if [ -n "$TDF_WINE_LANGUAGE" ]; then
-        export LC_ALL="$TDF_WINE_LANGUAGE"
-    fi
+    _applyLocale
     if [ "$(type -t onGameStart)" == "function" ]; then
         onGameStart
     fi
@@ -140,8 +146,6 @@ function _realRunGame {
         if [ -n "$relayPath" ]; then
             export WINEDEBUG="$WINEDEBUG,+relay"
             command="$command > \"$relayPath\" 2>&1"
-        else
-            exit
         fi
     fi
     eval $command
@@ -151,9 +155,7 @@ function _realRunGame {
     if [ $TDF_GAMESCOPE -eq 1 ]; then
         wineserver -k -w
     fi
-    if [ -n "$TDF_WINE_LANGUAGE" ]; then
-        export LC_ALL=C
-    fi
+    _restoreLocale
 }
 function _runGame {
     if [ $_manualInit -eq 1 ]; then
