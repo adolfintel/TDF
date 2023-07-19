@@ -415,11 +415,11 @@ Possible values:
 * `0`: don't install the Corefonts
 
 __`TDF_VCREDIST`__  
-Whether to install the Microsoft Visual C++ Redistributable (2019+) or not. This is useful for modern games but unnecessary for older ones.
+Whether to install the Microsoft Visual C++ Redistributable (2015+) or not. This is useful for modern games but unnecessary for older ones.
 
 Possible values:  
-* `1` (default): install VCRedist 2019+
-* `0`: don't install VCRedist 2019+
+* `1` (default): install VCRedist 2015+
+* `0`: don't install VCRedist 2015+
 
 __`TDF_MSMFPLAT`__  
 Whether to install the Microsoft Media Foundation Platform (mfplat) instead of Wine's implementation. This can fix video playback in some games but is generally a bad idea. Also, once installed, it can't be cleanly removed without recreating `zzprefix` from scratch so keep this as an absolute last resort.
