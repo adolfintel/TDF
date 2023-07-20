@@ -1,5 +1,10 @@
 #!/usr/bin/env bash
 set -e
+if [ -d "override" ]; then
+    echo "Using prebuilt Gamescope from override folder"
+    cp -r override build
+    exit 0
+fi
 echo "Building Gamescope (master)"
 rm -rf gamescope seatd build
 mkdir build

@@ -5,6 +5,11 @@ if [ $? -ne 0 ]; then
     echo "Git not installed"
     failed=1
 fi
+command -v pkg-config > /dev/null
+if [ $? -ne 0 ]; then
+    echo "pkg-config not installed"
+    failed=1
+fi
 command -v meson > /dev/null
 if [ $? -ne 0 ]; then
     echo "Meson not installed"
@@ -12,7 +17,16 @@ if [ $? -ne 0 ]; then
 fi
 command -v glslc > /dev/null
 if [ $? -ne 0 ]; then
-    echo "glslang not installed"
+    echo "glslc not installed"
+    failed=1
+fi
+command -v glslangValidator > /dev/null
+if [ $? -ne 0 ]; then
+    echo "glslangValidator not installed"
+    failed=1
+fi
+if [ ! -d "/usr/share/hwdata" ]; then
+    echo "hwdata not installed (must be in /usr/share/hwdata)"
     failed=1
 fi
 command -v gcc > /dev/null

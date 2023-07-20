@@ -32,7 +32,12 @@ if [ $? -ne 0 ]; then
 fi
 command -v glslc > /dev/null
 if [ $? -ne 0 ]; then
-    echo "glslang not installed"
+    echo "glslc not installed"
+    failed=1
+fi
+command -v glslangValidator > /dev/null
+if [ $? -ne 0 ]; then
+    echo "glslangValidator not installed"
     failed=1
 fi
 command -v curl > /dev/null
