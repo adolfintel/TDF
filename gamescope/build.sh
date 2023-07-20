@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 set -e
+rm -rf gamescope seatd build
+mkdir build
 if [ -d "override" ]; then
     echo "Using prebuilt Gamescope from override folder"
-    cp -r override build
+    cp -r override/* build
     exit 0
 fi
 echo "Building Gamescope (master)"
-rm -rf gamescope seatd build
-mkdir build
 git clone https://github.com/Plagman/gamescope
 cd gamescope
 git submodule update --init
