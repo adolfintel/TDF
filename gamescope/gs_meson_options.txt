@@ -1,4 +1,0 @@
-option('pipewire', type: 'feature', description: 'Screen capture via PipeWire')
-option('enable_gamescope',           type : 'boolean', value : true, description: 'Build Gamescope executable')
-option('enable_gamescope_wsi_layer', type : 'boolean', value : false, description: 'Build Gamescope layer')
-option('enable_openvr_support',      type : 'boolean', value : false, description: 'OpenVR Integrations')

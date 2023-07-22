@@ -6,7 +6,6 @@ __TDF is based on the following awesome projects:__
 * [DXVK](https://github.com/doitsujin/dxvk), for DirectX 9-11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension
 * [D8VK](https://github.com/AlpyneDreams/d8vk), for DirectX 8 emulation (soon to be merged into DXVK), built from source
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
-* [Gamescope](https://github.com/ValveSoftware/gamescope), a "virtual display", can be enabled on games that require lower resolutions, integer scaling, and similar features, built from source
 * [Steam Runtime](https://github.com/ValveSoftware/steam-runtime), to make the Wine dependency hell a bit easier (it still depends on some things of course)
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
 * ...and a handful of other useful things
@@ -365,20 +364,13 @@ Note that the `zzhome` folder and all data inside it will be automatically delet
 
 #### Gamescope variables
 __`TDF_GAMESCOPE`__  
-Whether to enable Gamescope when running the game or not. This is generally not recommended when using the `games` version of Wine, since it integrates the fshack patches which makes it mostly useless, but it can be useful when using the `mainline` version for games that change the screen resolution often, require low resolutions, integers scaling, etc. such as KOTOR or WinQuake.
+Whether to enable Gamescope when running the game or not. This is generally not recommended when using the `games` version of Wine, since it integrates the fshack patches which makes it mostly useless, but it can be useful when using the `mainline` version for games that change the screen resolution often, require low resolutions, integers scaling, etc. such as KOTOR or WinQuake. If Gamescope is not installed in the system, it has no effect.
 
 Possible values:  
 * `0` (default): don't use Gamescope
-* `1`: use Gamescope when running games
+* `1`: use Gamescope when running games if available
 
-Note that Gamescope is quite buggy at the moment, it is well known to crash on startup, delay/repeat inputs on some systems, show graphical artifacts on some cards, etc.
-
-__`TDF_GAMESCOPE_PREFER_SYSTEM`__  
-TDF comes with its own version of Gamescope but it can also use the one installed in the system by enabling this option, which may provide better compatibility.
-
-Possible values:  
-* `0` (default): use the version of Gamescope provided by TDF
-* `1`: use the version of Gamescope installed in the system, or the builtin one if it's not installed
+Note that Gamescope currently only works properly on AMD GPUs and getting it to work properly on Intel and nVidia cards requires additional configuration.
 
 __`TDF_GAMESCOPE_PARAMETERS`__  
 The command line arguments used to start Gamescope. You can see a complete list [here](https://github.com/ValveSoftware/gamescope#options).
@@ -816,7 +808,6 @@ The following components will be built from source:
 * DXVK-gplasync: latest patch from [Gitlab](https://gitlab.com/Ph42oN/dxvk-gplasync) applied to the latest master of DXVK
 * D8VK: latest master from [Github](https://github.com/AlpyneDreams/d8vk)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
-* Gamescope: latest master from [Github](https://github.com/ValveSoftware/gamescope), along with the latest version of seatd from [Github](https://github.com/kennylevinsen/seatd)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
 * Some C programs included with the TDF source code used
 

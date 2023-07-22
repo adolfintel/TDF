@@ -62,7 +62,6 @@ TDF_PROTECT_DOSDEVICES=0
 
 # --- VARIABLES - Gamescope ---
 TDF_GAMESCOPE=0
-TDF_GAMESCOPE_PREFER_SYSTEM=0
 TDF_GAMESCOPE_PARAMETERS='' #if not changed in config, this will become -f -r 60 -w $XRES -h $YRES -- where $XRES and $YRES are the resolution of the main display
 
 # --- VARIABLES - Miscellaneous ---
@@ -846,24 +845,17 @@ function _tdfmain {
         _blockNetworkCommand=""
     fi
     local _gamescopeCommand=""
-    if [ -d "system/gamescope" ]; then
-        if [ $TDF_GAMESCOPE -ge 1 ]; then
-            if [ $TDF_GAMESCOPE_PREFER_SYSTEM -eq 1 ]; then
-                export PATH="$PATH:$(pwd)/system/gamescope"
-            else
-                export PATH="$(pwd)/system/gamescope:$PATH"
-            fi
-            export LD_LIBRARY_PATH="$LD_LIBRARY_PATH:$(pwd)/system/gamescope"
+    if [ $TDF_GAMESCOPE -ge 1 ]; then
+        command -v gamescope > /dev/null
+        if [ $? -eq 0 ]; then
             if [ -z "$TDF_GAMESCOPE_PARAMETERS" ]; then
                 TDF_GAMESCOPE_PARAMETERS="-f -r 60 -w $XRES -h $YRES"
             fi
             _gamescopeCommand="gamescope $TDF_GAMESCOPE_PARAMETERS --"
-            if [ -z "$INTEL_DEBUG" ]; then
-                INTEL_DEBUG=norbc
-            fi
+            export INTEL_DEBUG="noccs,$INTEL_DEBUG"
         fi
-        source "system/gamescope/gsutils.sh"
     fi
+    source "system/gsutils.sh"
     local _gamemodeCommand="gamemoderun"
     if [ $TDF_GAMEMODE -eq 1 ]; then
         command -v gamemoderun > /dev/null
