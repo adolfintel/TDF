@@ -8,8 +8,7 @@ if [ "$1" == "stable" ]; then
     mkdir build
     tar -xf d8vk.tar.gz --directory build
     cd build
-    rm LICENSE README.md setup_d3d8.sh
-    mv dxvk.conf d8vk.conf.template
+    rm LICENSE README.md setup_d3d8.sh dxvk.conf
     cd ..
     rm d8vk.tar.gz
 else
@@ -25,7 +24,5 @@ else
     cp -r "build/dxvk-master/x"* ../build
     cd ..
     rm -rf repo
-    wget https://raw.githubusercontent.com/AlpyneDreams/d8vk/master/dxvk.conf -O d8vk.conf.template
-    mv d8vk.conf.template build/
 fi
 exit 0

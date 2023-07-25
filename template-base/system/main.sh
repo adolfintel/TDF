@@ -44,8 +44,6 @@ TDF_DXVK=1
 TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't
 TDF_D8VK=0
 export DXVK_ASYNC=1 #enables async features when using the async version of dxvk, ignored by the regular version
-export DXVK_CONFIG_FILE="$WINEPREFIX/dxvk.conf"
-export D8VK_CONFIG_FILE="$WINEPREFIX/d8vk.conf"
 
 # --- VARIABLES - VKD3D ---
 TDF_VKD3D=1
@@ -236,10 +234,6 @@ function _applyDLLs {
             _outputDetail "Installing d8vk..."
             TDF_DXVK=0
             TDF_VKD3D=0
-            if [ ! -f "$D8VK_CONFIG_FILE" ]; then
-                cp -f "$d8vk_dir/d8vk.conf.template" "$D8VK_CONFIG_FILE"
-                export DXVK_CONFIG_FILE="$D8VK_CONFIG_FILE"
-            fi
             if [ "$WINEARCH" == "win32" ]; then
                 for d in "${d8vk_dlls[@]}"; do
                     copyIfDifferent "$d8vk_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"
@@ -273,9 +267,6 @@ function _applyDLLs {
     if [ -d "$dxvk_dir" ]; then
         if [ $TDF_DXVK -eq 1 ]; then
             _outputDetail "Installing dxvk..."
-            if [ ! -f "$DXVK_CONFIG_FILE" ]; then
-                cp -f "$dxvk_dir/dxvk.conf.template" "$DXVK_CONFIG_FILE"
-            fi
             if [ "$WINEARCH" == "win32" ]; then
                 for d in "${dxvk_dlls[@]}"; do
                     copyIfDifferent "$dxvk_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"

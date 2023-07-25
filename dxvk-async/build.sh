@@ -31,6 +31,4 @@ else
     cd ..
     rm -rf repo
 fi
-wget https://raw.githubusercontent.com/doitsujin/dxvk/master/dxvk.conf -O dxvk.conf.template
-mv dxvk.conf.template build/
 exit 0
