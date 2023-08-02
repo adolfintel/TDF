@@ -321,7 +321,7 @@ __`TDF_BLOCK_ZDRIVE`__
 Wine normally exposes a Z drive to applications, with full access to the Linux file system, which can be abused by games to collect data or by malware to modify files outside the TDF instance, but it can also be useful when installing games, since you can access mounted drives, your Downloads folder, etc. or if you're running applications.
 
 Possible values:  
-* `1` (default): allow access to the Z drive only once, making it easier to install the game, block afterwards
+* `1` (default): allow access to the Z drive when in "install mode" (i.e. `game_exe` is not set yet), making it easier to install the game, block afterwards
 * `2`: always block access to the Z drive
 * `0`: allow access to the Z drive
 

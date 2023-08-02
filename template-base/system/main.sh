@@ -656,7 +656,7 @@ function _removeUnwantedDosdevices {
             fi
         fi
     done
-    if [[ $TDF_BLOCK_ZDRIVE -ge 2  || "$1" == "game"  && $TDF_BLOCK_ZDRIVE -eq 1 ]]; then
+    if [[ $TDF_BLOCK_ZDRIVE -ge 2  || $TDF_BLOCK_ZDRIVE -eq 1 && -n "$game_exe" ]]; then
         unlink "$WINEPREFIX/dosdevices/z:"
     fi
     _dosdevices_protect
@@ -973,7 +973,7 @@ function _tdfmain {
                 echo "80"
                 _applyVCRedists
                 echo "90"
-                _removeUnwantedDosdevices "game"
+                _removeUnwantedDosdevices
                 echo "95"
                 wait
                 export WINEDLLOVERRIDES="$_realOverrides"
@@ -1028,7 +1028,7 @@ function _tdfmain {
             echo "80"
             _applyVCRedists
             echo "90"
-            _removeUnwantedDosdevices "init"
+            _removeUnwantedDosdevices
             echo "95"
             wait
             export WINEDLLOVERRIDES="$_realOverrides"
