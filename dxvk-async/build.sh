@@ -2,19 +2,21 @@
 set -e
 if [ "$1" == "stable" ]; then
     echo "Downloading dxvk-gplasync (stable build)"
-    rm -rf build repo
+    rm -rf build repo dxvk-gplasync
     git clone https://gitlab.com/Ph42oN/dxvk-gplasync/
     filename=$(ls dxvk-gplasync/releases/*.tar.gz | tail -n 1)
     mkdir build
     tar -xf "$filename" --directory build
     mv build/dxvk-*/* build
     rm -rf build/dxvk-*
+    set +e
     rm build/x*/*.sh
     rm build/*.sh
+    set -e
     rm -rf dxvk-gplasync
 else
     echo "Building dxvk-gplasync (master)"
-    rm -rf build repo
+    rm -rf build repo dxvk-gplasync
     mkdir build
     mkdir repo
     cd repo
