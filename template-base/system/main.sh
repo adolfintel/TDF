@@ -681,7 +681,7 @@ function _checkAndRepairCDrive {
 }
 function _checkAndRepairZDrive {
     _outputDetail "Checking symlinks..."
-    if [ $TDF_BLOCK_ZDRIVE -ge 1 ]; then
+    if [[ $TDF_BLOCK_ZDRIVE -ge 2 || $TDF_BLOCK_ZDRIVE -eq 1 && -n "$game_exe" ]]; then
         return
     fi
     local link=$(realpath "$WINEPREFIX/dosdevices/z:")
