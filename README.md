@@ -768,7 +768,7 @@ During the compression process, TDF will show you a progress indicator. At the e
 
 Note: this feature assumes that `tar`, `xz` and `zstd` are installed on your system (they probably are).
 
-If you want to transfer a TDF instance from one PC to another using an external drive, it is strongly recommended to use to use the archive function so it's just one big file. __Never copy a TDF instance to an NTFS, exFAT or a FAT32 partition, it will become unusable.__
+If you want to transfer a TDF instance from one PC to another using an external drive, it is strongly recommended to use the archive function so that it's just one big file. __Never copy a TDF instance to an NTFS, exFAT or a FAT32 partition, it will become unusable.__
 
 ### Updating a TDF instance
 TDF is designed to be easy to update. To update a TDF instance from an older version:
@@ -807,8 +807,8 @@ TDF comes with the Steam Runtime which provides a lot of libraries required to r
 
 #### Game won't install, the installer doesn't start, doesn't work, it freezes or gives an error during the installation
 * Try using `TDF_WINE_PREFERRED_VERSION='mainline'` during the installation, using a normal version of Wine instead of the game-optimized one can get it to work
-* Try using `export WINE_HEAP_DELAY_FREE=1` during the installation, this can work around memory management bugs in the installer (very useful for repacks)
-* Find another version of the game with a different installer, like a Steam rip or a repack
+* Try using `export WINE_HEAP_DELAY_FREE=1` during the installation, this can workaround memory management bugs in the installer (very useful for repacks)
+* Find another version of the game with a different installer, like a Steam rip, an ISO, or a repack from another group
 * As a last resort, try installing the game in a Windows VM and copy the files over to `zzprefix/drive_c`
 
 #### During the installation, I see error messages about .net or being unable to ShellExecute something
@@ -832,17 +832,17 @@ TDF comes with the Steam Runtime which provides a lot of libraries required to r
             * Missing files like `mscoree.dll` indicates that you're trying to load a .net application, try adding `TDF_WINEMONO=1` to the configuration
             * Missing files like `msvcrt###.dll` or `vcruntime###.dll` indicates that you need a specific version of the Microsoft Visual C++ Redistributable
             * Missing files like `mshtml.dll` indicates that you're trying to load an application that depends on Internet Explorer, try adding `TDF_WINEGECKO=1` to the configuration
-            * Missing any file that's not a part of Windows or some Microsoft redistributable indicate that there's a problem with the game installation (incomplete/corrupt setup)
+            * Missing any file that's not part of Windows or some Microsoft redistributable indicates that there's a problem with the game installation (incomplete/corrupt setup)
         * Once you've downloaded what you need
             * If it's a single DLL just copy it to the game's folder
             * If it's an installer, remove `game_exe` from the configuration and launch `run.sh` to enter "install mode", install what you downloaded, then put back `game_exe` and try launching the game again
 * If you don't see complaints about missing DLLs, it could be that the game is crashing immediately
-    * Add `unset WINEDEBUG` to enable Wine's default debugging messages
+    * Add `unset WINEDEBUG` and `TDF_WINE_HIDE_CRASHES=0` to enable Wine's default debugging messages and "stopped working" screen
     * Open a terminal and run `./run.sh`
     * While the game is trying to start, you'll see a lot of messages in the terminal, most of them are innocuous, but some of them may provide some info about the problem that you can search online. Typical causes are missing files/registry keys, issues with video playback, incompatibility with DXVK/VKD3D-Proton (rare), DRM issues, mods failing to load. It's hard to tell and you'll have to figure it out
-        * A useful tool to investigate is Wine's relay mod, which logs all interaction between the application and the system to a file. To enable relay, add `TDF_WINE_DEBUG_RELAY=1` and launch the game, it will ask you where you want to save the trace and then try to launch the game. Keep in mind that Wine runs extremely slow while this is enabled and the generated trace could be several GB in size
-        * After the game has crashed, open the trace and start looking for clues (especially around the end of the file)
-* If your game is a UWP app (like an extracted appx package), this is not supported by Wine at the moment, you'll need a regular Win32 version of the game. This is easily identifiable by the presence of an .appx version of VCRedist
+        * A useful tool to investigate is Wine's relay feature, which logs all interaction between the application and the system to a file. To enable relay, add `TDF_WINE_DEBUG_RELAY=1` and launch the game, it will ask you where you want to save the trace and then try to launch the game. Keep in mind that Wine runs extremely slow while this is enabled and the generated trace could be several GB in size
+        * After the game has crashed, open the trace with a text editor and start looking for clues (especially around the end of the file)
+* If your game is a UWP app (like an extracted appx package), this is not supported by Wine at the moment, you'll need a regular Win32 version of the game. This is easily identifiable by the presence of an .appx version of VCRuntime
     
 #### Game launcher doesn't work (closes immediately or has garbled graphics)
 * Find some way online to bypass the launcher, usually it involves setting `game_exe` to another file or adding some arguments with `game_args`
@@ -879,10 +879,10 @@ TDF comes with the Steam Runtime which provides a lot of libraries required to r
 * If this is a DX9-11 game, try running it with WineD3D instead of DXVK by adding `TDF_DXVK=0`
 * If this is a DX8-10 game and you see striped shadows, your graphics driver probably doesn't support the `VK_EXT_depth_bias_control` extension yet (added in Mesa 23.3 for AMD/Intel)
 * Look for known issues and fixes for this game in the [DXVK issues page](https://github.com/doitsujin/dxvk/issues) (DX9-11), the [VKD3D-Proton issues page](https://github.com/HansKristian-Work/vkd3d-proton/issues) (DX12), and if you're on an AMD/Intel GPU check the [Mesa issues page](https://gitlab.freedesktop.org/mesa/mesa/-/issues) as well
-* If this is a DX9-11 game, create a file called `dxvk.conf` in the game's folder and tinker with [DXVK settings](https://github.com/doitsujin/dxvk/wiki/Configuration)
+* If this is a DX9-11 game, create a file called `dxvk.conf` in the game's folder and tinker with [DXVK's settings](https://github.com/doitsujin/dxvk/wiki/Configuration)
 * If this is a DX12 game, try tinkering with [VKD3D-Proton's settings](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables)
 * If the game supports DXR, try adding `unset VKD3D_CONFIG` to disable ray tracing support that's normally enabled by default by TDF
-* If you're on AMD/Intel, try tinkering with [Mesa's settings](https://docs.mesa3d.org/envvars.html). These are some typical settings to try first for issues on AMD
+* If you're on AMD/Intel, try tinkering with [Mesa's settings](https://docs.mesa3d.org/envvars.html). These are some typical settings to try first for issues on AMD (try them one by one!):
     * `export RADV_DEBUG=nodcc`
     * `export RADV_DEBUG=llvm`
     * `export ACO_DEBUG=noopt`
@@ -891,7 +891,7 @@ TDF comes with the Steam Runtime which provides a lot of libraries required to r
 * Some games have memory management issues that can be workarounded by adding `export WINE_HEAP_DELAY_FREE=1`
 * Look for game-specific fixes on [PCGamingWiki](https://www.pcgamingwiki.com/wiki/Home), even if it's focused on Windows, the same fixes often apply to Wine as well
 * If this is an old DX9 game, add `unset WINEDEBUG` to the configuration, open a terminal and run `./run.sh`, if you see errors about shader compilation, you probably need to install the [old DirectX redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
-* It is extremely rare but some very old games don't work with Wine's msvcrt/msvcrp, for those you'll have to find an old version of the Visual C++ Redistributable (version 6 and older) or take it from Windows, put the DLLs in the game's folder and add `export WINEDLLOVERRIDES="msvcrt,msvcp=n,b"`
+* It is extremely rare but some very old games don't work with Wine's msvcrt/msvcp, for those you'll have to find an old version of the Visual C++ Redistributable (version 6 and older) or take it from Windows, put the DLLs in the game's folder and add `export WINEDLLOVERRIDES="msvcrt,msvcp=n,b"`
 * Add `unset WINEDEBUG` and `TDF_WINE_HIDE_CRASHES=0` to the config, open a terminal and run `./run.sh`, most of the messages you'll see are innocuous, but some may provide clues about what's going on
 
 If you find a solution to a problem, always make sure to report it somewhere. If you can't find a solution, report the problem to one of the projects involved, at worst they'll tell you it's not their fault and where to report it. People are generally very friendly in the Linux gaming community.
@@ -952,7 +952,7 @@ What this means is that a process running inside Wine is, to all intents and pur
 
 This is not really a problem if you're just running games, the chances of games containing such a sophisticated malware are virtually zero, but it's important to understand that TDF is not a safe way to run malware or other software downloaded from dubious sources, it can easily escape the sandboxing and damage the real system. Always use a well isolated VM to test or reverse engineer malware.
 
-To put it short: if you're worried about telemetry and data collection in games, you just don't want games to put files all over your system or you just want to package games, TDF is good; if you're going to run GTAV_Installer.exe (2.9MB) downloaded from SkidEmpressReloadedLegitCracks69 it is very much not.
+To put it short: if you're worried about telemetry and data collection in games, you just don't want games to put files all over your system or you just want to package games, TDF is good; if you're going to run GTAV_Installer.exe (2.9MB) downloaded from SkidEmpressReloadedLegitCracks69.ru it is very much not.
 
 ## TODOs and future improvements
 * Replace Steam Runtime "scout" with "sniper" or similar alternative to make TDF less dependant on system libraries
