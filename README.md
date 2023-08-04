@@ -26,14 +26,14 @@ This section explains how to use TDF to install, play and optionally package a g
 ### Requirements
 * A relatively recent PC that's fast enough to run modern games. An x86_64 CPU is required, as well as a GPU with support for Vulkan 1.3 or newer
 * Linux kernel 5.16 or newer is strongly recommended, but it will work on older versions (tested as low as 4.19)
-* A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, X11, etc. installed, __both 32 and 64 bit versions__. Arch-based distros will work best.
+* A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, X11, etc. installed, __both 32 and 64-bit versions__. Arch-based distros will work best.
 * An AMD graphics card with the latest Mesa 23.1 driver or newer is recommended, but it will also work on nVidia and Intel cards
 * An SSD is strongly recommended, with a file system like ext4 or btrfs. Do not use NTFS, FAT or exFAT
 * You must be able to use a Linux system, do file and folder management, know how to install games manually, know some basic shell scripting, etc.
 
 ### Basic usage
-* Download the latest build of TDF (or built it yourself)
-* Extract the archive somewhere, optionally renaming the folder from template-YYYYMMDD to something more useful. We'll call this folder a TDF instance, you can have as many instances as you want
+* [Download the latest build of TDF](https://downloads.fdossena.com/geth.php?r=tdf-bin) (or built it yourself)
+* Extract the archive somewhere, optionally renaming the folder from `template-YYYYMMDD` to something more descriptive. We'll call this folder a TDF instance, you can have as many instances as you want
     * Inside this folder, you'll see 4 things:
         * `run.sh`: the script that starts all the TDF magic, we'll use this in a moment
         * `vars.conf`: TDF's main configuration file for this instance, you'll use this to tell TDF where to find the game and to change emulation settings
@@ -53,7 +53,9 @@ This section explains how to use TDF to install, play and optionally package a g
     * About 85% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in `vars.conf`, which we'll discuss later
     * Online games that require anticheat software will usually not work (and that's probably for the best)
 
-TODO: VIDEO
+Here's a video showing how to install a game from GOG that requires no additional configuration: [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)
+
+You can find more video examples at the end of this document.
 
 ### Configuration variables
 The following lists contain all the variables that can be added in `vars.conf` to configure emulation settings, work around issues, improve performance, etc.
@@ -179,8 +181,8 @@ __`TDF_WINE_ARCH`__
 The architecture of the Wine installation. Can only be set once, before the initialization is performed, and can't be changed afterwards without deleting the wineprefix.
 
 Possible values:  
-* `win64` (default): create a 64bit Windows installation
-* `win32`: create a 32bit Windows installation (useful for some old games)
+* `win64` (default): create a 64-bit Windows installation
+* `win32`: create a 32-bit Windows installation (useful for some old games)
 
 __`TDF_WINE_SYNC`__  
 The synchronization method to be used by Wine (game-optimized build only).
@@ -778,7 +780,133 @@ TDF is designed to be easy to update. To update a TDF instance from an older ver
 It is also possible to downgrade to an older version of TDF in the same way, in case the newer version introduces some problems.
 
 ### Troubleshooting
-TODO, sorry
+This section covers troubleshooting games on Wine in general, with a focus on how to do it with TDF. In general, some good knowledge of Windows and Linux will be very useful here.
+
+If a game doesn't work out of the box, before you even start troubleshooting, check [ProtonDB](https://www.protondb.com/) for known issues/fixes for this game. Solutions that work on Proton can easily be adapted to work in TDF.
+
+#### TDF won't start (Failed to load Wine)
+TDF comes with the Steam Runtime which provides a lot of libraries required to run Wine, but some basic libraries must still be installed on your system, both in 32 and 64-bit variants.
+* Install missing 32-bit libraries
+    * For Arch-based distros see here: [Enabling multilib](https://wiki.archlinux.org/title/Official_repositories#Enabling_multilib) (not required for Manjaro)
+    * For Debian-based distros:  
+        ```
+        sudo dpkg --add-architecture i386
+        sudo apt-get update
+        ```
+* If it still doesn't work, install missing libraries by installing Wine and then removing it
+    * For Arch-based distros:
+        ```
+        sudo pacman -S wine
+        sudo pacman -R wine
+        ```
+    * For Debian-based distros:
+        ```
+        sudo apt-get install wine
+        sudo apt-get remove wine
+        ```
+
+#### Game won't install, the installer doesn't start, doesn't work, it freezes or gives an error during the installation
+* Try using `TDF_WINE_PREFERRED_VERSION='mainline'` during the installation, using a normal version of Wine instead of the game-optimized one can get it to work
+* Try using `export WINE_HEAP_DELAY_FREE=1` during the installation, this can work around memory management bugs in the installer (very useful for repacks)
+* Find another version of the game with a different installer, like a Steam rip or a repack
+* As a last resort, try installing the game in a Windows VM and copy the files over to `zzprefix/drive_c`
+
+#### During the installation, I see error messages about .net or being unable to ShellExecute something
+* These are not a problem in Wine, ignore them
+
+#### Game won't launch (DRM issues like disc not found or requiring a login)
+* Use a cracked version of the game
+* If this is a cracked game, the crack may not have been loaded correctly due to a missing DLL override (see `WINEDLLOVERRIDES`) or it could be missing some DLL (see next section)
+
+#### Game won't launch ("Game running" dialog disappears immediately)
+* Often caused by missing DLLs
+    * If there's a folder called `_CommonRedist` or `_Redists` in the game's folder, that will most likely contain some installers for libraries required by the game. They're usually not necessary with Wine but some older redists like PhysX will need to be installed.
+        * Remove `game_exe` and launch `run.sh`
+        * Navigate to that folder and install the redists
+        * Put back `game_exe` and try launching the game again
+    * If it still doesn't work, investigate missing DLLs
+        * Add `export WINEDEBUG=-all,+loaddll` to `vars.conf`
+        * Open a terminal and run `./run.sh`
+        * While the game is starting you'll see each DLL that it tries to load, if you see errors about missing DLLs, they need to be installed
+            * Missing files like `xinput1_3.dll` or `d3dcompiler_43.dll` indicates that you need to install the [old DirectX redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
+            * Missing files like `mscoree.dll` indicates that you're trying to load a .net application, try adding `TDF_WINEMONO=1` to the configuration
+            * Missing files like `msvcrt###.dll` or `vcruntime###.dll` indicates that you need a specific version of the Microsoft Visual C++ Redistributable
+            * Missing files like `mshtml.dll` indicates that you're trying to load an application that depends on Internet Explorer, try adding `TDF_WINEGECKO=1` to the configuration
+            * Missing any file that's not a part of Windows or some Microsoft redistributable indicate that there's a problem with the game installation (incomplete/corrupt setup)
+        * Once you've downloaded what you need
+            * If it's a single DLL just copy it to the game's folder
+            * If it's an installer, remove `game_exe` from the configuration and launch `run.sh` to enter "install mode", install what you downloaded, then put back `game_exe` and try launching the game again
+* If you don't see complaints about missing DLLs, it could be that the game is crashing immediately
+    * Add `unset WINEDEBUG` to enable Wine's default debugging messages
+    * Open a terminal and run `./run.sh`
+    * While the game is trying to start, you'll see a lot of messages in the terminal, most of them are innocuous, but some of them may provide some info about the problem that you can search online. Typical causes are missing files/registry keys, issues with video playback, incompatibility with DXVK/VKD3D-Proton (rare), DRM issues, mods failing to load. It's hard to tell and you'll have to figure it out
+        * A useful tool to investigate is Wine's relay mod, which logs all interaction between the application and the system to a file. To enable relay, add `TDF_WINE_DEBUG_RELAY=1` and launch the game, it will ask you where you want to save the trace and then try to launch the game. Keep in mind that Wine runs extremely slow while this is enabled and the generated trace could be several GB in size
+        * After the game has crashed, open the trace and start looking for clues (especially around the end of the file)
+* If your game is a UWP app (like an extracted appx package), this is not supported by Wine at the moment, you'll need a regular Win32 version of the game. This is easily identifiable by the presence of an .appx version of VCRedist
+    
+#### Game launcher doesn't work (closes immediately or has garbled graphics)
+* Find some way online to bypass the launcher, usually it involves setting `game_exe` to another file or adding some arguments with `game_args`
+* Find an alternative launcher online
+* Some games have .net applications as launchers or they need Internet Explorer, try adding `TDF_WINEMONO=1` and `TDF_WINEGECKO=1`
+
+#### The game uses the wrong GPU (integrated instead of dedicated)
+* Add `export DRI_PRIME=1` to the config, where 1 is the number of the GPU that you want to use (starting from 0)
+
+#### Mods with DLL files don't work
+* Wine doesn't automatically load overrides for system DLLs like `dinput8.dll`, `version.dll`, `winmm.dll`, `dsound.dll`, etc., this is a common technique used by mods to inject code, add `export WINEDLLOVERRIDES="filename1,filename2,...=n,b"`. Note that the filenames must not have an extension, only the name. Example: `export WINEDLLOVERRIDES="winmm=n,b"`.
+
+#### Game starts with the wrong language with no way to change it
+* See the `TDF_WINE_LANGUAGE` variable
+* If the game is using a Steam/EGS/whatever emulator, there's usually an file nearby like `steam_api.ini` that will contain some configuration, including the language
+* Some games require a command line option to change the language (`game_args` variable)
+* Some older games store the language in the registry, remove `game_exe` from the configuration to get into "install mode", run regedit and find the key
+
+#### Game detects incorrect amount of VRAM or says that the video driver is out of date
+* Modern games usually obtain this information through a proprietary API like AMD AGS. If you see files like `amd_ags_x64.dll` or `nvapi.dll`, you can force Wine to use its own fake version to fix this problem by adding `export WINEDLLOVERRIDES="amd_ags_x64=b"`. If you need to add multiple overrides, separate them with a semicolon. Example: `export WINEDLLOVERRIDES="winmm=n,b;amd_ags_x64=b"`
+
+#### Game crashes/freezes during gameplay, graphical or performance issues
+* Make sure TDF is updated to the latest version
+* Make sure you're running the latest Linux kernel and the latest version of Mesa (AMD/Intel) or the nVidia drvier. Ideally, if you're on an Arch-based distro, use the mesa-git package from the AUR
+* If you experience severe stuttering or performance drops, these are some likely causes:
+    * For DX9-11 games (DXVK), make sure your system supports the `VK_EXT_graphics_pipeline_library` extension by running this command: `vulkaninfo | grep VK_EXT_graphics_pipeline_library`, if you don't see anything, your GPU/driver doesn't support it and your experience will be miserable
+    * You may be running out of VRAM. Linux doesn't handle this very well, games will stutter heavily or have a sudden drop in performance when that happens. Try installing MangoHud and add `TDF_MANGOHUD=1`, this provides a nice overlay for various things, including VRAM usage. When it's above 90%, you'll start running into problems
+    * If this is a modern game, your CPU may not be fast enough to handle the game and the emulation overhead
+    * The game may have issues with fsync (Uncharted 4 is the only one I've encountered so far), try adding `TDF_WINE_SYNC="esync"`
+    * If this is an old UE2-based game like UT2004, this is a known issue and as of August 2023 a solution is in the works
+* If this is an older game, it may not support high core count CPUs, try setting `export WINE_CPU_TOPOLOGY=4:0,1,2,3` to simulate a quad-core
+* If this is an older game, it may also be a good idea to run it using regular Wine, add `TDF_WINE_PREFERRED_VERSION=mainline`
+* If this is a DX8 game, try running it with D8VK by adding `TDF_D8VK=1`
+* If this is a DX9-11 game, try running it with WineD3D instead of DXVK by adding `TDF_DXVK=0`
+* If this is a DX8-10 game and you see striped shadows, your graphics driver probably doesn't support the `VK_EXT_depth_bias_control` extension yet (added in Mesa 23.3 for AMD/Intel)
+* Look for known issues and fixes for this game in the [DXVK issues page](https://github.com/doitsujin/dxvk/issues) (DX9-11), the [VKD3D-Proton issues page](https://github.com/HansKristian-Work/vkd3d-proton/issues) (DX12), and if you're on an AMD/Intel GPU check the [Mesa issues page](https://gitlab.freedesktop.org/mesa/mesa/-/issues) as well
+* If this is a DX9-11 game, create a file called `dxvk.conf` in the game's folder and tinker with [DXVK settings](https://github.com/doitsujin/dxvk/wiki/Configuration)
+* If this is a DX12 game, try tinkering with [VKD3D-Proton's settings](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables)
+* If the game supports DXR, try adding `unset VKD3D_CONFIG` to disable ray tracing support that's normally enabled by default by TDF
+* If you're on AMD/Intel, try tinkering with [Mesa's settings](https://docs.mesa3d.org/envvars.html). These are some typical settings to try first for issues on AMD
+    * `export RADV_DEBUG=nodcc`
+    * `export RADV_DEBUG=llvm`
+    * `export ACO_DEBUG=noopt`
+    * `export RADV_PERFTEST=nosam`
+    * `export AMD_DEBUG=nongg`
+* Some games have memory management issues that can be workarounded by adding `export WINE_HEAP_DELAY_FREE=1`
+* Look for game-specific fixes on [PCGamingWiki](https://www.pcgamingwiki.com/wiki/Home), even if it's focused on Windows, the same fixes often apply to Wine as well
+* If this is an old DX9 game, add `unset WINEDEBUG` to the configuration, open a terminal and run `./run.sh`, if you see errors about shader compilation, you probably need to install the [old DirectX redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
+* It is extremely rare but some very old games don't work with Wine's msvcrt/msvcrp, for those you'll have to find an old version of the Visual C++ Redistributable (version 6 and older) or take it from Windows, put the DLLs in the game's folder and add `export WINEDLLOVERRIDES="msvcrt,msvcp=n,b"`
+* Add `unset WINEDEBUG` and `TDF_WINE_HIDE_CRASHES=0` to the config, open a terminal and run `./run.sh`, most of the messages you'll see are innocuous, but some may provide clues about what's going on
+
+If you find a solution to a problem, always make sure to report it somewhere. If you can't find a solution, report the problem to one of the projects involved, at worst they'll tell you it's not their fault and where to report it. People are generally very friendly in the Linux gaming community.
+
+#### Sound crackling, cutting in and out, etc.
+* Increase sound buffer size by adding `export PULSE_LATENCY_MSEC=120`
+* If this is an older game, try using an EAX emulator like [DSOAL](https://github.com/kcat/dsoal), you can find prebuilt DLLs online if you don't want to mess with Visual Studio, all you have to do is put them in the game's folder and add `export WINEDLLOVERRIDES="dsound=n,b"`
+* The game may not support surround sound or your sample rate, set your system to 44.1KHz stereo
+
+#### Window positioning issues (stuck in window mode, partially off screen, etc.)
+* If this is an older game, it may not support display scaling, try adding `TDF_WINE_DPI=96`
+* See the section on Builtin functions for how to lock on to a window and manipulate it, or watch my video about A Plague Tale Requiem
+
+#### Game controller not detected/not working
+* Wine has built-in support for Xbox and Dualshock controllers, but you may have to add some udev rules to allow your user permissions to use them. If you're on an Arch-based distro, the `game-devices-udev` package on the AUR will take care of most models, otherwise, [this article will help](https://wiki.archlinux.org/title/Gamepad) users of all distros
 
 ## Building TDF
 The TDF build scripts are designed to download the latest version of each component in TDF, build what needs to be compiled from source and create a `template-YYYYMMDD.tar.zst` ready to extract and use.
@@ -796,10 +924,10 @@ The following dependencies must be installed on your system:
 
 The following components will be downloaded:  
 * Wine Mono: latest version from [Github](https://github.com/madewokherd/wine-mono/releases/)
-* Wine Gecko: latest 32 and 64 bit versions from the [Wine website](https://dl.winehq.org/wine/wine-gecko/)
+* Wine Gecko: latest 32 and 64-bit versions from the [Wine website](https://dl.winehq.org/wine/wine-gecko/)
 * Steam Runtime: latest "scout" version from [Valve](https://repo.steampowered.com/steamrt-images-scout/snapshots/)
 * Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
-* Microsoft Visual C++ Redistributable: latest 32 and 64 bit versions from Microsoft
+* Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
 * Microsoft mfplat: [mf-install](https://github.com/z0z0z/mf-install) from Github (will probably be removed in future versions of TDF)
 
 The following components will be built from source:  
@@ -826,12 +954,30 @@ This is not really a problem if you're just running games, the chances of games 
 
 To put it short: if you're worried about telemetry and data collection in games, you just don't want games to put files all over your system or you just want to package games, TDF is good; if you're going to run GTAV_Installer.exe (2.9MB) downloaded from SkidEmpressReloadedLegitCracks69 it is very much not.
 
+## TODOs and future improvements
+* Replace Steam Runtime "scout" with "sniper" or similar alternative to make TDF less dependant on system libraries
+* Localization (TDF has hardcoded English strings at the moment)
+* Automatically recognize some known problematic games and apply tweaks to the configuration
+
+## Videos
+* [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)
+* [Basic usage - Installing Steam rips](https://downloads.fdossena.com/geth.php?r=tdfvideo2)
+* [Basic usage - Installing a game from ISO](https://downloads.fdossena.com/geth.php?r=tdfvideo4)
+* [Troubleshooting: Video driver out of date message](https://downloads.fdossena.com/geth.php?r=tdfvideo3)
+* [Troubleshooting: Repack fails to extract, game with graphical issues](https://downloads.fdossena.com/geth.php?r=tdfvideo5)
+* [Advanced usage - Multiple games in one TDF instance (and some minor troubleshooting)](https://downloads.fdossena.com/geth.php?r=tdfvideo6)
+* [Troubleshooting: A Plague Tale Requiem (Window positioning, graphical issues, crackling audio)](https://downloads.fdossena.com/geth.php?r=tdfvideo7) (Note: this video was shot before all the others, the version of TDF shown is a bit older)
+* [Basic usage - Installing a multiplayer game](https://downloads.fdossena.com/geth.php?r=tdfvideo8)
+* [Advanced usage - Capturing with Apitrace and RenderDoc](https://downloads.fdossena.com/geth.php?r=tdfvideo9)
+
+__Important: some cracked copies of games that I have in my Steam/GOG/EGS library are used in these videos. These cracks have been used to circumvent DRM issues or incompatibilities with modern systems. TDF does not endorse piracy and I will not provide cracked copies of games.__
+
 ## What does TDF mean?
 This project started off in 2021 as a "template" that I could use to easily create these self-contained ready-made environments to easily and safely run Windows games, something that things like Lutris couldn't do really well despite having a nice GUI.
 
 Eventually, my friends started calling it "Template Di Frederico", meaning Frederico's Template in Italian (Frederico being a common misspelling of my name, Federico); the temporary name eventually stuck, it got abbreviated to TDF or just "the template", and I couldn't come up with a better name so TDF became the official name in 2023 when I finally decided to write some documentation and release it.
 
-## Copyright
+## License
 All TDF code is distributed under the GNU GPL v3 license, but a built version of TDF will contain components with multiple licenses, including proprietary ones.
 
 Copyright (C) 2021-2023 Federico Dossena
