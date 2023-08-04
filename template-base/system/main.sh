@@ -486,12 +486,12 @@ function _applyVCRedists {
             fi
             if [ "$WINEARCH" == "win32" ]; then
                 \cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
-                wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
+                unshare -nc wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
             else
                 \cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
                 \cp "$vc_dir/vc_redist.x64.exe" "$WINEPREFIX/drive_c/vc_redist.x64.exe"
-                wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
-                wine "C:\\vc_redist.x64.exe" /install /quiet /norestart
+                unshare -nc wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
+                unshare -nc wine "C:\\vc_redist.x64.exe" /install /quiet /norestart
             fi
             wait
             wineserver -k -w
@@ -511,8 +511,8 @@ function _applyVCRedists {
                 mv "$WINEPREFIX/dosdevices/z:" "$WINEPREFIX/.templink"
                 _dosdevices_protect "always"
             fi
-            wine "C:\\vc_redist.x86.exe" /uninstall /quiet /norestart
-            wine "C:\\vc_redist.x64.exe" /uninstall /quiet /norestart
+            unshare -nc wine "C:\\vc_redist.x86.exe" /uninstall /quiet /norestart
+            unshare -nc wine "C:\\vc_redist.x64.exe" /uninstall /quiet /norestart
             wait
             wineserver -k -w
             wait
