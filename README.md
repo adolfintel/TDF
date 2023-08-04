@@ -676,7 +676,7 @@ Returns 0 if the operation succeeded, 1 if an error occurred.
 Note: this function only works on X11.
 
 __`restoreGamma`__  
-Restored the gamma level previously saved with `saveGamma`. If a gamma level was never saved, it restores the gamma level from when TDF was started.
+Restores the gamma level previously saved with `saveGamma`. If a gamma level was never saved, it restores the gamma level from when TDF was started.
 
 Returns 0 if the operation succeeded, 1 if an error occurred.
 
@@ -904,6 +904,10 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 #### Window positioning issues (stuck in window mode, partially off screen, etc.)
 * If this is an older game, it may not support display scaling, try adding `TDF_WINE_DPI=96`
 * See the section on Builtin functions for how to lock on to a window and manipulate it, or watch my video about A Plague Tale Requiem
+
+#### TDF says the wineprefix is already running but the game is not
+* The game probably left a background process running. Open your favorite task manager and kill any process's a Windows exe
+* If this happens frequently, try adding `TDF_WINE_KILL_AFTER=1`, this will terminate all Wine processes when the game's main process terminates
 
 #### Game controller not detected/not working
 * Wine has built-in support for Xbox and Dualshock controllers, but you may have to add some udev rules to allow your user permissions to use them. If you're on an Arch-based distro, the `game-devices-udev` package on the AUR will take care of most models, otherwise, [this article will help](https://wiki.archlinux.org/title/Gamepad) users of all distros
