@@ -253,7 +253,7 @@ export WINE_CPU_TOPOLOGY=4:0,1,2,3"
 __`export WINEDEBUG`__  
 Enables/disables some [Wine debug channels](https://wiki.winehq.org/Debug_Channels).
 
-By default, TDF sets this to `-all` improve performance, but you might want to enable one or more of these for troubleshooting, or restore the default Wine settings using `unset WINEDEBUG`.
+By default, TDF sets this to `-all` to improve performance, but you might want to enable one or more of these for troubleshooting, or restore the default Wine settings using `unset WINEDEBUG`.
 
 Don't add `+relay` to this variable, as it's controlled by the `TDF_WINE_DEBUG_RELAY` variable.
 
@@ -973,6 +973,8 @@ To put it short: if you're worried about telemetry and data collection in games,
 * [Troubleshooting: A Plague Tale Requiem (Window positioning, graphical issues, crackling audio)](https://downloads.fdossena.com/geth.php?r=tdfvideo7) (Note: this video was shot before all the others, the version of TDF shown is a bit older)
 * [Basic usage - Installing a multiplayer game](https://downloads.fdossena.com/geth.php?r=tdfvideo8)
 * [Advanced usage - Capturing with Apitrace and RenderDoc](https://downloads.fdossena.com/geth.php?r=tdfvideo9)
+* [Basic usage - Creating a game archive to redistribute it or to move it to another computer](https://downloads.fdossena.com/geth.php?r=tdfvideo10)
+* [Callbacks: Automatically backup your saved game, just in case...](https://downloads.fdossena.com/geth.php?r=tdfvideo11)
 
 __Important: some cracked copies of games that I have in my Steam/GOG/EGS library are used in these videos. These cracks have been used to circumvent DRM issues or incompatibilities with modern systems. TDF does not endorse piracy and I will not provide cracked copies of games.__
 
