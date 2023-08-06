@@ -779,6 +779,53 @@ TDF is designed to be easy to update. To update a TDF instance from an older ver
 
 It is also possible to downgrade to an older version of TDF in the same way, in case the newer version introduces some problems.
 
+### Using custom versions of Wine, DXVK, etc.
+TDF will automatically detect and apply changes to the files in the following folders inside the `system` of a TDF instance:
+* `d8vk`
+* `dxvk`
+* `dxvk-async`
+* `msi`
+* `steamrt`
+* `vcredist`
+* `vkd3d`
+* `wine-games`
+* `wine-mainline`
+* `xdotool`
+
+So for instance, if you need to test a custom version of DXVK, simply replace the DLLs in `system/dxvk` with your build (making sure to keep the same folder structure), when you launch `run.sh`, TDF will detect that these DLLs don't match the ones in the wineprefix and reinstall DXVK. The same goes for Wine and other components in the list above.
+
+Note: your custom files will only be used if that component is actually being used. For instance, if your GPU supports the `VK_EXT_graphics_pipeline_library`, then DXVK-gplasync will never be used unless you explicitly set `TDF_DXVK_ASYNC=1` or switch to an older driver.
+
+The following folders are not monitored for changes as they are very rarely needed:
+* `corefonts`
+* `mfplat`
+
+Should you need to test changes to them, simply disable that component, launch `run.sh`, then reenable it and launch it again.
+
+### Removing unused components
+TDF is built to be partially modular, meaning that if your game doesn't need certain components, such as Wine Mono, they can be removed to reduce overhead.
+
+__Do not do this unless you know what you're doing.__
+
+The following folders can be deleted from the `system` folder of a TDF instance if they are not needed:
+* `d8vk`
+* `dxvk`
+* `dxvk-async` (Note: if this is removed, it is recommended to set `TDF_DXVK_ASYNC=0`, that way it won't try to use it on GPUs that don't support the GPL extension)
+* `msi/winemono.msi`
+* `msi/winegecko32.msi` and `msi/winegecko64.msi`
+* `steamrt`
+* `vcredist`
+* `vkd3d`
+* `wine-games` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="mainline"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-mainline` as a last resort. If neither are available, TDF will fail to start)
+* `wine-mainline` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="games"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-games` as a last resort. If neither are available, TDF will fail to start)
+
+Folders and files not mentioned in this list should not be removed to avoid breaking TDF.
+
+If a component has been removed, TDF will not try to use or install it even if explicitly requested in the config. If a component is removed after it has been installed in the wineprefix, it will not be removed even if explicitly requested in the config.  
+For these reasons, it's better to remove components before the first time initialization of the wineprefix.
+
+__Never remove a component that is currently installed in the wineprefix__, as this will leave it in an inconsistent state, especially during Wine updates. If that happens, simply restore the removed components and TDF should take care of the problem.
+
 ### Troubleshooting
 This section covers troubleshooting games on Wine in general, with a focus on how to do it with TDF. In general, some good knowledge of Windows and Linux will be very useful here.
 
@@ -911,6 +958,11 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 
 #### Game controller not detected/not working
 * Wine has built-in support for Xbox and Dualshock controllers, but you may have to add some udev rules to allow your user permissions to use them. If you're on an Arch-based distro, the `game-devices-udev` package on the AUR will take care of most models, otherwise, [this article will help](https://wiki.archlinux.org/title/Gamepad) users of all distros
+
+#### TDF no longer starts after being copied/moved to an external drive or syncing through cloud to another computer
+* To transfer a TDF instance, you should use the archive feature instead, it's faster and more reliable
+* If you're using syncthing to keep a TDF instance synced between PCs, you need to set that folder to sync and send extended attributes on all your machines. This is a bad idea though, a much better thing to do would be to only sync the saved games folder inside that TDF instance
+* If you moved a TDF instance to an NTFS, exFAT or god forbid a FAT32 drive, or any other file system that doesn't support UNIX permissions and symlinks, you're out of luck and I told you so in the beginning of this document. Recover your saved games from `zzprefix` and start over with a new TDF instance
 
 ## Building TDF
 The TDF build scripts are designed to download the latest version of each component in TDF, build what needs to be compiled from source and create a `template-YYYYMMDD.tar.zst` ready to extract and use.
