@@ -301,7 +301,7 @@ Whether to block network access to Wine. By default, TDF blocks network access e
 Possible values:  
 * `1` (default): block network access using `unshare -nc` (creates a namespace without the network stack)
 * `0`: allow network access
-* `2`: block network access using Firejail if it's installed in the system, otherwise `unshare -nc` will be used. This can fix some games that take a long time to load when there is no network stack, such as Death Stranding
+* `2`: block network access using Firejail if it's installed in the system, otherwise `unshare -nc` will be used. This can fix some games that take a long time to load when there is no network stack, such as Death Stranding. Note that Firejail cannot be used if the Steam Runtime is loaded, in this case, `unshare -nc` will be used instead
 
 __`TDF_BLOCK_BROWSER`__  
 Whether to block Wine from opening the system's native web browser or not. By default, TDF will block these requests to prevent undesirable data collection, but it can be unblocked if you trust the game you're running or it needs to open some web pages.
@@ -367,6 +367,8 @@ Possible values:
 
 Note that Gamescope currently only works properly on AMD GPUs and getting it to work properly on Intel and nVidia cards requires additional configuration.
 
+Note: Gamescope cannot be used if the Steam Runtime is loaded, in this case, this option will have no effect.
+
 __`TDF_GAMESCOPE_PARAMETERS`__  
 The command line arguments used to start Gamescope. You can see a complete list [here](https://github.com/ValveSoftware/gamescope#options).
 
@@ -374,7 +376,7 @@ By default, TDF sets this variable to `-f -r 60 -w $XRES -h $YRES`, where `XRES`
 
 #### Miscellaneous variables
 __`TDF_STEAM_RUNTIME`__  
-Whether to launch TDF using the Steam Runtime or not. This is generally a good idea as it makes TDF extermely portable, but if it fails to launch you might want to disable it. If you disable this feature, you must have Wine and all its dependencies installed on your system, as well as Zenity.
+Whether to launch TDF using the Steam Runtime or not. The Steam Runtime makes TDF more portable, making it less dependant on system libraries, but it does limit some of its features since it runs inside a container similar to Flatpak with a minimal version of Debian 11.
 
 Possible values:  
 * `2` (default): use Steam Runtime only if the system lacks known dependencies for Wine or TDF
@@ -387,6 +389,8 @@ Whether to launch the game using Feral Gamemode or not, which can improve perfor
 Possible values:  
 * `1` (default): use Gamemode if available
 * `0`: don't use Gamemode
+
+Note: Gamemode cannot be used if the Steam Runtime is loaded, in this case, this option will have no effect.
 
 __`TDF_MANGOHUD`__  
 Whether to launch the game with the MangoHud performance overlay or not. If MangoHud is not installed in the system, it has no effect. Note that some games will crash when launched with MangoHud.
@@ -494,7 +498,7 @@ whileGameRunning(){
 }
 ```
 
-Nots:
+Notes:
 * This function does not automatically stop running when the game's process ends, so if you're running a loop, make sure to check the game's process using `isProcessRunning`
 * The game process may not have been created yet when this function is called, since Wine takes a bit to launch
 
@@ -1011,7 +1015,7 @@ To put it short: if you're worried about telemetry and data collection in games,
 ## TODOs and future improvements
 * Localization (TDF has hardcoded English strings at the moment)
 * Automatically recognize some known problematic games and apply tweaks to the configuration
-* Find some way to build against old versions of glibc for better compatibility, ideally using the Steam Runtime SDK (Wine-tkg currently fails to build on debian-based distrosd due to conflicting dependencies)
+* Find some way to build against old versions of glibc for better compatibility, ideally using the Steam Runtime SDK (Wine-tkg currently fails to build on Debian-based distros due to conflicting dependencies)
 
 ## Videos
 * [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)

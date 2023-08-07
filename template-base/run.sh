@@ -69,9 +69,8 @@ if [ $TDF_STEAM_RUNTIME -eq 2 ]; then
     fi
 fi
 if [ $TDF_STEAM_RUNTIME -eq 1 ] && [ -d "./system/steamrt" ]; then
-    
     tar -xf ./system/steamrt/depot/sniper_platform_*/files/share/ca-certificates.tar -C ./system/steamrt/depot/sniper_platform_*/files/share
-    command="./system/steamrt/depot/run $command"
+    command="./system/steamrt/depot/run --no-generate-locales $command"
 fi
 if [ -n "$1" ]; then
     command="$command \"$*\""
