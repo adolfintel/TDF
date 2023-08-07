@@ -866,6 +866,7 @@ function _tdfmain {
     fi
     wine --version > /dev/null
     if [ $? -ne 0 ]; then
+        touch .tdfok
         zenity --error --width=500 --text="Failed to load Wine\nThis is usually caused by missing libraries (especially 32 bit libs) or broken permissions"
         exit
     fi
@@ -890,6 +891,7 @@ function _tdfmain {
     elif [ "$TDF_WINE_ARCH" = "win32" ]; then
         export WINEARCH="win32"
     else
+        touch .tdfok
         zenity --error --text="Invalid TDF_WINE_ARCH. Must be win32 or win64"
         exit
     fi
@@ -904,6 +906,7 @@ function _tdfmain {
     exec {_flockid}<"$0"
     flock -n -e $_flockid
     if [ $? -ne 0 ]; then
+        touch .tdfok
         if [ -e "$WINEPREFIX/.initialized" ]; then
             local _pfxversion=$(cat "$WINEPREFIX/.initialized")
             if [ "$_pfxversion" == "$TDF_VERSION" ]; then
@@ -940,12 +943,14 @@ function _tdfmain {
         if [ -n "$WINEARCH" ]; then
             local _pfxarch=$(cat "$WINEPREFIX/system.reg" | grep -m 1 '#arch' | cut -d '=' -f2)
             if [ "$_pfxarch" != "$WINEARCH" ]; then
+                touch .tdfok
                 zenity --error --width=500 --text="WINEARCH mismatch\n\nThis wineprefix:$_pfxarch\nRequested:$WINEARCH\n\nWINEARCH cannot be changed after initialization"
                 exit
             fi
         fi
         rm -f "$WINEPREFIX/.abort"
         (
+            touch .tdfok
             echo "1"
             if [ $_skipInitializations -eq 0 ]; then
                 _removeBrokenDosdevices
@@ -1002,6 +1007,7 @@ function _tdfmain {
         fi
     else
         (
+            touch .tdfok
             echo "10"
             _outputDetail "Starting wine..."
             local _realOverrides="$WINEDLLOVERRIDES"

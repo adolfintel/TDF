@@ -2,7 +2,7 @@
 export LC_ALL=C
 
 # --- VARIABLES - Steam runtime ---
-TDF_USE_STEAM_RUNTIME=1
+TDF_STEAM_RUNTIME=1
 
 #cd to run.sh location
 SOURCE=${BASH_SOURCE[0]}
@@ -30,6 +30,19 @@ if [ "$1" == "archive" ]; then
     fi
     exit 0
 fi
+command -v zenity > /dev/null
+    if [ $? -eq 0 ]; then
+    (
+        rm .tdfok
+        for i in {1..100}; do
+            if [ -e .tdfok ]; then
+                rm .tdfok
+                break;
+            fi
+            sleep 0.1
+        done
+    ) | zenity --progress --no-cancel --text="Launching..." --width=250 --auto-close --auto-kill &
+fi
 if [ ! -x "./system/main.sh" ]; then
     chmod -R 777 .
 fi
@@ -39,7 +52,7 @@ else #TODO: wayland support (0 lets wine handle it)
     export _DPI_FROM_OS=0
 fi
 command="./system/main.sh"
-if [ $TDF_USE_STEAM_RUNTIME -eq 1 ] && [ -d "./system/steamrt" ]; then
+if [ $TDF_STEAM_RUNTIME -eq 1 ] && [ -d "./system/steamrt" ]; then
     tar -xf ./system/steamrt/depot/sniper_platform_*/files/share/ca-certificates.tar -C ./system/steamrt/depot/sniper_platform_*/files/share
     command="./system/steamrt/depot/run $command"
 fi
