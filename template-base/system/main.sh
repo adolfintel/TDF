@@ -594,9 +594,9 @@ function _removeIntegrations {
 function _applyScaling {
     _outputDetail "Configuring scaling..."
     if [ $TDF_WINE_DPI -eq -1 ]; then
-        if [ "$XDG_SESSION_TYPE" == "x11" ]; then
-            TDF_WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
-        else #TODO: wayland support
+        if [ -n "$_DPI_FROM_OS" ]; then
+            TDF_WINE_DPI="$_DPI_FROM_OS"
+        else
             TDF_WINE_DPI=0
         fi
     fi
@@ -768,10 +768,10 @@ function _tdfmain {
         zenity --error --width=500 --text="Couldn't find a GPU with Vulkan support, make sure the drivers are installed"
         exit
     fi
-    if [ -d "system/xdotool" ]; then
-        export PATH="$PATH:$(pwd)/system/xdotool"
-        source "$(pwd)/system/xdotool/xdotoolfuncts.sh"
+    if [ -d "system/xutils" ]; then
+        export PATH="$PATH:$(pwd)/system/xutils"
     fi
+    source "$(pwd)/system/builtinFunctions.sh"
     XRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 1)
     YRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 2)
     if [ -f "vars.conf" ]; then
@@ -846,7 +846,6 @@ function _tdfmain {
             export INTEL_DEBUG="noccs,$INTEL_DEBUG"
         fi
     fi
-    source "system/gsutils.sh"
     local _gamemodeCommand="gamemoderun"
     if [ $TDF_GAMEMODE -eq 1 ]; then
         command -v gamemoderun > /dev/null

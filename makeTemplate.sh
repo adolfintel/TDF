@@ -4,7 +4,7 @@ fail(){
     exit 1
 }
 depsCheckFailed=0
-for d in "dxvk-async" "dxvk" "d8vk" "vkd3d" "xdotool" "futex2test" "vkgpltest" "wine" "prebuilts" "vcredist" "mfplat" "corefonts"; do
+for d in "dxvk-async" "dxvk" "d8vk" "vkd3d" "xutils" "futex2test" "vkgpltest" "wine" "prebuilts" "vcredist" "mfplat" "corefonts"; do
     sh "$d/checkDeps.sh"
     if [ $? -ne 0 ]; then
         depsCheckFailed=1;
@@ -75,10 +75,10 @@ fi
 mv build/* "../$dir/system/vkd3d"
 rm -rf build
 cd ..
-cd xdotool
+cd xutils
 ./build.sh
-if [ $? -ne 0 ]; then fail "xdotool"; fi
-mv build/* "../$dir/system/xdotool/"
+if [ $? -ne 0 ]; then fail "xutils"; fi
+mv build/* "../$dir/system/xutils/"
 rm -rf build
 cd ..
 cd futex2test

@@ -33,10 +33,15 @@ fi
 if [ ! -x "./system/main.sh" ]; then
     chmod -R 777 .
 fi
+if [ "$XDG_SESSION_TYPE" == "x11" ]; then
+    export _DPI_FROM_OS="$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)"
+else #TODO: wayland support (0 lets wine handle it)
+    export _DPI_FROM_OS=0
+fi
 command="./system/main.sh"
 if [ $TDF_USE_STEAM_RUNTIME -eq 1 ] && [ -d "./system/steamrt" ]; then
-    ./system/steamrt/setup.sh
-    command="./system/steamrt/run.sh $command"
+    tar -xf ./system/steamrt/depot/sniper_platform_*/files/share/ca-certificates.tar -C ./system/steamrt/depot/sniper_platform_*/files/share
+    command="./system/steamrt/depot/run $command"
 fi
 if [ -n "$1" ]; then
     command="$command \"$*\""

@@ -31,13 +31,11 @@ if [ $? -ne 0 ]; then
     failed=1
 fi
 command -v glslc > /dev/null
-if [ $? -ne 0 ]; then
-    echo "glslc not installed"
-    failed=1
-fi
+err1=$?
 command -v glslangValidator > /dev/null
-if [ $? -ne 0 ]; then
-    echo "glslangValidator not installed"
+err2=$?
+if [[ $err1 -ne 0 && $err2 -ne 0  ]]; then
+    echo "glslc or glslangValidator not installed"
     failed=1
 fi
 command -v curl > /dev/null

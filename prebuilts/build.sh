@@ -4,14 +4,15 @@ rm -rf build
 mkdir build
 cd build
 echo "Downloading steamrt"
-rm -rf steamrt steam-runtime
-wget https://repo.steampowered.com/steamrt-images-scout/snapshots/latest-public-beta/steam-runtime.tar.xz
-tar -xf steam-runtime.tar.xz
-mv steam-runtime steamrt
-cd steamrt
-patch -p1 < ../../steamrt-misleading-message.patch
-cd ..
-rm -f steam-runtime.tar.xz
+rm -rf steamrt steam-container-runtime
+wget https://repo.steampowered.com/steamrt3/images/latest-container-runtime-public-beta/steam-container-runtime-complete.tar.gz
+tar -xf steam-container-runtime-complete.tar.gz
+mv steam-container-runtime steamrt
+cd steamrt/depot/sniper_platform_*/files/share
+tar -cvf "ca-certificates.tar" "ca-certificates/" > /dev/null
+rm -rf "ca-certificates"
+cd ../../../../../
+rm -f steam-container-runtime-complete.tar.gz
 rm -rf msi
 mkdir msi
 cd msi

@@ -851,6 +851,7 @@ TDF comes with the Steam Runtime which provides a lot of libraries required to r
         sudo apt-get install wine
         sudo apt-get remove wine
         ```
+* If it still doesn't work, your distro may have a version of glibc that's older than the one that was used to build the prebuilt version of TDF that you have downloaded. You can verify this by opening the terminal and typing `./run.sh`, and looking at the errors that appear while TDF tries to load. If this is your case, at the moment the only solution is either building TDF yourself or using a more modern distro
 
 #### Game won't install, the installer doesn't start, doesn't work, it freezes or gives an error during the installation
 * Try using `TDF_WINE_PREFERRED_VERSION='mainline'` during the installation, using a normal version of Wine instead of the game-optimized one can get it to work
@@ -981,7 +982,7 @@ The following dependencies must be installed on your system:
 The following components will be downloaded:  
 * Wine Mono: latest version from [Github](https://github.com/madewokherd/wine-mono/releases/)
 * Wine Gecko: latest 32 and 64-bit versions from the [Wine website](https://dl.winehq.org/wine/wine-gecko/)
-* Steam Runtime: latest "scout" version from [Valve](https://repo.steampowered.com/steamrt-images-scout/snapshots/)
+* Steam Runtime: latest "sniper" version from [Valve](https://repo.steampowered.com/steamrt3/images/)
 * Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
 * Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
 * Microsoft mfplat: [mf-install](https://github.com/z0z0z/mf-install) from Github (will probably be removed in future versions of TDF)
@@ -1011,9 +1012,9 @@ This is not really a problem if you're just running games, the chances of games 
 To put it short: if you're worried about telemetry and data collection in games, you just don't want games to put files all over your system or you just want to package games, TDF is good; if you're going to run GTAV_Installer.exe (2.9MB) downloaded from SkidEmpressReloadedLegitCracks69.ru it is very much not.
 
 ## TODOs and future improvements
-* Replace Steam Runtime "scout" with "sniper" or similar alternative to make TDF less dependant on system libraries
 * Localization (TDF has hardcoded English strings at the moment)
 * Automatically recognize some known problematic games and apply tweaks to the configuration
+* Find some way to build against old versions of glibc for better compatibility, ideally using the Steam Runtime SDK (Wine-tkg currently fails to build on debian-based distrosd due to conflicting dependencies)
 
 ## Videos
 * [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)
