@@ -5,7 +5,10 @@ mkdir build temp
 cd temp
 exes=("andale32" "arial32" "arialb32" "comic32" "courie32" "georgi32" "impact32" "times32" "trebuc32" "verdan32" "webdin32")
 for exe in ${exes[@]}; do
-    wget "https://sourceforge.net/projects/corefonts/files/the fonts/final/$exe.exe"
+    for i in {1..20}; do #sometimes a sourceforge mirror is down and if we do this it will try a different one
+        wget --tries=1 "https://sourceforge.net/projects/corefonts/files/the fonts/final/$exe.exe"
+        if [ $? -eq 0 ]; then break; fi;
+    done
 done
 cabextract *.exe
 mv *.TTF *.ttf ../build
