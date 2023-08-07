@@ -91,13 +91,6 @@ Possible values:
 * `1` (default): show details like "Starting wine", "Registering DLLs", etc.
 * `0`: show a generic message like "Launching..." or "Creating a new wineprefix, this will take a while..."
 
-__`TDF_ZENITY_PREFER_SYSTEM`__  
-Zenity is the tool that displays the TDF windows with the progress bar and the various messages. TDF comes with its own version of Zenity but it can use the one in the system (if installed), which looks better.
-
-Possible values:  
-* `1` (default): use Zenity provided by the system, keep the builtin one as a fallback
-* `0`: always use the builtin Zenity
-
 __`TDF_MULTIPLE_INSTANCES`__  
 What to do if the user tries to launch `run.sh` while it's already running.
 
@@ -136,7 +129,7 @@ TDF comes with 2 different versions of Wine and can also use the one on your sys
 Possible values:  
 * `games` (default): use the game-optimized build. This version is based on Valve's version of Wine, with the GE and tkg patches and is very similar to [Wine-GE-Proton](https://github.com/GloriousEggroll/wine-ge-custom). Some functionalities have been disabled: anticheat bridges (you can't convince me they're not malware), dbus (automounting of external drives), ISDN, printing, digital camera importing, LDAP and related things, pcap support (network traffic sniffing), smart cart readers support, scanners, low level access to USB devices (does not affect input, that goes over HID), webcam support, Win16 support, winemenubuilder, vkd3d-lib (Wine's own VKD3D implementation, not needed since TDF uses VKD3D-Proton)
 * `mainline`: use a mostly regular version of Wine, useful for applications and old games that don't work with the game-optimized build. This version only contains a couple of hotfixes from tkg and the only disabled features are dbus and winemenubuilder for better isolation
-* `system`: use the version of Wine that's installed in the system, if it's not installed `mainline` will be used instead
+* `system` (not recommended): use the version of Wine that's installed in the system, if it's not installed `mainline` will be used instead. Note that system Wine cannot be used if the Steam Runtime is loaded, in this case, `mainline` will be used instead
 
 __`TDF_WINE_HIDE_CRASHES`__  
 When a Wine application crashes, it normally shows a window similar to the "Stopped working" dialog on Windows, but depending on the game and configuration, it may be impossible to interact with that window, leaving you stuck. By default, TDF disables this crash window, but it can be enabled for debugging and troubleshooting purposes.
@@ -384,8 +377,9 @@ __`TDF_STEAM_RUNTIME`__
 Whether to launch TDF using the Steam Runtime or not. This is generally a good idea as it makes TDF extermely portable, but if it fails to launch you might want to disable it. If you disable this feature, you must have Wine and all its dependencies installed on your system, as well as Zenity.
 
 Possible values:  
-* `1` (default): use Steam Runtime
+* `2` (default): use Steam Runtime only if the system lacks known dependencies for Wine or TDF
 * `0`: don't use Steam Runtime
+* `1`: always use Steam Runtime
 
 __`TDF_GAMEMODE`__  
 Whether to launch the game using Feral Gamemode or not, which can improve performance especially on weaker or mobile systems. If Gamemode is not installed in the system, it has no effect.

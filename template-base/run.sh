@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 export LC_ALL=C
 
-# --- VARIABLES - Steam runtime ---
-TDF_STEAM_RUNTIME=1
+# --- VARIABLES - Steam Runtime ---
+TDF_STEAM_RUNTIME=2
 
 #cd to run.sh location
 SOURCE=${BASH_SOURCE[0]}
@@ -14,8 +14,10 @@ done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 cd "$DIR"
 
-#load global config and launch TDF
+#load global config
 source "vars.conf"
+
+#launch archive mode if requested
 if [ "$1" == "archive" ]; then
     if [ "$(type -t onArchiveStart)" == "function" ]; then
         onArchiveStart "$@"
@@ -30,6 +32,8 @@ if [ "$1" == "archive" ]; then
     fi
     exit 0
 fi
+
+#otherwise, launch TDF
 command -v zenity > /dev/null
     if [ $? -eq 0 ]; then
     (
@@ -52,7 +56,20 @@ else #TODO: wayland support (0 lets wine handle it)
     export _DPI_FROM_OS=0
 fi
 command="./system/main.sh"
+function found(){
+    command -v "$1" > /dev/null
+    return $?
+}
+if [ $TDF_STEAM_RUNTIME -eq 2 ]; then
+    found wine && found wine64 && found winepath && found wineserver && found zenity && found xrandr && found unshare && found flock && found cmp
+    if [ $? -eq 0 ]; then
+        TDF_STEAM_RUNTIME=0
+    else
+        TDF_STEAM_RUNTIME=1
+    fi
+fi
 if [ $TDF_STEAM_RUNTIME -eq 1 ] && [ -d "./system/steamrt" ]; then
+    
     tar -xf ./system/steamrt/depot/sniper_platform_*/files/share/ca-certificates.tar -C ./system/steamrt/depot/sniper_platform_*/files/share
     command="./system/steamrt/depot/run $command"
 fi
