@@ -968,14 +968,16 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 ## Building TDF
 The TDF build scripts are designed to download the latest version of each component in TDF, build what needs to be compiled from source and create a `template-YYYYMMDD.tar.zst` ready to extract and use.
 
+__It is strongly recommended to use an Arch-based distro to build TDF.__
+
 To build TDF:  
 * Download the latest version of this repo: `git clone https://github.com/adolfintel/tdf`
 * Enter the downloaded folder: `cd tdf`
-* Launch the automatic build script: `./makeTemplate`
+* Launch the automatic build script: `./makeTemplate.sh`
 
 The following dependencies must be installed on your system:  
 * Basic tools like coreutils, gcc, g++, wget, curl, git, make, meson, sed, tar, zstd, etc. (on Arch-based distros, the `base-devel` package should provide everything you need)
-* Wine and its dependencies (just install Wine from your distro's repos)
+* Wine and its dependencies. (on Arch-based distros, the easiest way to get all of these is to install the wine-git package from the AUR)
 * Mingw-w64
 * glslc (glslang)
 
@@ -986,6 +988,7 @@ The following components will be downloaded:
 * Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
 * Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
 * Microsoft mfplat: [mf-install](https://github.com/z0z0z/mf-install) from Github (will probably be removed in future versions of TDF)
+* xrandr: taken from the [Debian 11 package](https://packages.debian.org/bullseye/amd64/x11-xserver-utils/download) for better compatibility with the Steam Runtime
 
 The following components will be built from source:  
 * Wine: latest master using the [wine-tkg build system](https://github.com/Frogging-Family/wine-tkg-git) with some custom config
@@ -996,7 +999,7 @@ The following components will be built from source:
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
 * Some C programs included with the TDF source code used
 
-It will take 30-60 minutes to compile everything, after which the package will be compressed and the finished archive will be ~380MB.
+It will take 30-60 minutes to compile everything, after which the package will be compressed and the finished archive will be ~480MB.
 
 Note that while TDF downloads the latest version of almost everything, the repo does not update itself so if you're going to be building TDF regularly, you should always run `git pull origin master` before starting the build to make sure you have the latest version of the TDF repo.
 
