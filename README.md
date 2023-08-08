@@ -500,7 +500,7 @@ whileGameRunning(){
 }
 ```
 
-Nots:
+Notes:
 * This function does not automatically stop running when the game's process ends, so if you're running a loop, make sure to check the game's process using `isProcessRunning`
 * The game process may not have been created yet when this function is called, since Wine takes a bit to launch
 
@@ -790,7 +790,7 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `vkd3d`
 * `wine-games`
 * `wine-mainline`
-* `xdotool`
+* `xutils`
 
 So for instance, if you need to test a custom version of DXVK, simply replace the DLLs in `system/dxvk` with your build (making sure to keep the same folder structure), when you launch `run.sh`, TDF will detect that these DLLs don't match the ones in the wineprefix and reinstall DXVK. The same goes for Wine and other components in the list above.
 
@@ -851,6 +851,7 @@ TDF comes with the Steam Runtime which provides a lot of libraries required to r
         sudo apt-get install wine
         sudo apt-get remove wine
         ```
+* If it still doesn't work, your distro may have a version of glibc that's older than the one that was used to build the prebuilt version of TDF that you have downloaded. You can verify this by opening the terminal and typing `./run.sh`, and looking at the errors that appear while TDF tries to load. If this is your case, at the moment the only solution is either building TDF yourself or using a more modern distro
 
 #### Game won't install, the installer doesn't start, doesn't work, it freezes or gives an error during the installation
 * Try using `TDF_WINE_PREFERRED_VERSION='mainline'` during the installation, using a normal version of Wine instead of the game-optimized one can get it to work
@@ -967,14 +968,16 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 ## Building TDF
 The TDF build scripts are designed to download the latest version of each component in TDF, build what needs to be compiled from source and create a `template-YYYYMMDD.tar.zst` ready to extract and use.
 
+__It is strongly recommended to use an Arch-based distro to build TDF.__
+
 To build TDF:  
 * Download the latest version of this repo: `git clone https://github.com/adolfintel/tdf`
 * Enter the downloaded folder: `cd tdf`
-* Launch the automatic build script: `./makeTemplate`
+* Launch the automatic build script: `./makeTemplate.sh`
 
 The following dependencies must be installed on your system:  
 * Basic tools like coreutils, gcc, g++, wget, curl, git, make, meson, sed, tar, zstd, etc. (on Arch-based distros, the `base-devel` package should provide everything you need)
-* Wine and its dependencies (just install Wine from your distro's repos)
+* Wine and its dependencies. (on Arch-based distros, the easiest way to get all of these is to install the wine-git package from the AUR)
 * Mingw-w64
 * glslc (glslang)
 
@@ -1014,6 +1017,7 @@ To put it short: if you're worried about telemetry and data collection in games,
 * Replace Steam Runtime "scout" with "sniper" or similar alternative to make TDF less dependant on system libraries
 * Localization (TDF has hardcoded English strings at the moment)
 * Automatically recognize some known problematic games and apply tweaks to the configuration
+* Find some way to build against old versions of glibc for better compatibility, ideally using the Steam Runtime SDK (Wine-tkg currently fails to build on Debian-based distros due to conflicting dependencies)
 
 ## Videos
 * [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)

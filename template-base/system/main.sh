@@ -768,10 +768,10 @@ function _tdfmain {
         zenity --error --width=500 --text="Couldn't find a GPU with Vulkan support, make sure the drivers are installed"
         exit
     fi
-    if [ -d "system/xdotool" ]; then
-        export PATH="$PATH:$(pwd)/system/xdotool"
-        source "$(pwd)/system/xdotool/xdotoolfuncts.sh"
+    if [ -d "system/xutils" ]; then
+        export PATH="$PATH:$(pwd)/system/xutils"
     fi
+    source "$(pwd)/system/builtinFunctions.sh"
     XRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 1)
     YRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 2)
     if [ -f "vars.conf" ]; then
@@ -846,7 +846,6 @@ function _tdfmain {
             export INTEL_DEBUG="noccs,$INTEL_DEBUG"
         fi
     fi
-    source "system/gsutils.sh"
     local _gamemodeCommand="gamemoderun"
     if [ $TDF_GAMEMODE -eq 1 ]; then
         command -v gamemoderun > /dev/null
