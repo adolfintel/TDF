@@ -754,6 +754,20 @@ Example for Mass Effect Legendary Edition:
 
 Note: the `TDF_STEAM_RUNTIME` variable can only be set in `vars.conf`, since it's applied before TDF is started.
 
+By default, when the list of games is displayed, they are shown in alphabetical order. If you want them to appear in a specific order, create a file called `_list.txt` in the `confs` folder, with the list of the configuration files in the order in which you want them to appear (filenames only, no extension).
+
+Example:
+```
+Mass Effect 1
+Mass Effect 2
+Mass Effect 3
+Mass Effect 1 - Configuration Utility
+Mass Effect 2 - Configuration Utility
+Mass Effect 3 - Configuration Utility
+Command Prompt (for modding)
+Windows Explorer (for modding)
+```
+
 ### Packaging and redistributing a TDF instance
 You installed your game(s) in a TDF instance and made sure it works perfectly? Did you test it on different hardware? Different distros? All good? Great! You're ready to package it.
 
