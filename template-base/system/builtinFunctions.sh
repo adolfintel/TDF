@@ -6,7 +6,7 @@ _savedGamma="1:1:1"
 
 TDF_XDOTOOL_ONLY_VISIBLE=0
 
-function pressKey(){
+function pressKey {
     local n=1
     if [ ! -z "$2" ]; then
         n="$2"
@@ -17,7 +17,7 @@ function pressKey(){
     done
 }
 
-function focusWindow(){
+function focusWindow {
     xdotool windowfocus "$1"
     xdotool windowactivate "$1"
     if [ $? -ne 0 ]; then
@@ -27,42 +27,42 @@ function focusWindow(){
     fi
 }
 
-function makeFullscreen(){
+function makeFullscreen {
     xdotool windowstate --add FULLSCREEN "$1"
     focusWindow $1
 }
 
-function removeFullscreen(){
+function removeFullscreen {
     xdotool windowstate --remove FULLSCREEN "$1"
 }
 
-function maximizeWindow(){
+function maximizeWindow {
     xdotool windowstate --add MAXIMIZED_VERT "$1"
     xdotool windowstate --add MAXIMIZED_HORZ "$1"
 }
 
-function restoreWindow(){
+function restoreWindow {
     xdotool windowstate --remove MAXIMIZED_VERT "$1"
     xdotool windowstate --remove MAXIMIZED_HORZ "$1"
 }
 
-function minimizeWindow(){
+function minimizeWindow {
     xdotool windowminimize "$1"
 }
 
-function activateWindow(){
+function activateWindow {
     xdotool windowactivate "$1"
 }
 
-function moveWindow(){
+function moveWindow {
     xdotool windowmove "$1" "$2" "$3"
 }
 
-function resizeWindow(){
+function resizeWindow {
     xdotool windowsize "$1" "$2" "$3"
 }
 
-function waitForWindow(){
+function waitForWindow {
     local timeout=30
     if [ ! -z "$3" ]; then
         timeout="$3"
@@ -121,7 +121,7 @@ function waitForWindow(){
     return 1
 }
 
-function keepWindowFocused(){
+function keepWindowFocused {
     local timeout=30
     if [ ! -z "$3" ]; then
         timeout="$3"
@@ -139,7 +139,7 @@ function keepWindowFocused(){
     done
 }
 
-function keepWindowFocusedById(){
+function keepWindowFocusedById {
     local first=1
     while true; do
         focusWindow "$1"
@@ -155,7 +155,7 @@ function keepWindowFocusedById(){
     done
 }
 
-function saveGamma(){
+function saveGamma {
     xrandr --version > /dev/null
     if [ $? -ne 0 ]; then
         return 1
@@ -170,7 +170,7 @@ function saveGamma(){
     return 0
 }
 
-function setGamma(){
+function setGamma {
     xrandr --version > /dev/null
     if [ $? -ne 0 ]; then
         return 1
@@ -183,12 +183,12 @@ function setGamma(){
     return 0
 }
 
-function restoreGamma(){
+function restoreGamma {
     setGamma $_savedGamma
     return $?
 }
 
-function defaultGamma(){
+function defaultGamma {
     setGamma "1:1:1"
     return $?
 }

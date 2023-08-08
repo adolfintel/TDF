@@ -75,14 +75,6 @@ alias zenity='zenity --title="$TDF_TITLE"'
 if [ $TDF_ZENITY_PREFER_SYSTEM -eq 1 ] && [ -f "/usr/bin/zenity" ]; then
     alias zenity='/usr/bin/zenity --title="$TDF_TITLE"'
 fi
-function isProcessRunning {
-    ps -e | grep "$1" > /dev/null
-    if [ $? -eq 0 ]; then
-        return 1
-    else
-        return 0
-    fi
-}
 function _outputDetail {
     if [ $TDF_DETAILED_PROGRESS -eq 1 ];then
         echo "#$1"
