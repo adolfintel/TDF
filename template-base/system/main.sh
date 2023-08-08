@@ -771,12 +771,18 @@ function _tdfmain {
     fi
     if [ -d "confs" ]; then
         local _confs=()
-        for f in confs/*.conf; do
-            if [ -f "$f" ]; then
-                f=$(basename "$f" ".conf")
+        if [ -f "confs/_list.txt" ]; then
+            while read f; do
                 _confs+=("$f")
-            fi
-        done
+            done < "confs/_list.txt"
+        else
+            for f in confs/*.conf; do
+                if [ -f "$f" ]; then
+                    f=$(basename "$f" ".conf")
+                    _confs+=("$f")
+                fi
+            done
+        fi
         if [ ${#_confs[@]} -ne 0 ]; then
             local _confToUse=$(zenity --list --width=400 --hide-header --text="Choose a game to launch" --column="Game" "${_confs[@]}")
             if [ -z "$_confToUse" ]; then
