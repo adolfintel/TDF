@@ -199,6 +199,13 @@ Possible values:
 * `0` (default): disabled
 * `1`: when the game is launched, TDF will ask where you want to save the trace, then launch the game with relay enabled
 
+__`TDF_WINE_SMOKETEST`__  
+Whether or not to perform a "smoke test" to make sure that Wine actually works before trying to run the game, that way we can tell if a crash is a Wine problem or a game problem. TDF does this by default but you can disable it if it takes too long at the "Starting Wine" screen.
+
+Possible values:  
+* `1` (default): do the "smoke test"
+* `0`: skip the "smoke test" for faster startup
+
 __`TDF_WINEMONO`__  
 Whether to install Wine Mono in the prefix or not. Mostly useful for launchers and applications based on .NET, games don't usually need this.
 

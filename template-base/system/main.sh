@@ -32,6 +32,7 @@ TDF_WINE_LANGUAGE=''
 TDF_WINE_ARCH="win64" #win64=emulate 64bit windows, win32=emulate 32bit windows (useful for older games). cannot be changed after wineprefix initialization
 TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, esync=always use esync, default=let wine decide. Only supported by wine-ge-proton, other versions will ignore this parameter
 TDF_WINE_DEBUG_RELAY=0
+TDF_WINE_SMOKETEST=1
 TDF_WINEMONO=0
 TDF_WINEGECKO=0
 export WINE_LARGE_ADDRESS_AWARE=1
@@ -748,6 +749,48 @@ function _applyFakeHomeDir {
         fi
     fi
 }
+function _wineSmokeTest {
+    if [ $TDF_WINE_SMOKETEST -eq 0 ]; then
+        return 0
+    fi
+    if [ -d "$WINEPREFIX/drive_c" ]; then
+        if [ -e "$WINEPREFIX/drive_c/smoke.txt" ]; then
+            rm "$WINEPREFIX/drive_c/smoke.txt"
+        fi
+        \cp "system/smoke32.exe" "$WINEPREFIX/drive_c/"
+        local _r=$RANDOM
+        wine 'C:\smoke32.exe' $_r
+        wait
+        rm "$WINEPREFIX/drive_c/smoke32.exe"
+        if [ -f "$WINEPREFIX/drive_c/smoke.txt" ]; then
+            local _out=$(cat "$WINEPREFIX/drive_c/smoke.txt")
+            rm "$WINEPREFIX/drive_c/smoke.txt"
+            if [ "$_out" != "$_r" ]; then
+                return 2
+            fi
+            if [ "$WINEARCH" == "win32" ]; then
+                return 0
+            fi
+            \cp "system/smoke64.exe" "$WINEPREFIX/drive_c/"
+            wine 'C:\smoke64.exe' $_r
+            wait
+            rm "$WINEPREFIX/drive_c/smoke64.exe"
+            if [ -f "$WINEPREFIX/drive_c/smoke.txt" ]; then
+                _out=$(cat "$WINEPREFIX/drive_c/smoke.txt")
+                rm "$WINEPREFIX/drive_c/smoke.txt"
+                if [ "$_out" != "$_r" ]; then
+                    return 3
+                fi
+            fi
+        fi
+    else
+        return 1
+    fi
+    return 0
+}
+function _showWineError {
+    zenity --error --width=500 --text="Failed to load Wine.\nThis is usually caused by missing libraries (especially 32-bit libs) or broken permissions."
+}
 
 function _tdfmain {
     local _manualInit=0
@@ -864,7 +907,7 @@ function _tdfmain {
     fi
     wine --version > /dev/null
     if [ $? -ne 0 ]; then
-        zenity --error --width=500 --text="Failed to load Wine\nThis is usually caused by missing libraries (especially 32 bit libs) or broken permissions"
+        _showWineError
         exit
     fi
     if [ "$TDF_WINE_SYNC" = "fsync" ]; then
@@ -955,6 +998,12 @@ function _tdfmain {
                 export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
                 wineboot
                 wait
+                _wineSmokeTest
+                if [ $? -ne 0 ]; then
+                    _showWineError
+                    touch "$WINEPREFIX/.abort"
+                    exit
+                fi
                 echo "30"
                 _applyDLLs
                 echo "40"
@@ -1006,6 +1055,12 @@ function _tdfmain {
             export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
             wineboot -i
             wait
+            _wineSmokeTest
+            if [ $? -ne 0 ]; then
+                _showWineError
+                touch "$WINEPREFIX/.abort"
+                exit
+            fi
             echo "30"
             while ! test -f "$WINEPREFIX/system.reg"; do
                 sleep 1

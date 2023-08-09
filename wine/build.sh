@@ -21,4 +21,7 @@ cd ../wine-mainline
 rm -rf include share/man share/applications
 cd ../..
 rm -rf repo
+echo "Building Wine smoke test\n"
+i686-w64-mingw32-gcc -static -o build/smoke32.exe smoke.c
+x86_64-w64-mingw32-gcc -static -o build/smoke64.exe smoke.c
 exit 0
