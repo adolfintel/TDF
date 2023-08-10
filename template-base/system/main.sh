@@ -750,14 +750,14 @@ function _applyFakeHomeDir {
     fi
 }
 function _wineSmokeTest {
-    if [ $TDF_WINE_SMOKETEST -eq 0 ]; then
+    if [[ $TDF_WINE_SMOKETEST -eq 0 || ! -d "system/winesmoketest" ]]; then
         return 0
     fi
     if [ -d "$WINEPREFIX/drive_c" ]; then
         if [ -e "$WINEPREFIX/drive_c/smoke.txt" ]; then
             rm "$WINEPREFIX/drive_c/smoke.txt"
         fi
-        \cp "system/smoke32.exe" "$WINEPREFIX/drive_c/"
+        \cp "system/winesmoketest/smoke32.exe" "$WINEPREFIX/drive_c/"
         local _r=$RANDOM
         wine 'C:\smoke32.exe' $_r
         wait
@@ -771,7 +771,7 @@ function _wineSmokeTest {
             if [ "$WINEARCH" == "win32" ]; then
                 return 0
             fi
-            \cp "system/smoke64.exe" "$WINEPREFIX/drive_c/"
+            \cp "system/winesmoketest/smoke64.exe" "$WINEPREFIX/drive_c/"
             wine 'C:\smoke64.exe' $_r
             wait
             rm "$WINEPREFIX/drive_c/smoke64.exe"
