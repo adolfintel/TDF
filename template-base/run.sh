@@ -14,8 +14,9 @@ done
 DIR=$( cd -P "$( dirname "$SOURCE" )" >/dev/null 2>&1 && pwd )
 cd "$DIR"
 
-#load global config and launch TDF
+#load global config, language and launch TDF
 source "vars.conf"
+source "system/localization/load.sh"
 if [ "$1" == "archive" ]; then
     if [ "$(type -t onArchiveStart)" == "function" ]; then
         onArchiveStart "$@"

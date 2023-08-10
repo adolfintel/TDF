@@ -1,8 +1,9 @@
 #!/usr/bin/env bash
 shopt -s expand_aliases
+source "system/localization/load.sh"
 export LC_ALL=C.UTF-8
 if [[ $# -eq 0 ]]; then
-    echo "This script should not be run directly, use run.sh instead"
+    echo "$(_loc "$TDF_LOCALE_DONTRUNDIRECTLY")"
     exit
 fi
 
@@ -13,7 +14,7 @@ game_workingDir=''
 
 # --- VARIABLES - TDF stuff ---
 TDF_VERSION="$(cat system/version)"
-TDF_TITLE="Launcher"
+TDF_TITLE="$(_loc "$TDF_LOCALE_DEFAULTTITLE")"
 TDF_DETAILED_PROGRESS=1
 TDF_ZENITY_PREFER_SYSTEM=1
 TDF_MULTIPLE_INSTANCES="askcmd" #deny=exit without error messages, error=show an error message and close, askcmd=ask the user if they want to run cmd inside the running prefix, cmd=run command prompt inside the running prefix, allow=allow multiple instances of the game
@@ -114,11 +115,11 @@ function _realRunCommandPrompt {
     eval "$_blockNetworkCommand wine start /D \"C:\Windows\System32\" /WAIT \"cmd.exe\""
 }
 function _runCommandPrompt {
-    zenity --info --width=500 --text="A Wine command prompt will now open, use it to install the game and then close it.\nDo not launch the game yet" &
+    zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")" &
     _applyLocale
     _realRunCommandPrompt
     _restoreLocale
-    zenity --info --width=500 --text="Good, now edit vars.conf and set game_exe to the Windows-style path to the game's exe file"
+    zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_AFTERCMD")"
 }
 function _realRunGame {
     _applyLocale
@@ -132,7 +133,7 @@ function _realRunGame {
     fi
     local command="$_gamemodeCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
     if [ $TDF_WINE_DEBUG_RELAY -eq 1 ]; then
-        local relayPath=$(zenity --file-selection --save --title="Where do you want to save the trace?" --filename="relay.txt")
+        local relayPath=$(zenity --file-selection --save --title="$(_loc "$TDF_LOCALE_WINE_RELAYPATH")" --filename="relay.txt")
         if [ -n "$relayPath" ]; then
             export WINEDEBUG="$WINEDEBUG,+relay"
             command="$command > \"$relayPath\" 2>&1"
@@ -161,7 +162,7 @@ function _runGame {
             else
                 (
                     _realRunGame
-                ) | zenity --progress --no-cancel --text="Game running" --width=250 --auto-kill --auto-close
+                ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_GAMERUNNING")" --width=250 --auto-kill --auto-close
             fi
             wait
             local playedTime=$((SECONDS - startedAt))
@@ -178,17 +179,17 @@ function _runGame {
                 hh="0$hh"
             fi
             if [ $TDF_SHOW_PLAY_TIME -eq 1 ]; then
-                zenity --info --width=300 --text="Played for $hh:$mm:$ss"
+                zenity --info --width=300 --text="$(_loc "$TDF_LOCALE_PLAYEDFOR")"
             fi
         else
-            zenity --error --width=500 --text="Configuration error: the specified game_exe does not exist"
+            zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_EXENOTFOUND")"
         fi
     else
-        zenity --error --width=500 --text="Configuration error: the specified game_workingDir does not exist"
+        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_DIRNOTFOUND")"
     fi
 }
 function _applyDLLs {
-    _outputDetail "Copying DLLs..."
+    _outputDetail "$(_loc "$TDF_LOCALE_COPYINGDLLS")"
     local windows_dir="$WINEPREFIX/drive_c/windows"
     if [ $TDF_DXVK_ASYNC -eq 2 ]; then
         ./system/vkgpltest
@@ -224,7 +225,7 @@ function _applyDLLs {
     }
     if [ -d "$d8vk_dir" ]; then
         if [ $TDF_D8VK -eq 1 ]; then
-            _outputDetail "Installing d8vk..."
+            _outputDetail "$(_loc "$TDF_LOCALE_D8VK_INSTALL")"
             TDF_DXVK=0
             TDF_VKD3D=0
             if [ "$WINEARCH" == "win32" ]; then
@@ -244,7 +245,7 @@ function _applyDLLs {
                 touch "$WINEPREFIX/.d8vk-installed"
             fi
         else
-            _outputDetail "Removing d8vk..."
+            _outputDetail "$(_loc "$TDF_LOCALE_D8VK_REMOVE")"
             if [ -f "$WINEPREFIX/.d8vk-installed" ]; then
                 for d in "${d8vk_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -259,7 +260,7 @@ function _applyDLLs {
     fi
     if [ -d "$dxvk_dir" ]; then
         if [ $TDF_DXVK -eq 1 ]; then
-            _outputDetail "Installing dxvk..."
+            _outputDetail "$(_loc "$TDF_LOCALE_DXVK_INSTALL")"
             if [ "$WINEARCH" == "win32" ]; then
                 for d in "${dxvk_dlls[@]}"; do
                     copyIfDifferent "$dxvk_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"
@@ -277,7 +278,7 @@ function _applyDLLs {
                 touch "$WINEPREFIX/.dxvk-installed"
             fi
         else
-            _outputDetail "Removing dxvk..."
+            _outputDetail "$(_loc "$TDF_LOCALE_DXVK_REMOVE")"
             if [ -f "$WINEPREFIX/.dxvk-installed" ]; then
                 for d in "${dxvk_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -292,7 +293,7 @@ function _applyDLLs {
     fi
     if [ -d "$vkd3d_dir" ]; then
         if [ $TDF_VKD3D -eq 1 ]; then
-            _outputDetail "Installing vkd3d..."
+            _outputDetail "$(_loc "$TDF_LOCALE_VKD3D_INSTALL")"
             if [ "$WINEARCH" == "win32" ]; then    
                 for d in "${vkd3d_dlls[@]}"; do
                     copyIfDifferent "$vkd3d_dir/x86/$d.dll" "$windows_dir/system32/$d.dll"
@@ -310,7 +311,7 @@ function _applyDLLs {
                 touch "$WINEPREFIX/.vkd3d-installed"
             fi
         else
-            _outputDetail "Removing vkd3d..."
+            _outputDetail "$(_loc "$TDF_LOCALE_VKD3D_REMOVE")"
             if [ -f "$WINEPREFIX/.vkd3d-installed" ]; then
                 for d in "${vkd3d_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -325,7 +326,7 @@ function _applyDLLs {
     fi
     if [ -d "$mfplat_dir" ]; then
         if [ $TDF_MSMFPLAT -eq 1 ]; then
-            _outputDetail "Installing MS mfplat..."
+            _outputDetail "$(_loc "$TDF_LOCALE_MSMFPLAT_INSTALL")"
             if [ "$WINEARCH" == "win32" ]; then
                 for d in "${mfplat_dlls[@]}"; do
                     copyIfDifferent "$mfplat_dir/syswow64/$d.dll" "$windows_dir/system32/$d.dll"
@@ -363,7 +364,7 @@ function _applyDLLs {
                 rm -f "regsvr32_d3d9.log"
             fi
         else
-            _outputDetail "Removing MS mfplat..."
+            _outputDetail "$(_loc "$TDF_LOCALE_MSMFPLAT_REMOVE")"
             if [ -f "$WINEPREFIX/.msmfplat-installed" ]; then
                 for d in "${mfplat_dlls[@]}"; do
                     rm -f "$windows_dir/system32/$d.dll"
@@ -376,7 +377,7 @@ function _applyDLLs {
             fi
         fi
     fi
-    _outputDetail "Registering DLLs..."
+    _outputDetail "$(_loc "$TDF_LOCALE_REGISTERINGDLLS")"
     for d in "${toUnoverride[@]}"; do
         unoverrideDll "$d"
     done
@@ -401,19 +402,19 @@ function _applyMSIs {
         }
         if [ $TDF_WINEMONO -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.winemono-installed" ]; then
-                _outputDetail "Installing winemono..."
+                _outputDetail "$(_loc "$TDF_LOCALE_WINEMONO_INSTALL")"
                 installMonoMSI
             else
                 if ! cmp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi" > /dev/null 2>&1; then
                     \cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
-                    _outputDetail "Updating winemono..."
+                    _outputDetail "$(_loc "$TDF_LOCALE_WINEMONO_UPDATE")"
                     uninstallMonoMSI
                     installMonoMSI
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.winemono-installed" ]; then
-                _outputDetail "Removing winemono..."
+                _outputDetail "$(_loc "$TDF_LOCALE_WINEMONO_REMOVE")"
                 uninstallMonoMSI
             fi
         fi
@@ -440,7 +441,7 @@ function _applyMSIs {
         }
         if [ $TDF_WINEGECKO -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.winegecko-installed" ]; then
-                _outputDetail "Installing winegecko..."
+                _outputDetail "$(_loc "$TDF_LOCALE_WINEGECKO_INSTALL")"
                 installGeckoMSI
             else
                 local mustUpdate=0
@@ -453,14 +454,14 @@ function _applyMSIs {
                     fi
                 fi
                 if [ $mustUpdate -eq 1 ]; then
-                    _outputDetail "Updating winegecko..."
+                    _outputDetail "$(_loc "$TDF_LOCALE_WINEGECKO_UPDATE")"
                     uninstallGeckoMSI
                     installGeckoMSI
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.winegecko-installed" ]; then
-                _outputDetail "Removing winegecko..."
+                _outputDetail "$(_loc "$TDF_LOCALE_WINEGECKO_REMOVE")"
                 uninstallGeckoMSI
             fi
         fi
@@ -520,7 +521,7 @@ function _applyVCRedists {
         }
         if [ $TDF_VCREDIST -eq 1 ]; then
             if [ ! -f "$WINEPREFIX/.vcredist-installed" ]; then
-                _outputDetail "Installing vcredist..."
+                _outputDetail "$(_loc "$TDF_LOCALE_VCREDIST_INSTALL")"
                 installVCRedists
             else
                 local mustUpdate=0
@@ -533,14 +534,14 @@ function _applyVCRedists {
                     fi
                 fi
                 if [ $mustUpdate -eq 1 ]; then
-                    _outputDetail "Updating vcredist..."
+                    _outputDetail "$(_loc "$TDF_LOCALE_VCREDIST_UPDATE")"
                     uninstallVCRedists
                     installVCRedists
                 fi
             fi
         else
             if [ -f "$WINEPREFIX/.vcredist-installed" ]; then
-                _outputDetail "Removing vcredist..."
+                _outputDetail "$(_loc "$TDF_LOCALE_VCREDIST_REMOVE")"
                 uninstallVCRedists
             fi
         fi    
@@ -548,7 +549,7 @@ function _applyVCRedists {
     fi
 }
 function _removeIntegrations {
-    _outputDetail "Removing integrations..."
+    _outputDetail "$(_loc "$TDF_LOCALE_DEINTEGRATING")"
     local _pfxversion=$(cat "$WINEPREFIX/.initialized")
     if [ "$_pfxversion" != "$TDF_VERSION" ]; then
         if [ "$WINEARCH" == "win32" ]; then
@@ -585,7 +586,7 @@ function _removeIntegrations {
     fi
 }
 function _applyScaling {
-    _outputDetail "Configuring scaling..."
+    _outputDetail "$(_loc "$TDF_LOCALE_SCALING")"
     if [ $TDF_WINE_DPI -eq -1 ]; then
         if [ "$XDG_SESSION_TYPE" == "x11" ]; then
             TDF_WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
@@ -610,7 +611,7 @@ function _applyScaling {
     fi
 }
 function _applyHideCrashes {
-    _outputDetail "Configuring winedbg..."
+    _outputDetail "$(_loc "$TDF_LOCALE_WINE_HIDECRASHES")"
     if [ $TDF_WINE_HIDE_CRASHES -eq 1 ]; then
         export WINEDEBUG=-all
         if [ ! -f "$WINEPREFIX/.crash-hidden" ]; then
@@ -625,7 +626,7 @@ function _applyHideCrashes {
     fi
 }
 function _removeBrokenDosdevices {
-    _outputDetail "Checking symlinks..."
+    _outputDetail "$(_loc "$TDF_LOCALE_LINKS_CHECK")"
     _dosdevices_unprotect
     local before="$(pwd)"
     cd "$WINEPREFIX/dosdevices"
@@ -634,7 +635,7 @@ function _removeBrokenDosdevices {
     _dosdevices_protect
 }
 function _removeUnwantedDosdevices {
-    _outputDetail "Removing symlinks..."
+    _outputDetail "$(_loc "$TDF_LOCALE_LINKS_CHECK")"
     _dosdevices_unprotect
     local driveC=$(realpath "$WINEPREFIX/dosdevices/c:")
     for f in "$WINEPREFIX"/dosdevices/* ; do
@@ -655,7 +656,7 @@ function _removeUnwantedDosdevices {
     _dosdevices_protect
 }
 function _checkAndRepairCDrive {
-    _outputDetail "Checking symlinks..."
+    _outputDetail "$(_loc "$TDF_LOCALE_LINKS_CHECK")"
     local link=$(realpath "$WINEPREFIX/dosdevices/c:")
     local target=$(realpath "$WINEPREFIX/drive_c")
     if [ "$link" != "$target" ]; then
@@ -667,13 +668,13 @@ function _checkAndRepairCDrive {
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
             touch "$WINEPREFIX/.abort"
-            zenity --error --width=500 --text="Virtual C drive is broken and attempts to repair it failed.\n\nPlease check $link"
+            zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_LINKS_CDRIVEBROKEN")"
             exit
         fi
     fi
 }
 function _checkAndRepairZDrive {
-    _outputDetail "Checking symlinks..."
+    _outputDetail "$(_loc "$TDF_LOCALE_LINKS_CHECK")"
     if [[ $TDF_BLOCK_ZDRIVE -ge 2 || $TDF_BLOCK_ZDRIVE -eq 1 && -n "$game_exe" ]]; then
         return
     fi
@@ -688,13 +689,13 @@ function _checkAndRepairZDrive {
         link=$(realpath "$link")
         if [ "$link" != "$target" ]; then
             touch "$WINEPREFIX/.abort"
-            zenity --error --width=500 --text="Z drive is broken and attempts to repair it failed.\n\nPlease check $link"
+            zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_LINKS_ZDRIVEBROKEN")"
             exit
         fi
     fi
 }
 function _applyBlockBrowser {
-    _outputDetail "Configuring winebrowser..."
+    _outputDetail "$(_loc "$TDF_LOCALE_WINE_BLOCKBROWSER")"
     if [ $TDF_BLOCK_BROWSER -eq 1 ]; then
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winebrowser.exe=d"
     fi
@@ -705,7 +706,7 @@ function _applyCorefonts {
     local corefonts_info=("AndaleMo.TTF:Andale Mono" "Arial.TTF:Arial" "Arialbd.TTF:Arial Bold" "Arialbi.TTF:Arial Bold Italic" "Ariali.TTF:Arial Italic" "AriBlk.TTF:Arial Black" "Comic.TTF:Comic Sans MS" "Comicbd.TTF:Comic Sans MS Bold" "cour.ttf:Courier New" "courbd.ttf:Courier New Bold" "courbi.ttf:Courier New Bold Italic" "couri.ttf:Courier New Italic" "Georgia.TTF:Georgia" "Georgiab.TTF:Georgia Bold" "Georgiai.TTF:Georgia Italic" "Georgiaz.TTF:Georgia Bold Italic" "Impact.TTF:Impact" "Times.TTF:Times New Roman" "Timesbd.TTF:Times New Roman Bold" "Timesbi.TTF:Times New Roman Bold Italic" "Timesi.TTF:Times New Roman Italic" "trebuc.ttf:Trebuchet MS" "Trebucbd.ttf:Trebuchet MS Bold" "trebucbi.ttf:Trebuchet MS Bold Italic" "trebucit.ttf:Trebuchet MS Italic" "Verdana.TTF:Verdana" "Verdanab.TTF:Verdana Bold" "Verdanai.TTF:Verdana Italic" "Verdanaz.TTF:Verdana Bold Italic" "Webdings.TTF:Webdings")
     if [ -d "$corefonts_dir" ]; then
         if [ $TDF_COREFONTS -eq 1 ]; then
-            _outputDetail "Installing corefonts..."
+            _outputDetail "$(_loc "$TDF_LOCALE_COREFONTS_INSTALL")"
             if [ ! -f "$WINEPREFIX/.corefonts-installed" ]; then
                 local commands=""
                 function copyAndRegister {
@@ -720,7 +721,7 @@ function _applyCorefonts {
                 touch "$WINEPREFIX/.corefonts-installed"
             fi
         else
-            _outputDetail "Removing corefonts..."
+            _outputDetail "$(_loc "$TDF_LOCALE_COREFONTS_REMOVE")"
             if [ -f "$WINEPREFIX/.corefonts-installed" ]; then
                 local commands=""
                 function deleteAndUnregister {
@@ -789,7 +790,7 @@ function _wineSmokeTest {
     return 0
 }
 function _showWineError {
-    zenity --error --width=500 --text="Failed to load Wine.\nThis is usually caused by missing libraries (especially 32-bit libs) or broken permissions."
+    zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_BROKEN")"
 }
 
 function _tdfmain {
@@ -800,7 +801,7 @@ function _tdfmain {
     ./system/vkgpltest
     local _res=$?
     if [ $_res -eq 0 ] || [ $_res -gt 2 ] || [ $_res -lt 0 ]; then
-        zenity --error --width=500 --text="Couldn't find a GPU with Vulkan support, make sure the drivers are installed"
+        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKAN")"
         exit
     fi
     if [ -d "system/xutils" ]; then
@@ -827,7 +828,7 @@ function _tdfmain {
             done
         fi
         if [ ${#_confs[@]} -ne 0 ]; then
-            local _confToUse=$(zenity --list --width=400 --hide-header --text="Choose a game to launch" --column="Game" "${_confs[@]}")
+            local _confToUse=$(zenity --list --width=400 --hide-header --text="$(_loc "$TDF_LOCALE_CHOOSEGAME")" --column="Game" "${_confs[@]}")
             if [ -z "$_confToUse" ]; then
                 exit
             fi
@@ -931,7 +932,7 @@ function _tdfmain {
     elif [ "$TDF_WINE_ARCH" = "win32" ]; then
         export WINEARCH="win32"
     else
-        zenity --error --text="Invalid TDF_WINE_ARCH. Must be win32 or win64"
+        zenity --error --text="$(_loc "$TDF_LOCALE_WINE_INVALIDARCH")"
         exit
     fi
     local _flockid=$(( RANDOM % 10000 + 400 ))
@@ -951,10 +952,10 @@ function _tdfmain {
                 if [ "$TDF_MULTIPLE_INSTANCES" == "close" ]; then
                     exit
                 elif [ "$TDF_MULTIPLE_INSTANCES" == "error" ]; then
-                    zenity --error --text="This application is already running"
+                    zenity --error --text="$(_loc "$TDF_LOCALE_ALREADYRUNNING_ERROR")"
                     exit
                 elif [ "$TDF_MULTIPLE_INSTANCES" == "askcmd" ]; then
-                    zenity --question --width=400 --text="This wineprefix is already running\nOpen a command prompt inside it?"
+                    zenity --question --width=400 --text="$(_loc "$TDF_LOCALE_ALREADYRUNNING_ASKCMD")"
                     if [ $? -eq 0 ]; then
                         _realRunCommandPrompt
                     fi
@@ -981,7 +982,7 @@ function _tdfmain {
         if [ -n "$WINEARCH" ]; then
             local _pfxarch=$(cat "$WINEPREFIX/system.reg" | grep -m 1 '#arch' | cut -d '=' -f2)
             if [ "$_pfxarch" != "$WINEARCH" ]; then
-                zenity --error --width=500 --text="WINEARCH mismatch\n\nThis wineprefix:$_pfxarch\nRequested:$WINEARCH\n\nWINEARCH cannot be changed after initialization"
+                zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_WRONGARCH")"
                 exit
             fi
         fi
@@ -993,7 +994,7 @@ function _tdfmain {
                 _checkAndRepairCDrive
                 _checkAndRepairZDrive
                 echo "10"
-                _outputDetail "Starting wine..."
+                _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
                 local _realOverrides="$WINEDLLOVERRIDES"
                 export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
                 wineboot
@@ -1023,13 +1024,13 @@ function _tdfmain {
                 echo "95"
                 wait
                 export WINEDLLOVERRIDES="$_realOverrides"
-                _outputDetail "Launching game..."
+                _outputDetail "$(_loc "$TDF_LOCALE_LAUNCHINGGAME")"
                 wineserver -k -w
                 wait
                 echo "100"
                 echo "$TDF_VERSION" > "$WINEPREFIX/.initialized"
             fi
-        ) | zenity --progress --no-cancel --text="Launching..." --width=250 --auto-close --auto-kill
+        ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_LAUNCHING")" --width=250 --auto-close --auto-kill
         wait
         if [ -f "$WINEPREFIX/.abort" ]; then
             rm -f "$WINEPREFIX/.abort"
@@ -1050,7 +1051,7 @@ function _tdfmain {
     else
         (
             echo "10"
-            _outputDetail "Starting wine..."
+            _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
             local _realOverrides="$WINEDLLOVERRIDES"
             export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
             wineboot -i
@@ -1084,12 +1085,12 @@ function _tdfmain {
             echo "95"
             wait
             export WINEDLLOVERRIDES="$_realOverrides"
-            _outputDetail "Starting..."
+            _outputDetail "$(_loc "$TDF_LOCALE_STARTING")"
             wineserver -k -w
             wait
             echo "100"
             echo "$TDF_VERSION" > "$WINEPREFIX/.initialized"
-        ) | zenity --progress --no-cancel --text="Initializing a new wineprefix, this may take a while" --width=500 --auto-close --auto-kill
+        ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_INITPREFIX")" --width=500 --auto-close --auto-kill
         wait
         _applyBlockBrowser
         if [ $_manualInit -eq 1 ]; then

@@ -1,35 +1,38 @@
 #!/usr/bin/env bash
+source "system/localization/load.sh"
 folderPath="$(basename "$(pwd)")"
 cd ..
 archivePath="$(realpath "$folderPath")"
 fromSize=$( du -sk --apparent-size "$folderPath" | cut -f 1 )
-echo "Archiving $((fromSize/1024)) MBytes"
+fromSizeMB=$((fromSize/1024))
+echo "$(_loc "$TDF_LOCALE_ARCHIVE_STARTED")"
 checkpoint="$((fromSize/50))"
 command="tar -c --record-size=1K --checkpoint=$checkpoint --checkpoint-action=\"ttyout=█\" -f - \"$folderPath\""
 if [ "$2" == "nocompress" ]; then
     archivePath="$archivePath.tar"
-    echo "Output: $archivePath (no compression)"
+    echo "$(_loc "$TDF_LOCALE_ARCHIVE_TAR")"
 elif [ "$2" == "fastcompress" ]; then
     archivePath="$archivePath.tar.xz"
-    echo "Output: $archivePath (parallel xz compression)"
+    echo "$(_loc "$TDF_LOCALE_ARCHIVE_XZ")"
     command="$command | xz -T0"
 elif [ "$2" == "maxcompress" ] || [ -z "$2" ]; then
     archivePath="$archivePath.tar.zst"
-    echo "Output: $archivePath (zstd maximum compression)"
+    echo "$(_loc "$TDF_LOCALE_ARCHIVE_ZSTD")"
     command="$command | zstd --ultra -22"
 else
-    echo "Error: valid options for compression are nocompress, fastcompress or maxcompress"
+    echo "$(_loc "$TDF_LOCALE_ARCHIVE_INVALIDARGS")"
     exit 2
 fi
 echo -en "░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░░\r"
 eval "$command" > "$archivePath"
 if [ $? -ne 0 ]; then
-    echo -e "\nFailed"
+    echo -e "\n$(_loc "$TDF_LOCALE_ARCHIVE_FAILED")"
     exit 1
 else
-    echo -e "\nDone!"
+    echo -e "\n$(_loc "$TDF_LOCALE_ARCHIVE_DONE")"
     toSize=$( du -sk "$archivePath" | cut -f 1 )
     ratio=$(( (100 * toSize) / fromSize ))
-    echo "Final size: $((toSize/1024)) MBytes ($ratio% compression ratio)"
+    toSizeMB=$((toSize/1024))
+    echo "$(_loc "$TDF_LOCALE_ARCHIVE_FINALSIZE")"
     exit 0
 fi
