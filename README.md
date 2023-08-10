@@ -814,6 +814,7 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `d8vk`
 * `dxvk`
 * `dxvk-async`
+* `localization`
 * `msi`
 * `steamrt`
 * `vcredist`
