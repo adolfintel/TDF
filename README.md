@@ -811,6 +811,7 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `vkd3d`
 * `wine-games`
 * `wine-mainline`
+* `winesmoketest`
 * `xutils`
 
 So for instance, if you need to test a custom version of DXVK, simply replace the DLLs in `system/dxvk` with your build (making sure to keep the same folder structure), when you launch `run.sh`, TDF will detect that these DLLs don't match the ones in the wineprefix and reinstall DXVK. The same goes for Wine and other components in the list above.
@@ -839,6 +840,7 @@ The following folders can be deleted from the `system` folder of a TDF instance 
 * `vkd3d`
 * `wine-games` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="mainline"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-mainline` as a last resort. If neither are available, TDF will fail to start)
 * `wine-mainline` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="games"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-games` as a last resort. If neither are available, TDF will fail to start)
+* `winesmoketest`
 
 Folders and files not mentioned in this list should not be removed to avoid breaking TDF.
 
