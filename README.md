@@ -129,6 +129,15 @@ Possible values:
 * `0` (default): don't show it
 * `1`: show it
 
+__`TDF_UI_LANGUAGE`__  
+The language to use for the TDF user interface. Does not affect Wine or games (see `TDF_WINE_LANGUAGE` for that).
+
+By default, TDF tries to obtain the language from the OS. If a translation is not available, it will fall back to English.
+
+Currently implemented languages:  
+* `en`: English
+* `it`: Italian
+
 ### Wine variables
 __`TDF_WINE_PREFERRED_VERSION`__  
 TDF comes with 2 different versions of Wine and can also use the one on your system (if installed). This variable lets you choose which one you prefer.
@@ -759,7 +768,7 @@ Example for Mass Effect Legendary Edition:
         }
     ```
 
-Note: the `TDF_STEAM_RUNTIME` variable can only be set in `vars.conf`, since it's applied before TDF is started.
+Note: the `TDF_STEAM_RUNTIME` and `TDF_UI_LANGUAGE` variables can only be set in `vars.conf`, since they're applied before TDF is started, all other variables can be changed at any moment.
 
 By default, when the list of games is displayed, they are shown in alphabetical order. If you want them to appear in a specific order, create a file called `_list.txt` in the `confs` folder, with the list of the configuration files in the order in which you want them to appear (filenames only, no extension).
 
