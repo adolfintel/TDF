@@ -2,7 +2,7 @@
 export LC_ALL=C
 
 # --- VARIABLES - Steam runtime ---
-TDF_USE_STEAM_RUNTIME=1
+TDF_STEAM_RUNTIME=1
 
 #cd to run.sh location
 SOURCE=${BASH_SOURCE[0]}
@@ -26,7 +26,7 @@ if [ "$1" == "archive" ]; then
     fi
     ./system/archive.sh "$@"
     res=$?
-    if [ "$(type -t onArchiveEnd)" == "function" ]; then
+    if [ "$(type -t onArchiveEnd)" = "function" ]; then
         onArchiveEnd $res
     fi
     exit 0
@@ -35,7 +35,7 @@ if [ ! -x "./system/main.sh" ]; then
     chmod -R 777 .
 fi
 command="./system/main.sh"
-if [ $TDF_USE_STEAM_RUNTIME -eq 1 ] && [ -d "./system/steamrt" ]; then
+if [[ "$TDF_STEAM_RUNTIME" -eq 1 && -d "./system/steamrt" ]]; then
     ./system/steamrt/setup.sh
     command="./system/steamrt/run.sh $command"
 fi

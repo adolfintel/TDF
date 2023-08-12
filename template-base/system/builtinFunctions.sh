@@ -68,7 +68,7 @@ function waitForWindow {
         timeout="$3"
     fi
     local args="--shell"
-    if [ $TDF_XDOTOOL_ONLY_VISIBLE -eq 1 ]; then
+    if [ "$TDF_XDOTOOL_ONLY_VISIBLE" -eq 1 ]; then
         args="$args --onlyvisible"
     fi
     for i in $(seq 1 $timeout); do
