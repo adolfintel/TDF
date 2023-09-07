@@ -4,7 +4,7 @@ fail(){
     exit 1
 }
 depsCheckFailed=0
-for d in "dxvk-async" "dxvk" "d8vk" "vkd3d" "xutils" "futex2test" "vkgpltest" "wine" "prebuilts" "vcredist" "mfplat" "corefonts"; do
+for d in "dxvk-async" "dxvk" "d8vk" "vkd3d" "xutils" "futex2test" "vkgpltest" "wine" "prebuilts" "vcredist" "corefonts"; do
     sh "$d/checkDeps.sh"
     if [ $? -ne 0 ]; then
         depsCheckFailed=1;
@@ -109,12 +109,6 @@ cd vcredist
 ./build.sh
 if [ $? -ne 0 ]; then fail "vcredist"; fi
 mv build/* "../$dir/system/vcredist"
-rm -rf build
-cd ..
-cd mfplat
-./build.sh
-if [ $? -ne 0 ]; then fail "mfplat"; fi
-mv build/* "../$dir/system/mfplat"
 rm -rf build
 cd ..
 cd corefonts

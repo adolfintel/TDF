@@ -431,15 +431,6 @@ Possible values:
 * `1` (default): install VCRedist 2015+
 * `0`: don't install VCRedist 2015+
 
-__`TDF_MSMFPLAT`__  
-Whether to install the Microsoft Media Foundation Platform (mfplat) instead of Wine's implementation. This can fix video playback in some games but is generally a bad idea. Also, once installed, it can't be cleanly removed without recreating `zzprefix` from scratch so keep this as an absolute last resort.
-
-Possible values:  
-* `0` (default): use Wine's mfplat implementation
-* `1`: use Microsoft's implementation
-
-Note that the licensing status of this feature is unclear and it will probably be removed in future versions of TDF since it's rarely necessary. These files are readily available on [GitHub](https://github.com/z0z0z/mf-install) and have been used for years before Wine implemented mfplat decently, but they are proprietary blobs so if you're concerned about licenses and software patents, remove the `system/mfplat` folder from your TDF instance.
-
 __`export DRI_PRIME`__  
 Sometimes on systems with multiple GPUs, a game might start using the wrong GPU, such as the integrated graphics on your laptop instead of the dedicated card.
 
@@ -830,7 +821,6 @@ Note: your custom files will only be used if that component is actually being us
 
 The following folders are not monitored for changes as they are very rarely needed:
 * `corefonts`
-* `mfplat`
 
 Should you need to test changes to them, simply disable that component, launch `run.sh`, then reenable it and launch it again.
 
@@ -1020,7 +1010,6 @@ The following components will be downloaded:
 * Steam Runtime: latest "scout" version from [Valve](https://repo.steampowered.com/steamrt-images-scout/snapshots/)
 * Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
 * Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
-* Microsoft mfplat: [mf-install](https://github.com/z0z0z/mf-install) from Github (will probably be removed in future versions of TDF)
 
 The following components will be built from source:  
 * Wine: latest master using the [wine-tkg build system](https://github.com/Frogging-Family/wine-tkg-git) with some custom config

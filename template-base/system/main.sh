@@ -69,7 +69,6 @@ TDF_GAMEMODE=1
 TDF_MANGOHUD=0
 TDF_COREFONTS=1
 TDF_VCREDIST=1
-TDF_MSMFPLAT=0
 
 # Note: there are a few other variables defined elsewhere, see the documentation for a complete list
 
@@ -208,8 +207,6 @@ function _applyDLLs {
     local d8vk_dlls=("d3d8" "d3d9" "d3d10core" "d3d11" "dxgi")
     local vkd3d_dir="system/vkd3d"
     local vkd3d_dlls=("d3d12" "d3d12core")
-    local mfplat_dir="system/mfplat"
-    local mfplat_dlls=("colorcnv" "mf" "mferror" "mfplat" "mfplay" "mfreadwrite" "msmpeg2adec" "msmpeg2vdec" "sqmapi")
     local toOverride=()
     local toUnoverride=()
     function overrideDll {
@@ -321,59 +318,6 @@ function _applyDLLs {
                 wineboot -u
                 wait
                 rm -f "$WINEPREFIX/.vkd3d-installed"
-            fi
-        fi
-    fi
-    if [ -d "$mfplat_dir" ]; then
-        if [ "$TDF_MSMFPLAT" -eq 1 ]; then
-            _outputDetail "$(_loc "$TDF_LOCALE_MSMFPLAT_INSTALL")"
-            if [ "$WINEARCH" = "win32" ]; then
-                for d in "${mfplat_dlls[@]}"; do
-                    copyIfDifferent "$mfplat_dir/syswow64/$d.dll" "$windows_dir/system32/$d.dll"
-                done
-            else
-                for d in "${mfplat_dlls[@]}"; do
-                    copyIfDifferent "$mfplat_dir/syswow64/$d.dll" "$windows_dir/syswow64/$d.dll"
-                    copyIfDifferent "$mfplat_dir/system32/$d.dll" "$windows_dir/system32/$d.dll"
-                done
-            fi
-            local mfplatVer="$(cat "$WINEPREFIX/.msmfplat-installed")"
-            if [ "$mfplatVer" != "$TDF_VERSION" ]; then
-                if [ "$WINEARCH" = "win32" ]; then
-                    wine reg import "$mfplat_dir/mf.reg"
-                    wine reg import "$mfplat_dir/wmf.reg"
-                    wine regsvr32 colorcnv.dll
-                    wine regsvr32 msmpeg2adec.dll
-                    wine regsvr32 msmpeg2vdec.dll
-                else
-                    wine reg import "$mfplat_dir/mf.reg" /reg:32
-                    wine reg import "$mfplat_dir/wmf.reg" /reg:32
-                    wine reg import "$mfplat_dir/mf.reg" /reg:64
-                    wine reg import "$mfplat_dir/wmf.reg" /reg:64
-                    wine regsvr32 colorcnv.dll
-                    wine regsvr32 msmpeg2adec.dll
-                    wine regsvr32 msmpeg2vdec.dll
-                    wine64 regsvr32 colorcnv.dll
-                    wine64 regsvr32 msmpeg2adec.dll
-                    wine64 regsvr32 msmpeg2vdec.dll
-                fi
-                for d in "${mfplat_dlls[@]}"; do
-                    toOverride+=("$d")
-                done
-                echo "$TDF_VERSION" > "$WINEPREFIX/.msmfplat-installed"
-                rm -f "regsvr32_d3d9.log"
-            fi
-        else
-            _outputDetail "$(_loc "$TDF_LOCALE_MSMFPLAT_REMOVE")"
-            if [ -f "$WINEPREFIX/.msmfplat-installed" ]; then
-                for d in "${mfplat_dlls[@]}"; do
-                    rm -f "$windows_dir/system32/$d.dll"
-                    rm -f "$windows_dir/syswow64/$d.dll"
-                    toUnoverride+=("$d")
-                done
-                wineboot -u
-                wait
-                rm -f "$WINEPREFIX/.msmfplat-installed"
             fi
         fi
     fi
