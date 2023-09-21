@@ -9,6 +9,7 @@ touch incomplete
 if [ -d d8vk ]; then
     cd d8vk
     git fetch --all -p
+    git reset --hard origin/main > /dev/null
     git submodule update
     cd ..
 else

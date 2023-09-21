@@ -9,6 +9,7 @@ touch incomplete
 if [ -d dxvk ]; then
     cd dxvk
     git fetch --all -p
+    git reset --hard origin/master > /dev/null
     git submodule update
     cd ..
 else
@@ -16,8 +17,8 @@ else
 fi
 if [ -d dxvk-gplasync ]; then
     cd dxvk-gplasync
-    git reset --hard > /dev/null
     git fetch --all -p
+    git reset --hard origin/main > /dev/null
     git submodule update
     cd ..
 else

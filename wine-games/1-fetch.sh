@@ -9,6 +9,7 @@ touch incomplete
 if [ -d wine-tkg-git ]; then
     cd wine-tkg-git
     git fetch --all -p
+    git reset --hard origin/master > /dev/null
     cd ..
 else
     git clone https://github.com/Frogging-Family/wine-tkg-git

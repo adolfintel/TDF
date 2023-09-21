@@ -9,6 +9,7 @@ touch incomplete
 if [ -d dxvk ]; then
     cd dxvk
     git fetch --all -p
+    git reset --hard origin/master > /dev/null
     git submodule update
     cd ..
 else

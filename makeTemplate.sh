@@ -3,6 +3,7 @@ if [ -z "$TDF_BUILD_NOUPDATES" ]; then
     if [ -d .git ]; then
         echo "This is a git repo, checking for TDF updates"
         git fetch --all -p
+        git reset --hard origin/newbuild > /dev/null
         TDF_BUILD_NOUPDATES=1 ./makeTemplate.sh && exit 0
         exit 0
     else

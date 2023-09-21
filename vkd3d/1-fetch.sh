@@ -9,6 +9,7 @@ touch incomplete
 if [ -d vkd3d-proton ]; then
     cd vkd3d-proton
     git fetch --all -p
+    git reset --hard origin/master > /dev/null
     git submodule update
     cd ..
 else
