@@ -28,6 +28,25 @@ if [ "$1" == "clean" ]; then
     echo "Done!"
     exit 0
 fi
+failedDepsCheck=0
+for module in "${modules[@]}"; do
+    cd "$module"
+    for f in ./0-*.sh; do
+        "$f"
+        if [ $? -ne 0 ]; then
+            failedDepsCheck=1
+        fi
+    done
+    cd ..
+done
+command -v zstd > /dev/null
+if [ $? -ne 0 ]; then
+    echo "zstd not installed"
+    failedDepsCheck=1
+fi
+if [ $failedDepsCheck -eq 1 ]; then
+    fail "missing dependencies"
+fi
 failedModules=()
 version=$(date +"%Y%m%d")
 startState=0
@@ -35,7 +54,7 @@ if [ -f state ]; then
     startState="$(cat state)"
     startState=$((startState))
 fi
-for state in {0..3}; do
+for state in {1..3}; do
     echo $state > state
     for module in "${modules[@]}"; do
         skip=0
