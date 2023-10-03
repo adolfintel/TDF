@@ -1,142 +1,128 @@
 #!/usr/bin/env bash
+if [ -z "$TDF_BUILD_NOUPDATES" ]; then
+    if [ -d .git ]; then
+        echo "This is a git repo, checking for TDF updates"
+        git fetch --all -p
+        git reset --hard origin/"$(git branch --show-current)" > /dev/null
+        TDF_BUILD_NOUPDATES=1 ./makeTemplate.sh && exit 0
+        exit 0
+    else
+        echo "Not a git repo, please check for TDF updates manually"
+    fi
+fi
 fail(){
     echo "Build failed: $1"
     exit 1
 }
-depsCheckFailed=0
-for d in "dxvk-async" "dxvk" "d8vk" "vkd3d" "xutils" "futex2test" "vkgpltest" "wine" "prebuilts" "vcredist" "corefonts"; do
-    sh "$d/checkDeps.sh"
-    if [ $? -ne 0 ]; then
-        depsCheckFailed=1;
-    fi
+modules=("vkd3d" "dxvk" "dxvk-async" "d8vk" "wine-games" "wine-mainline" "winesmoketest" "xutils" "futex2test" "vkgpltest" "msi" "steamrt" "vcredist" "corefonts")
+if [ "$1" == "clean" ]; then
+    echo "Cleaning up"
+    rm -f state
+    for module in "${modules[@]}"; do
+        cd "$module"
+        ./clean.sh
+        if [ $? -ne 0 ]; then
+            fail "Clean failed for module $module"
+        fi
+        cd ..
+    done
+    echo "Done!"
+    exit 0
+fi
+failedDepsCheck=0
+for module in "${modules[@]}"; do
+    cd "$module"
+    for f in ./0-*.sh; do
+        "$f"
+        if [ $? -ne 0 ]; then
+            failedDepsCheck=1
+        fi
+    done
+    cd ..
 done
-zstd --version > /dev/null
+command -v zstd > /dev/null
 if [ $? -ne 0 ]; then
     echo "zstd not installed"
-    depsCheckFailed=1
+    failedDepsCheck=1
 fi
-if [ $depsCheckFailed -ne 0 ]; then
-    fail "deps-check"
+if [ $failedDepsCheck -eq 1 ]; then
+    fail "missing dependencies"
 fi
+failedModules=()
 version=$(date +"%Y%m%d")
+startState=0
+if [ -f state ]; then
+    startState="$(cat state)"
+    startState=$((startState))
+fi
+for state in {1..3}; do
+    echo $state > state
+    for module in "${modules[@]}"; do
+        skip=0
+        for f in "${failedModules[@]}"; do
+            if [ "$module" == "$f" ]; then
+                skip=1
+                break
+            fi
+        done
+        if [ $skip -eq 1 ]; then
+            echo "WARNING: $module has fallbacked, skipping state $state"
+            continue
+        fi
+        cd "$module"
+        modState=0
+        if [ -f state ]; then
+            modState="$(cat state)"
+            modState=$((modState))
+        fi
+        if [ $modState -gt $state ]; then
+            echo "RESUME: $module is in state $modState, current state is $state, skipping this phase"
+            cd ..
+            continue
+        fi
+        for f in "./$state"-*.sh; do
+            "$f"
+            if [ $? -ne 0 ]; then
+                echo "FAILED: $module, phase $state, script $f"
+                if [ -x fallback.sh ]; then
+                    echo "Attempting fallback for module $module"
+                    failedModules+=("$module")
+                    ./fallback.sh
+                    if [ $? -ne 0 ]; then
+                        fail "$module, both the regular build and the fallback have failed"
+                    fi
+                    break
+                else
+                    echo "No fallback available for this module"
+                    fail "$module"
+                fi
+            fi
+        done
+        cd ..
+    done
+done
+rm -f state
+echo "Copying files"
 dir="template-$version"
 rm -rf "$dir"
-mkdir "$dir"
-cp -r "template-base"/* "$dir"
-cd dxvk-async
-dxvkAsyncFallbacked=0
-./build.sh master
-if [ $? -ne 0 ]; then
-    dxvkAsyncFallbacked=1
-    ./build.sh stable
-    if [ $? -ne 0 ]; then
-        fail "dxvk-async"
-    fi
+cp -r template-base "$dir"
+for module in "${modules[@]}"; do
+    cp -r "$module/build" "$dir/system/$module"
+done
+if [ ${#failedModules[@]} -ne 0 ]; then
+    echo "WARNING: The following modules failed to build, a fallback version was used instead"
+    for module in "${failedModules[@]}"; do
+        echo "* $module"
+    done
 fi
-mv build/* "../$dir/system/dxvk-async"
-rm -rf build
-cd ..
-cd dxvk
-dxvkFallbacked=0
-./build.sh master
-if [ $? -ne 0 ]; then
-    dxvkFallbacked=1
-    ./build.sh stable
-    if [ $? -ne 0 ]; then
-        fail "dxvk"
-    fi
-fi
-mv build/* "../$dir/system/dxvk"
-rm -rf build
-cd ..
-cd d8vk
-d8vkFallbacked=0
-./build.sh master
-if [ $? -ne 0 ]; then
-    d8vkFallbacked=1
-    ./build.sh stable
-    if [ $? -ne 0 ]; then
-        fail "d8vk"
-    fi
-fi
-mv build/* "../$dir/system/d8vk"
-rm -rf build
-cd ..
-cd vkd3d
-vkd3dFallbacked=0
-./build.sh master
-if [ $? -ne 0 ]; then
-    vkd3dFallbacked=1
-    ./build.sh stable
-    if [ $? -ne 0 ]; then
-        fail "vkd3d-proton"
-    fi
-fi
-mv build/* "../$dir/system/vkd3d"
-rm -rf build
-cd ..
-cd xutils
-./build.sh
-if [ $? -ne 0 ]; then fail "xutils"; fi
-mv build/* "../$dir/system/xutils/"
-rm -rf build
-cd ..
-cd futex2test
-./build.sh
-if [ $? -ne 0 ]; then fail "futex2test"; fi
-mv build/* "../$dir/system/"
-rm -rf build
-cd ..
-cd vkgpltest
-./build.sh
-if [ $? -ne 0 ]; then fail "vkgpltest"; fi
-mv build/* "../$dir/system/"
-rm -rf build
-cd ..
-cd wine
-./build.sh
-if [ $? -ne 0 ]; then fail "wine"; fi
-mv build/* "../$dir/system/"
-rm -rf build
-cd ..
-cd prebuilts
-./build.sh
-if [ $? -ne 0 ]; then fail "prebuilts"; fi
-mv build/* "../$dir/system/"
-rm -rf build
-cd ..
-cd vcredist
-./build.sh
-if [ $? -ne 0 ]; then fail "vcredist"; fi
-mv build/* "../$dir/system/vcredist"
-rm -rf build
-cd ..
-cd corefonts
-./build.sh
-if [ $? -ne 0 ]; then fail "corefonts"; fi
-mv build/* "../$dir/system/corefonts"
-rm -rf build
-cd ..
-echo "v$version" > "$dir/system/version"
 echo "Compressing template, this will take a few minutes"
-chmod -R 777 "$dir"
 cd "$dir"
-./run.sh archive $1
-if [ $? -ne 0 ]; then fail "compress"; fi
+./run.sh archive
 cd ..
 echo "Cleaning up"
+for module in "${modules[@]}"; do
+    rm -f "$module/state"
+done
 rm -rf "$dir"
-echo "All done"
-if [ $dxvkAsyncFallbacked -eq 1 ]; then
-    echo "WARNING: dxvk-gplasync build failed, using latest prebuilt binary"
-fi
-if [ $dxvkFallbacked -eq 1 ]; then
-    echo "WARNING: dxvk build failed, using latest prebuilt binary"
-fi
-if [ $d8vkFallbacked -eq 1 ]; then
-    echo "WARNING: d8vk build failed, using latest prebuilt binary"
-fi
-if [ $vkd3dFallbacked -eq 1 ]; then
-    echo "WARNING: vkd3d-proton build failed, using latest prebuilt binary"
-fi
+echo "Done!"
 exit 0

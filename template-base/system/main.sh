@@ -31,7 +31,7 @@ TDF_WINE_KILL_AFTER=0
 TDF_START_ARGS='' #additional arguments to pass to wine's start command, such as /affinity 1
 TDF_WINE_LANGUAGE=''
 TDF_WINE_ARCH="win64" #win64=emulate 64bit windows, win32=emulate 32bit windows (useful for older games). cannot be changed after wineprefix initialization
-TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, esync=always use esync, default=let wine decide. Only supported by wine-ge-proton, other versions will ignore this parameter
+TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, esync=always use esync, default=let wine decide. Only supported by games build, other versions will ignore this parameter
 TDF_WINE_DEBUG_RELAY=0
 TDF_WINE_SMOKETEST=1
 TDF_WINEMONO=0
@@ -191,7 +191,7 @@ function _applyDLLs {
     _outputDetail "$(_loc "$TDF_LOCALE_COPYINGDLLS")"
     local windows_dir="$WINEPREFIX/drive_c/windows"
     if [ "$TDF_DXVK_ASYNC" -eq 2 ]; then
-        ./system/vkgpltest
+        ./system/vkgpltest/vkgpltest
         if [ $? -eq 2 ]; then
             TDF_DXVK_ASYNC=0
         else
@@ -742,7 +742,7 @@ function _tdfmain {
     if [ "$1" = "manualInit" ]; then
         _manualInit=1
     fi
-    ./system/vkgpltest
+    ./system/vkgpltest/vkgpltest
     local _res=$?
     if [[ $_res -eq 0 || $_res -gt 2 || $_res -lt 0 ]]; then
         zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKAN")"
@@ -856,7 +856,7 @@ function _tdfmain {
         exit
     fi
     if [ "$TDF_WINE_SYNC" = "fsync" ]; then
-        ./system/futex2test
+        ./system/futex2test/futex2test
         if [ $? -eq 1 ]; then
             export WINEFSYNC=1
             export WINEESYNC=0

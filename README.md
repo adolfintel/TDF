@@ -805,11 +805,13 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `d8vk`
 * `dxvk`
 * `dxvk-async`
+* `futex2test`
 * `localization`
 * `msi`
 * `steamrt`
 * `vcredist`
 * `vkd3d`
+* `vkgpltest`
 * `wine-games`
 * `wine-mainline`
 * `winesmoketest`
@@ -1020,9 +1022,13 @@ The following components will be built from source:
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
 * Some C programs included with the TDF source code used
 
-It will take 30-60 minutes to compile everything, after which the package will be compressed and the finished archive will be ~380MB.
+The first build will take a good 30-60 minutes to download and compile everything, but subsequent builds will be quicker as the download phase will only download updates for the components and the TDF repo itself.
 
-Note that while TDF downloads the latest version of almost everything, the repo does not update itself so if you're going to be building TDF regularly, you should always run `git pull origin master` before starting the build to make sure you have the latest version of the TDF repo.
+If the build fails (and let's be honest, the first times it probably will), fix the problem and run `./makeTemplate.sh` again, the script will automatically resume from where it left off.
+
+If you don't want to use this caching and resuming system, you can run a clean build using `./makeTemplate.sh clean && ./makeTemplate.sh`, this will delete all saved data and redownload everything, then build TDF. If you don't want to fetch updates for the TDF repo itself, delete the `.git` folder.
+
+At the end of the build process, the package will be compressed using a slow but efficient zstd compression and the finished archive will be ~380MB.
 
 ## Important security notice
 While TDF provides some additional security compared to a standard installation of Wine or Proton, it is important to understand that Wine is simply not designed for security, quite the opposite, it's designed to seamlessly integrate Windows stuff into Linux.
