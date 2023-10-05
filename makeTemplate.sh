@@ -115,6 +115,7 @@ if [ ${#failedModules[@]} -ne 0 ]; then
         echo "* $module"
     done
 fi
+echo "v$version" > "$dir/system/version"
 echo "Compressing template, this will take a few minutes"
 cd "$dir"
 ./run.sh archive
