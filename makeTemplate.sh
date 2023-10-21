@@ -1,4 +1,18 @@
 #!/usr/bin/env bash
+modules=("vkd3d" "dxvk" "dxvk-async" "d8vk" "wine-games" "wine-mainline" "winesmoketest" "xutils" "futex2test" "vkgpltest" "msi" "steamrt" "vcredist" "corefonts")
+if [ "$1" == "clean" ]; then
+    echo "Cleaning up"
+    rm -f state
+    for module in "${modules[@]}"; do
+        cd "$module"
+        ./clean.sh
+        if [ $? -ne 0 ]; then
+            fail "Clean failed for module $module"
+        fi
+        cd ..
+    done
+    echo "Done!"
+fi
 if [ -z "$TDF_BUILD_NOUPDATES" ]; then
     if [ -d .git ]; then
         echo "This is a git repo, checking for TDF updates"
@@ -14,21 +28,6 @@ fail(){
     echo "Build failed: $1"
     exit 1
 }
-modules=("vkd3d" "dxvk" "dxvk-async" "d8vk" "wine-games" "wine-mainline" "winesmoketest" "xutils" "futex2test" "vkgpltest" "msi" "steamrt" "vcredist" "corefonts")
-if [ "$1" == "clean" ]; then
-    echo "Cleaning up"
-    rm -f state
-    for module in "${modules[@]}"; do
-        cd "$module"
-        ./clean.sh
-        if [ $? -ne 0 ]; then
-            fail "Clean failed for module $module"
-        fi
-        cd ..
-    done
-    echo "Done!"
-    exit 0
-fi
 failedDepsCheck=0
 for module in "${modules[@]}"; do
     cd "$module"
