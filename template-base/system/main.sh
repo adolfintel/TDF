@@ -49,7 +49,7 @@ export DXVK_ASYNC=1 #enables async features when using the async version of dxvk
 
 # --- VARIABLES - VKD3D ---
 TDF_VKD3D=1
-export VKD3D_CONFIG=dxr11 #enables dx12 ray tracing on supported cards
+#since november 2023, vkd3d enabled dxr11 by default on GPUs that support ray tracing, so there's no need to enable it here anymore
 
 # --- VARIABLES - Sandboxing ---
 TDF_BLOCK_NETWORK=1 #0=allow network access, 1=block with unshare -nc, 2=block with firejail if available, unshare -nc if it's not
@@ -202,7 +202,7 @@ function _applyDLLs {
     if [ "$TDF_DXVK_ASYNC" -eq 1 ]; then
         dxvk_dir="$dxvk_dir-async"
     fi
-    local dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi" "dxvk_config")
+    local dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi" "dxvk_config") #note: some files here may not exist, they are here so that overrides are added, which are useful for mods and older versions of dxvk
     local d8vk_dir="system/d8vk"
     local d8vk_dlls=("d3d8" "d3d9" "d3d10core" "d3d11" "dxgi")
     local vkd3d_dir="system/vkd3d"
@@ -217,7 +217,9 @@ function _applyDLLs {
     }
     function copyIfDifferent {
         if ! cmp "$1" "$2" > /dev/null 2>&1; then
-            \cp "$1" "$2"
+            if [ -e "$1" ]; then
+                \cp "$1" "$2"
+            fi
         fi
     }
     if [ -d "$d8vk_dir" ]; then
@@ -494,7 +496,10 @@ function _applyVCRedists {
 }
 function _removeIntegrations {
     _outputDetail "$(_loc "$TDF_LOCALE_DEINTEGRATING")"
-    local _pfxversion=$(cat "$WINEPREFIX/.initialized")
+    local _pfxversion=""
+    if [ -f "$WINEPREFIX/.initialized" ]; then
+        _pfxversion=$(cat "$WINEPREFIX/.initialized")
+    fi
     if [ "$_pfxversion" != "$TDF_VERSION" ]; then
         if [ "$WINEARCH" = "win32" ]; then
             wine reg delete 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Explorer\Desktop\Namespace\{9D20AAE8-0625-44B0-9CA7-71889C2254D9}' /f
@@ -879,12 +884,12 @@ function _tdfmain {
         zenity --error --text="$(_loc "$TDF_LOCALE_WINE_INVALIDARCH")"
         exit
     fi
-    local _flockid=$(( RANDOM % 10000 + 400 ))
+    local _flockid=0
     if [ -f "$WINEPREFIX/.flockid" ]; then
         _flockid=$(cat "$WINEPREFIX/.flockid")
         _flockid=$(( _flockid ))
     else
-        echo $_flockid > "$WINEPREFIX/.flockid"
+        _flockid=$(( RANDOM % 10000 + 400 ))
     fi
     local _skipInitializations=0
     exec {_flockid}<"$0"
@@ -998,6 +1003,8 @@ function _tdfmain {
             _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
             local _realOverrides="$WINEDLLOVERRIDES"
             export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
+            mkdir -p "$WINEPREFIX"
+            echo $_flockid > "$WINEPREFIX/.flockid"
             wineboot -i
             wait
             _wineSmokeTest

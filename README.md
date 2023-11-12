@@ -315,7 +315,7 @@ Possible values:
 * `1` (default): use VKD3D-Proton
 * `0`: use Wine's VKD3D implementation
 
-VKD3D's config can be changed by using its [environment variables](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables). By default, TDF only sets `export VKD3D_CONFIG=dxr11`, which enables ray tracing on supported cards.
+VKD3D's config can be changed by using its [environment variables](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables). By default, doesn't set this variable, meaning that VKD3D will automatically enable ray tracing on supported cards. Older versions of TDF (before November 2023) set this to `dxr11` to enable ray tracing.
 
 #### Sandboxing variables
 __`TDF_BLOCK_NETWORK`__  
