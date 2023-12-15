@@ -2,7 +2,7 @@
 export LC_ALL=C
 
 # --- VARIABLES - Steam runtime ---
-TDF_STEAM_RUNTIME=1
+TDF_STEAM_RUNTIME=0 #temporarily disabled, there's a problem with some distros and openssl
 
 #cd to run.sh location
 SOURCE=${BASH_SOURCE[0]}
