@@ -1,0 +1,25 @@
+From 94d30b0ee80a46a7125d34db39cc96286a1cc2c9 Mon Sep 17 00:00:00 2001
+From: Federico Dossena <info@fdossena.com>
+Date: Fri, 15 Dec 2023 21:07:07 +0100
+Subject: [PATCH] Workaround for broken openssl on some distros
+
+---
+ setup.sh | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/setup.sh b/setup.sh
+index 15d75de..6ec8fc1 100755
+--- a/setup.sh
++++ b/setup.sh
+@@ -368,7 +368,7 @@ pin_newer_runtime_libs ()
+                 # (If steamrt-libcurl-compat already fixed this for us, then
+                 # it will have created the libcurl.so.4 symlink and as a
+                 # result we'll never get here.)
+-                runtime_version_newer="forced"
++                runtime_version_newer="no"
+                 ;;
+ 
+             (libcurl-gnutls.so.4)
+-- 
+2.43.0
+
