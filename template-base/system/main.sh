@@ -777,7 +777,12 @@ function _tdfmain {
             done
         fi
         if [ ${#_confs[@]} -ne 0 ]; then
-            local _confToUse=$(zenity --list --width=400 --hide-header --text="$(_loc "$TDF_LOCALE_CHOOSEGAME")" --column="Game" "${_confs[@]}")
+            local h=${#_confs[@]}
+            if [ $h -gt 10 ]; then
+                h=10
+            fi
+            h=$((h * 50 + 200))
+            local _confToUse=$(zenity --list --width=400 --height="$h" --hide-header --text="$(_loc "$TDF_LOCALE_CHOOSEGAME")" --column="Game" "${_confs[@]}")
             if [ -z "$_confToUse" ]; then
                 exit
             fi

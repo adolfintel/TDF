@@ -76,7 +76,7 @@ The working directory of the game. By default this is set to the same folder whe
 
 Example:  
 ```
-game_exe='bin\indy.exe'`
+game_exe='bin\indy.exe'
 game_workingDir='C:\Indy'
 ```
 
@@ -257,13 +257,13 @@ This is not a TDF variable, but it allows you to set Wine to use specific CPU co
 Example:
 ```
 #limits wine to one CPU core
-export WINE_CPU_TOPOLOGY=1:0"
+export WINE_CPU_TOPOLOGY="1:0"
 ```
 
 Example:
 ```
 #limits wine to use the first 4 CPU cores
-export WINE_CPU_TOPOLOGY=4:0,1,2,3"
+export WINE_CPU_TOPOLOGY="4:0,1,2,3"
 ```
 
 __`export WINEDEBUG`__  
