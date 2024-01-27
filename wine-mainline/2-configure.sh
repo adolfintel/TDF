@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 echo 2 > state
-cp wine-tkg-tdf-mainline.cfg wine-tkg-git/wine-tkg-git/wine-tkg-profiles/
-echo "_LOCAL_PRESET=\"tdf-mainline\"" >> wine-tkg-git/wine-tkg-git/customization.cfg
+echo "_LOCAL_PRESET=\"mainline\"" >> wine-tkg-git/wine-tkg-git/customization.cfg
+cat wine-tkg-mainline-tdf.cfg >> wine-tkg-git/wine-tkg-git/wine-tkg-profiles/wine-tkg-mainline.cfg
 echo 3 > state
 exit 0
