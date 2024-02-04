@@ -32,7 +32,7 @@ This section explains how to use TDF to install, play and optionally package a g
 * You must be able to use a Linux system, do file and folder management, know how to install games manually, know some basic shell scripting, etc.
 
 ### Basic usage
-* [Download the latest build of TDF](https://downloads.fdossena.com/geth.php?r=tdf-bin) (or built it yourself)
+* [Download the latest build of TDF](https://downloads.fdossena.com/geth.php?r=tdf-bin) (or build it yourself)
 * Extract the archive somewhere, optionally renaming the folder from `template-YYYYMMDD` to something more descriptive. We'll call this folder a TDF instance, you can have as many instances as you want
     * Inside this folder, you'll see 4 things:
         * `run.sh`: the script that starts all the TDF magic, we'll use this in a moment
@@ -400,8 +400,9 @@ __`TDF_STEAM_RUNTIME`__
 Whether to launch TDF using the Steam Runtime or not. This is generally a good idea as it makes TDF extermely portable, but if it fails to launch you might want to disable it. If you disable this feature, you must have Wine and all its dependencies installed on your system, as well as Zenity.
 
 Possible values:  
-* `1` (default): use Steam Runtime
+* `2` (default): use Steam Runtime only if Wine is not already installed in the system
 * `0`: don't use Steam Runtime
+* `1` : use Steam Runtime
 
 __`TDF_GAMEMODE`__  
 Whether to launch the game using Feral Gamemode or not, which can improve performance especially on weaker or mobile systems. If Gamemode is not installed in the system, it has no effect.

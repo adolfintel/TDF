@@ -2,7 +2,7 @@
 export LC_ALL=C
 
 # --- VARIABLES - Steam runtime ---
-TDF_STEAM_RUNTIME=0
+TDF_STEAM_RUNTIME=2
 
 #cd to run.sh location
 SOURCE=${BASH_SOURCE[0]}
@@ -35,6 +35,17 @@ if [ ! -x "./system/main.sh" ]; then
     chmod -R 777 .
 fi
 command="./system/main.sh"
+#if wine is already installed, steamrt is not needed
+if [ "$TDF_STEAM_RUNTIME" -eq 2 ]; then
+    command -v wine > /dev/null
+    if [ $? -eq 0 ]; then
+        echo "steamrt not necessary"
+        TDF_STEAM_RUNTIME=0
+    else
+        echo "using steamrt"
+        TDF_STEAM_RUNTIME=1
+    fi
+fi
 if [[ "$TDF_STEAM_RUNTIME" -eq 1 && -d "./system/steamrt" ]]; then
     ./system/steamrt/setup.sh
     command="./system/steamrt/run.sh $command"
