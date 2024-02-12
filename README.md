@@ -708,6 +708,21 @@ Returns 0 if the operation succeeded, 1 if an error occurred.
 
 Note: this function only works on X11.
 
+__`resetResolution`__  
+Resets the main display to its default screen resolution an gamma. This is useful for when you're not using the game-optimized wine build and an old game crashes without restoring the screen resolution.
+
+Returns 0 if the operation succeeded, 1 if an error occurred.
+
+Note: this function only works on X11.
+
+Example:  
+```
+TDF_WINE_PREFERRED_VERSION='mainline'
+onGameEnd(){
+    resetResolution
+}
+```
+
 __`isProcessRunning exe`__  
 Determines whether there's a process with a name that contains the value in `exe` (case sensitive). Not limited to Wine executables.
 

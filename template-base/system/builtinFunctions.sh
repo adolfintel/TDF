@@ -193,4 +193,16 @@ function defaultGamma {
     return $?
 }
 
+function resetResolution {
+    xrandr --version > /dev/null
+    if [ $? -ne 0 ]; then
+        return 1
+    fi
+    xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --gamma "$_savedGamma"
+    xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --auto
+    xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --set "scaling mode" "Full aspect"
+    sleep 1
+    return 0
+}
+
 saveGamma
