@@ -3,7 +3,7 @@ TDF is a small project aiming to make it easy to install, package and safely run
 
 __TDF is based on the following awesome projects:__  
 * [Wine](https://winehq.org), for Windows emulation, more specifically it includes two custom builds made with [tkg](https://github.com/Frogging-Family/wine-tkg-git), one best suited for modern games, and one more suited for applications and older games
-* [DXVK](https://github.com/doitsujin/dxvk), for DirectX 9-11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension
+* [DXVK](https://github.com/doitsujin/dxvk), for DirectX 9-11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
 * [D8VK](https://github.com/AlpyneDreams/d8vk), for DirectX 8 emulation (soon to be merged into DXVK), built from source
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
 * [Steam Runtime](https://github.com/ValveSoftware/steam-runtime), to make the Wine dependency hell a bit easier (it still depends on some things of course)
@@ -307,6 +307,13 @@ Possible values:
 * `1`: use D8VK
 
 Note: D8VK will be merged into DXVK soon, when this happens this option will be removed.
+
+__`TDF_DXVK_NVAPI`__  
+Whether to install DXVK-nvapi or not, which provides nvapi support for nVidia GPUs. Requires `TDF_DXVK` to be set to `1`.
+
+Possible values:  
+* `0` (default): don't use DXVK-nvapi
+* `1`: use DXVK-nvapi on nVidia GPUs
 
 __`TDF_VKD3D`__  
 Whether to install VKD3D-Proton, which provides DirectX 12 emulation through Vulkan. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version.
@@ -821,6 +828,7 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `d8vk`
 * `dxvk`
 * `dxvk-async`
+* `dxvk-nvapi`
 * `futex2test`
 * `localization`
 * `msi`
@@ -851,6 +859,7 @@ The following folders can be deleted from the `system` folder of a TDF instance 
 * `d8vk`
 * `dxvk`
 * `dxvk-async` (Note: if this is removed, it is recommended to set `TDF_DXVK_ASYNC=0`, that way it won't try to use it on GPUs that don't support the GPL extension)
+* `dxvk-nvapi`
 * `msi/winemono.msi`
 * `msi/winegecko32.msi` and `msi/winegecko64.msi`
 * `steamrt`
@@ -1033,6 +1042,7 @@ The following components will be built from source:
 * Wine: latest master using the [wine-tkg build system](https://github.com/Frogging-Family/wine-tkg-git) with some custom config
 * DXVK: latest master from [Github](https://github.com/doitsujin/dxvk)
 * DXVK-gplasync: latest patch from [Gitlab](https://gitlab.com/Ph42oN/dxvk-gplasync) applied to the latest master of DXVK
+* DXVK-nvapi: latest master from [Github](https://github.com/jp7677/dxvk-nvapi)
 * D8VK: latest master from [Github](https://github.com/AlpyneDreams/d8vk)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
@@ -1086,7 +1096,7 @@ Eventually, my friends started calling it "Template Di Frederico", meaning Frede
 ## License
 All TDF code is distributed under the GNU GPL v3 license, but a built version of TDF will contain components with multiple licenses, including proprietary ones.
 
-Copyright (C) 2021-2023 Federico Dossena
+Copyright (C) 2021-2024 Federico Dossena
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

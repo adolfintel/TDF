@@ -43,6 +43,7 @@ export USER="wine"
 
 # --- VARIABLES - DXVK and D8VK ---
 TDF_DXVK=1
+TDF_DXVK_NVAPI=0 #set to 1 to enable nvapi (nvidia gpus only)
 TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't
 TDF_D8VK=0
 export DXVK_ASYNC=1 #enables async features when using the async version of dxvk, ignored by the regular version
@@ -203,6 +204,8 @@ function _applyDLLs {
         dxvk_dir="$dxvk_dir-async"
     fi
     local dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi" "dxvk_config") #note: some files here may not exist, they are here so that overrides are added, which are useful for mods and older versions of dxvk
+    local dxvknvapi_dir="system/dxvk-nvapi"
+    local dxvknvapi_dlls=("nvapi" "nvapi64")
     local d8vk_dir="system/d8vk"
     local d8vk_dlls=("d3d8" "d3d9" "d3d10core" "d3d11" "dxgi")
     local vkd3d_dir="system/vkd3d"
@@ -276,6 +279,35 @@ function _applyDLLs {
                 done
                 touch "$WINEPREFIX/.dxvk-installed"
             fi
+            if [ "$TDF_DXVK_NVAPI" -eq 1 ]; then
+                if [ "$WINEARCH" = "win32" ]; then
+                    for d in "${dxvknvapi_dlls[@]}"; do
+                        copyIfDifferent "$dxvknvapi_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"
+                    done
+                else
+                    for d in "${dxvknvapi_dlls[@]}"; do
+                        copyIfDifferent "$dxvknvapi_dir/x32/$d.dll" "$windows_dir/syswow64/$d.dll"
+                        copyIfDifferent "$dxvknvapi_dir/x64/$d.dll" "$windows_dir/system32/$d.dll"
+                    done
+                fi
+                if [ ! -f "$WINEPREFIX/.dxvknvapi-installed" ]; then
+                    for d in "${dxvknvapi_dlls[@]}"; do
+                        toOverride+=("$d")
+                    done
+                    touch "$WINEPREFIX/.dxvknvapi-installed"
+                fi
+            else
+                if [ -f "$WINEPREFIX/.dxvknvapi-installed" ]; then
+                    for d in "${dxvknvapi_dlls[@]}"; do
+                        rm -f "$windows_dir/system32/$d.dll"
+                        rm -f "$windows_dir/syswow64/$d.dll"
+                        toUnoverride+=("$d")
+                    done
+                    wineboot -u
+                    wait
+                    rm -f "$WINEPREFIX/.dxvknvapi-installed"
+                fi
+            fi
         else
             _outputDetail "$(_loc "$TDF_LOCALE_DXVK_REMOVE")"
             if [ -f "$WINEPREFIX/.dxvk-installed" ]; then
@@ -284,9 +316,17 @@ function _applyDLLs {
                     rm -f "$windows_dir/syswow64/$d.dll"
                     toUnoverride+=("$d")
                 done
+                rm -f "$WINEPREFIX/.dxvk-installed"
+                if [ -f "$WINEPREFIX/.dxvknvapi-installed" ]; then
+                    for d in "${dxvknvapi_dlls[@]}"; do
+                        rm -f "$windows_dir/system32/$d.dll"
+                        rm -f "$windows_dir/syswow64/$d.dll"
+                        toUnoverride+=("$d")
+                    done
+                    rm -f "$WINEPREFIX/.dxvknvapi-installed"
+                fi
                 wineboot -u
                 wait
-                rm -f "$WINEPREFIX/.dxvk-installed"
             fi
         fi
     fi
@@ -931,6 +971,9 @@ function _tdfmain {
     fi
     if [ "$TDF_WINE_KILL_BEFORE" -eq 1 ]; then
         _killWine
+    fi
+    if [[ "$TDF_DXVK" -eq 1 && "$TDF_DXVK_NVAPI" -eq 1 && -z "$DXVK_ENABLE_NVAPI" ]]; then
+        export DXVK_ENABLE_NVAPI=1
     fi
     if [ -d "$WINEPREFIX" ]; then
         if [ -n "$WINEARCH" ]; then
