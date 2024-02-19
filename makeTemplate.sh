@@ -117,6 +117,7 @@ fi
 echo "v$version" > "$dir/system/version"
 echo "Compressing template, this will take a few minutes"
 cd "$dir"
+chmod -R 777 .
 ./run.sh archive
 cd ..
 echo "Cleaning up"
