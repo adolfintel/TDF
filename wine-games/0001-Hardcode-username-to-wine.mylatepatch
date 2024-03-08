@@ -1,0 +1,34 @@
+From 8a583165fb37c042edc67f5ddc6aa850d8868940 Mon Sep 17 00:00:00 2001
+From: Federico Dossena <info@fdossena.com>
+Date: Wed, 6 Mar 2024 16:30:41 +0100
+Subject: [PATCH] Hardcode username to wine
+
+---
+ dlls/advapi32/advapi.c | 4 ++--
+ 1 file changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/dlls/advapi32/advapi.c b/dlls/advapi32/advapi.c
+index 127cec57252..fb639be059f 100644
+--- a/dlls/advapi32/advapi.c
++++ b/dlls/advapi32/advapi.c
+@@ -44,7 +44,7 @@ WINE_DEFAULT_DEBUG_CHANNEL(advapi);
+  */
+ BOOL WINAPI GetUserNameA( LPSTR name, LPDWORD size )
+ {
+-    static const char steamuserA[] = {'s','t','e','a','m','u','s','e','r',0};
++    static const char steamuserA[] = {'w','i','n','e',0};
+     if(*size < ARRAY_SIZE(steamuserA)){
+         SetLastError( ERROR_INSUFFICIENT_BUFFER );
+         *size = ARRAY_SIZE(steamuserA);
+@@ -60,7 +60,7 @@ BOOL WINAPI GetUserNameA( LPSTR name, LPDWORD size )
+  */
+ BOOL WINAPI GetUserNameW( LPWSTR name, LPDWORD size )
+ {
+-    static const WCHAR steamuserW[] = {'s','t','e','a','m','u','s','e','r',0};
++    static const WCHAR steamuserW[] = {'w','i','n','e',0};
+     if(*size < ARRAY_SIZE(steamuserW)){
+         SetLastError( ERROR_INSUFFICIENT_BUFFER );
+         *size = ARRAY_SIZE(steamuserW);
+-- 
+2.44.0
+
