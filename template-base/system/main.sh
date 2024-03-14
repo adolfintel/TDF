@@ -124,6 +124,7 @@ function _runCommandPrompt {
 function _realRunGame {
     _applyLocale
     if [ "$(type -t onGameStart)" = "function" ]; then
+        wineserver -k -w
         onGameStart
     fi
     if [ "$(type -t whileGameRunning)" = "function" ]; then
