@@ -154,6 +154,19 @@ Possible values:
 * `1` (default): hide the crash window
 * `0`: show the crash window
 
+__`TDF_WINE_AUDIO_DRIVER`__
+Sets the preferred audio driver for Wine. This can be useful if you have crackling audio or if one of the drivers has a lower latency than the others. Default is usually fine.
+
+Possible values:
+* `pulse`: use PulseAudio (you may also want to add `export PULSE_LATENCY_MSEC=20` for lower latency in music games)
+* `alsa`: use ALSA
+* `jack`: use Jack
+* `default` (default): let Wine decide
+
+Note: Choosing a driver that doesn't exist in Wine or in your system will result in no sound being played.
+
+Note: Wine doesn't natively support PipeWire yet, it uses PulseAudio by default for compatibility if you're using PipeWire.
+
 __`TDF_WINE_DPI`__  
 DPI value for display scaling of Wine applications.
 
