@@ -154,7 +154,7 @@ Possible values:
 * `1` (default): hide the crash window
 * `0`: show the crash window
 
-__`TDF_WINE_AUDIO_DRIVER`__
+__`TDF_WINE_AUDIO_DRIVER`__  
 Sets the preferred audio driver for Wine. This can be useful if you have crackling audio or if one of the drivers has a lower latency than the others. Default is usually fine.
 
 Possible values:
