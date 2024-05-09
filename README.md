@@ -181,7 +181,7 @@ __`TDF_WINE_DPI`__
 DPI value for display scaling of Wine applications.
 
 Possible values:  
-* `-1` (default): use DPI from the main display (X11 only, Wayland will use default value)
+* `-1` (default): use DPI from the main display
 * `0`: let Wine handle scaling
 * number: use this DPI value (96=100% scaling, 120=125% scaling, 144=150% scaling, etc.). 96 DPI will fix some older games
 

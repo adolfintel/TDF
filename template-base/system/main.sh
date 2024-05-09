@@ -580,11 +580,7 @@ function _removeIntegrations {
 function _applyScaling {
     _outputDetail "$(_loc "$TDF_LOCALE_SCALING")"
     if [ "$TDF_WINE_DPI" -eq -1 ]; then
-        if [ "$XDG_SESSION_TYPE" = "x11" ]; then
-            TDF_WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
-        else #TODO: wayland support
-            TDF_WINE_DPI=0
-        fi
+        TDF_WINE_DPI=$(xrdb -query | grep dpi | cut -f2 -d':' | xargs)
     fi
     if [ "$TDF_WINE_DPI" -ne 0 ]; then
         local currentDpi=0
