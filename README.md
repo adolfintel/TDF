@@ -158,7 +158,7 @@ __`TDF_WINE_AUDIO_DRIVER`__
 Sets the preferred audio driver for Wine. This can be useful if you have crackling audio or if one of the drivers has a lower latency than the others. Default is usually fine.
 
 Possible values:
-* `pulse`: use PulseAudio (you may also want to add `export PULSE_LATENCY_MSEC=20` for lower latency in music games)
+* `pulse`: use PulseAudio (you may also want to add `export PULSE_LATENCY_MSEC=20` for lower latency in music games or `export PULSE_LATENCY_MSEC=120` if you have crackling/dropouts)
 * `alsa`: use ALSA
 * `jack`: use Jack
 * `default` (default): let Wine decide
@@ -166,6 +166,16 @@ Possible values:
 Note: Choosing a driver that doesn't exist in Wine or in your system will result in no sound being played.
 
 Note: Wine doesn't natively support PipeWire yet, it uses PulseAudio by default for compatibility if you're using PipeWire.
+
+__`TDF_WINE_GRAPHICS_DRIVER`__  
+Sets the preferred graphics driver for Wine (as in how it outputs, not how it renders 3D graphics). This can be useful if you're messing around with Wayland and X11 and Wine doesn't work properly.
+
+Possible values:
+* `x11`: use X11 (recommended even if you're using Wayland)
+* `wayland`: use Wayland (incomplete and buggy at the moment, not recommended)
+* `default` (default): let Wine decide (defaults to X11 at the moment, even on Wayland)
+
+Note: Choosing a driver that doesn't exist in Wine or in your system will result in no graphics being displayed.
 
 __`TDF_WINE_DPI`__  
 DPI value for display scaling of Wine applications.

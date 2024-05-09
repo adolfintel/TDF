@@ -26,6 +26,7 @@ TDF_SHOW_PLAY_TIME=0
 TDF_WINE_PREFERRED_VERSION="games" #games=game-optimized build, mainline=regular wine, system=the version of wine that's installed on the system, or mainline if not installed
 TDF_WINE_HIDE_CRASHES=1
 TDF_WINE_AUDIO_DRIVER="default" #pulse,alsa,jack,default (let wine decide)
+TDF_WINE_GRAPHICS_DRIVER="default" #x11,wayland,default (let wine decide)
 TDF_WINE_DPI=-1 #-1=use system dpi (xorg only, wayland will use wine's default), 0=let wine decide, number=use specified dpi
 TDF_WINE_KILL_BEFORE=0
 TDF_WINE_KILL_AFTER=0
@@ -616,12 +617,17 @@ function _applyHideCrashes {
         fi
     fi
 }
-function _applyAudioDriver {
-    _outputDetail "$(_loc "$TDF_LOCALE_WINE_AUDIODRIVER")"
+function _applyWineDrivers {
+    _outputDetail "$(_loc "$TDF_LOCALE_WINE_DRIVERS")"
     if [ "$TDF_WINE_AUDIO_DRIVER" != "default" ]; then
         wine reg add 'HKEY_CURRENT_USER\Software\Wine\Drivers' /v 'Audio' /t REG_SZ /d "$TDF_WINE_AUDIO_DRIVER" /f
     else
         wine reg delete 'HKEY_CURRENT_USER\Software\Wine\Drivers' /v 'Audio' /f
+    fi
+    if [ "$TDF_WINE_GRAPHICS_DRIVER" != "default" ]; then
+        wine reg add 'HKEY_CURRENT_USER\Software\Wine\Drivers' /v 'Graphics' /t REG_SZ /d "$TDF_WINE_GRAPHICS_DRIVER" /f
+    else
+        wine reg delete 'HKEY_CURRENT_USER\Software\Wine\Drivers' /v 'Graphics' /f
     fi
 }
 function _removeBrokenDosdevices {
@@ -1017,7 +1023,7 @@ function _tdfmain {
                 echo "40"
                 _applyMSIs
                 echo "55"
-                _applyAudioDriver
+                _applyWineDrivers
                 _applyHideCrashes
                 echo "60"
                 _applyCorefonts
@@ -1081,7 +1087,7 @@ function _tdfmain {
             echo "40"
             _applyMSIs
             echo "55"
-            _applyAudioDriver
+            _applyWineDrivers
             _applyHideCrashes
             echo "60"
             _applyCorefonts
