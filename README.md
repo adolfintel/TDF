@@ -3,8 +3,7 @@ TDF is a small project aiming to make it easy to install, package and safely run
 
 __TDF is based on the following awesome projects:__  
 * [Wine](https://winehq.org), for Windows emulation, more specifically it includes two custom builds made with [tkg](https://github.com/Frogging-Family/wine-tkg-git), one best suited for modern games, and one more suited for applications and older games
-* [DXVK](https://github.com/doitsujin/dxvk), for DirectX 9-11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
-* [D8VK](https://github.com/AlpyneDreams/d8vk), for DirectX 8 emulation (soon to be merged into DXVK), built from source
+* [DXVK](https://github.com/doitsujin/dxvk), for DirectX 8/9/10/11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
 * [Steam Runtime](https://github.com/ValveSoftware/steam-runtime), to make the Wine dependency hell a bit easier (it still depends on some things of course)
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
@@ -302,7 +301,7 @@ Example:
 export WINEDEBUG=+loaddll,+pid
 ```
 
-#### DXVK, D8VK and VKD3D variables
+#### DXVK and VKD3D variables
 __`TDF_DXVK`__  
 Whether to install DXVK or not, which provides DirextX 9-11 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which is better for some older games.
 
@@ -319,17 +318,6 @@ Possible values:
 * `2` (default): let TDF decide automatically, uses regular DXVK if GPL is supported, gplasync otherwise
 * `0`: always use the regular version of DXVK. If the system doesn't support GPL, the game will suffer from heavy shader compilation stuttering
 * `1`: always use the gplasync version of DXVK. Not recommended, can introduce minor graphical issues or stability issues
-
-__`TDF_D8VK`__  
-Whether to install D8VK or not, which provides DirextX 8-11 emulation through Vulkan. Enabling this will automatically disable DXVK, DXVK_ASYNC and VKD3D. If this is disabled, WineD3D will be used instead. Games that use DirectX 1-7 will always use WineD3D.
-
-Settings for D8VK can be changed by editing the `d8vk.conf` file that will be created inside `zzprefix`.
-
-Possible values:  
-* `0` (default): use WineD3D
-* `1`: use D8VK
-
-Note: D8VK will be merged into DXVK soon, when this happens this option will be removed.
 
 __`TDF_DXVK_NVAPI`__  
 Whether to install DXVK-nvapi or not, which provides nvapi support for nVidia GPUs. Requires `TDF_DXVK` to be set to `1`.
@@ -848,7 +836,6 @@ It is also possible to downgrade to an older version of TDF in the same way, in 
 
 ### Using custom versions of Wine, DXVK, etc.
 TDF will automatically detect and apply changes to the files in the following folders inside the `system` of a TDF instance:
-* `d8vk`
 * `dxvk`
 * `dxvk-async`
 * `dxvk-nvapi`
@@ -879,7 +866,6 @@ TDF is built to be partially modular, meaning that if your game doesn't need cer
 __Do not do this unless you know what you're doing.__
 
 The following folders can be deleted from the `system` folder of a TDF instance if they are not needed:
-* `d8vk`
 * `dxvk`
 * `dxvk-async` (Note: if this is removed, it is recommended to set `TDF_DXVK_ASYNC=0`, that way it won't try to use it on GPUs that don't support the GPL extension)
 * `dxvk-nvapi`
@@ -996,8 +982,7 @@ TDF comes with the Steam Runtime which provides a lot of libraries required to r
     * If this is an old UE2-based game like UT2004, this is a known issue and as of August 2023 a solution is in the works
 * If this is an older game, it may not support high core count CPUs, try setting `export WINE_CPU_TOPOLOGY=4:0,1,2,3` to simulate a quad-core
 * If this is an older game, it may also be a good idea to run it using regular Wine, add `TDF_WINE_PREFERRED_VERSION=mainline`
-* If this is a DX8 game, try running it with D8VK by adding `TDF_D8VK=1`
-* If this is a DX9-11 game, try running it with WineD3D instead of DXVK by adding `TDF_DXVK=0`
+* If this is a DX8-11 game, try running it with WineD3D instead of DXVK by adding `TDF_DXVK=0`
 * If this is a DX8-10 game and you see striped shadows, your graphics driver probably doesn't support the `VK_EXT_depth_bias_control` extension yet (added in Mesa 23.3 for AMD/Intel)
 * Look for known issues and fixes for this game in the [DXVK issues page](https://github.com/doitsujin/dxvk/issues) (DX9-11), the [VKD3D-Proton issues page](https://github.com/HansKristian-Work/vkd3d-proton/issues) (DX12), and if you're on an AMD/Intel GPU check the [Mesa issues page](https://gitlab.freedesktop.org/mesa/mesa/-/issues) as well
 * If this is a DX9-11 game, create a file called `dxvk.conf` in the game's folder and tinker with [DXVK's settings](https://github.com/doitsujin/dxvk/wiki/Configuration)
@@ -1066,7 +1051,6 @@ The following components will be built from source:
 * DXVK: latest master from [Github](https://github.com/doitsujin/dxvk)
 * DXVK-gplasync: latest patch from [Gitlab](https://gitlab.com/Ph42oN/dxvk-gplasync) applied to the latest master of DXVK
 * DXVK-nvapi: latest master from [Github](https://github.com/jp7677/dxvk-nvapi)
-* D8VK: latest master from [Github](https://github.com/AlpyneDreams/d8vk)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
 * Some C programs included with the TDF source code used

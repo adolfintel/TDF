@@ -43,11 +43,10 @@ export WINEPREFIX="$(pwd)/zzprefix"
 export WINEDEBUG=-all
 export USER="wine"
 
-# --- VARIABLES - DXVK and D8VK ---
+# --- VARIABLES - DXVK ---
 TDF_DXVK=1
 TDF_DXVK_NVAPI=0 #set to 1 to enable nvapi (nvidia gpus only)
-TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't
-TDF_D8VK=0
+TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't0
 export DXVK_ASYNC=1 #enables async features when using the async version of dxvk, ignored by the regular version
 
 # --- VARIABLES - VKD3D ---
@@ -206,11 +205,9 @@ function _applyDLLs {
     if [ "$TDF_DXVK_ASYNC" -eq 1 ]; then
         dxvk_dir="$dxvk_dir-async"
     fi
-    local dxvk_dlls=("d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi" "dxvk_config") #note: some files here may not exist, they are here so that overrides are added, which are useful for mods and older versions of dxvk
+    local dxvk_dlls=("d3d8" "d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi" "dxvk_config") #note: some files here may not exist, they are here so that overrides are added, which are useful for mods and older versions of dxvk
     local dxvknvapi_dir="system/dxvk-nvapi"
     local dxvknvapi_dlls=("nvapi" "nvapi64")
-    local d8vk_dir="system/d8vk"
-    local d8vk_dlls=("d3d8" "d3d9" "d3d10core" "d3d11" "dxgi")
     local vkd3d_dir="system/vkd3d"
     local vkd3d_dlls=("d3d12" "d3d12core")
     local toOverride=()
@@ -228,41 +225,6 @@ function _applyDLLs {
             fi
         fi
     }
-    if [ -d "$d8vk_dir" ]; then
-        if [ "$TDF_D8VK" -eq 1 ]; then
-            _outputDetail "$(_loc "$TDF_LOCALE_D8VK_INSTALL")"
-            TDF_DXVK=0
-            TDF_VKD3D=0
-            if [ "$WINEARCH" = "win32" ]; then
-                for d in "${d8vk_dlls[@]}"; do
-                    copyIfDifferent "$d8vk_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"
-                done
-            else
-                for d in "${d8vk_dlls[@]}"; do
-                    copyIfDifferent "$d8vk_dir/x32/$d.dll" "$windows_dir/syswow64/$d.dll"
-                    copyIfDifferent "$d8vk_dir/x64/$d.dll" "$windows_dir/system32/$d.dll"
-                done
-            fi
-            if [ ! -f "$WINEPREFIX/.d8vk-installed" ]; then
-                for d in "${d8vk_dlls[@]}"; do
-                    toOverride+=("$d")
-                done
-                touch "$WINEPREFIX/.d8vk-installed"
-            fi
-        else
-            _outputDetail "$(_loc "$TDF_LOCALE_D8VK_REMOVE")"
-            if [ -f "$WINEPREFIX/.d8vk-installed" ]; then
-                for d in "${d8vk_dlls[@]}"; do
-                    rm -f "$windows_dir/system32/$d.dll"
-                    rm -f "$windows_dir/syswow64/$d.dll"
-                    toUnoverride+=("$d")
-                done
-                wineboot -u
-                wait
-                rm -f "$WINEPREFIX/.d8vk-installed"
-            fi
-        fi
-    fi
     if [ -d "$dxvk_dir" ]; then
         if [ "$TDF_DXVK" -eq 1 ]; then
             _outputDetail "$(_loc "$TDF_LOCALE_DXVK_INSTALL")"
