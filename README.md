@@ -1013,6 +1013,7 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 * Increase sound buffer size by adding `export PULSE_LATENCY_MSEC=120`
 * If this is an older game, try using an EAX emulator like [DSOAL](https://github.com/kcat/dsoal), you can find prebuilt DLLs online if you don't want to mess with Visual Studio, all you have to do is put them in the game's folder and add `export WINEDLLOVERRIDES="dsound=n,b"`
 * The game may not support surround sound or your sample rate, set your system to 44.1KHz stereo
+* If the sound issues are happening mostly when there's heavy CPU load (shader compilation, entering new areas, etc.) and you're using pipewire, your system may be affected by [this issue](https://wiki.archlinux.org/title/PipeWire#Missing_realtime_priority/crackling_under_load_after_suspend)
 
 #### Videos don't play or game crashes when a video is supposed to play
 * Try adding `TDF_WINE_DEBUG_GSTREAMER=1`, it may provide details about what's happening
