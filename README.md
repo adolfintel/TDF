@@ -230,6 +230,13 @@ Possible values:
 * `0` (default): disabled
 * `1`: when the game is launched, TDF will ask where you want to save the trace, then launch the game with relay enabled
 
+__`TDF_WINE_DEBUG_GSTREAMER`__  
+Enables gstreamer debug output. This can be used to debug issues like games not playing videos or crashing when a video is supposed to play.
+
+Possible values:  
+* `0` (default): disabled
+* `1`: enable gstreamer debug output
+
 __`TDF_WINE_SMOKETEST`__  
 Whether or not to perform a "smoke test" to make sure that Wine actually works before trying to run the game, that way we can tell if a crash is a Wine problem or a game problem. TDF does this by default but you can disable it if it takes too long at the "Starting Wine" screen.
 
@@ -1006,6 +1013,9 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 * Increase sound buffer size by adding `export PULSE_LATENCY_MSEC=120`
 * If this is an older game, try using an EAX emulator like [DSOAL](https://github.com/kcat/dsoal), you can find prebuilt DLLs online if you don't want to mess with Visual Studio, all you have to do is put them in the game's folder and add `export WINEDLLOVERRIDES="dsound=n,b"`
 * The game may not support surround sound or your sample rate, set your system to 44.1KHz stereo
+
+#### Videos don't play or game crashes when a video is supposed to play
+* Try adding `TDF_WINE_DEBUG_GSTREAMER=1`, it may provide details about what's happening
 
 #### Window positioning issues (stuck in window mode, partially off screen, etc.)
 * If this is an older game, it may not support display scaling, try adding `TDF_WINE_DPI=96`

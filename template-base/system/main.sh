@@ -35,6 +35,7 @@ TDF_WINE_LANGUAGE=''
 TDF_WINE_ARCH="win64" #win64=emulate 64bit windows, win32=emulate 32bit windows (useful for older games). cannot be changed after wineprefix initialization
 TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, esync=always use esync, default=let wine decide. Only supported by games build, other versions will ignore this parameter
 TDF_WINE_DEBUG_RELAY=0
+TDF_WINE_DEBUG_GSTREAMER=0
 TDF_WINE_SMOKETEST=1
 TDF_WINEMONO=0
 TDF_WINEGECKO=0
@@ -816,6 +817,10 @@ function _tdfmain {
         if [ $? -ne 0 ]; then
             exit
         fi
+    fi
+    if [ "$TDF_WINE_DEBUG_GSTREAMER" -eq 1 ]; then
+        export GST_DEBUG_NO_COLOR=1
+        export GST_DEBUG=4,WINE:9
     fi
     if [ "$TDF_WINE_PREFERRED_VERSION" = "games" ]; then
         export PATH="$(pwd)/system/wine-games/bin:$PATH:$(pwd)/system/wine-mainline/bin"
