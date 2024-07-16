@@ -142,6 +142,7 @@ function _realRunGame {
             command="$command > \"$relayPath\" 2>&1"
         fi
     fi
+    command="${command//\\/\\\\}"
     eval $command
     if [ "$(type -t onGameEnd)" = "function" ]; then
         onGameEnd
@@ -157,7 +158,12 @@ function _runGame {
     fi
     local wdir=$(winepath -u "$game_workingDir" 2> /dev/null)
     if [[ -d "$wdir" || "$TDF_IGNORE_EXIST_CHECKS" -eq 1 ]]; then
-        local fpath=$(winepath -u "$game_workingDir\\$game_exe" 2> /dev/null)
+        local fpath=""
+        if [[ "$game_exe" =~ ^[A-Z,a-z]:.*$ ]]; then
+            fpath=$(winepath -u "$game_exe" 2> /dev/null)
+        else
+            fpath=$(winepath -u "$game_workingDir\\$game_exe" 2> /dev/null)
+        fi
         if [[ -f "$fpath" || "$TDF_IGNORE_EXIST_CHECKS" -eq 1 ]]; then
             local startedAt=$SECONDS
             if [ $TDF_HIDE_GAME_RUNNING_DIALOG -eq 1 ]; then
@@ -809,7 +815,6 @@ function _tdfmain {
     game_exe="${game_exe//\//\\}"
     if [ -z "$game_workingDir" ]; then
         game_workingDir="${game_exe%\\*}"
-        game_exe="${game_exe##*\\}"
     fi
     _applyFakeHomeDir
     if [ "$(type -t customChecks)" = "function" ]; then
