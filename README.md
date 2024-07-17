@@ -71,7 +71,7 @@ Arguments to be passed to the game.
 Example: `game_args='-iwad doom2.wad -file mymod.wad'`
 
 __`game_workingDir`__  
-The working directory of the game. By default this is set to the same folder where the `game_exe` resides. If you need to change this, `game_exe` will have to be set to a path relative to this folder. All paths must be Windows-style.
+The working directory of the game. By default this is set to the same folder where the `game_exe` resides. All paths must be Windows-style.
 
 Example:  
 ```
