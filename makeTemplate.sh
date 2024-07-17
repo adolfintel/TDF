@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-modules=("vkd3d" "dxvk" "dxvk-async" "dxvk-nvapi" "wine-games" "wine-mainline" "winesmoketest" "xutils" "zenity" "futex2test" "vkgpltest" "msi" "steamrt" "vcredist" "corefonts")
+modules=("vkd3d" "dxvk" "dxvk-async" "dxvk-nvapi" "wine-games" "wine-mainline" "winesmoketest" "xutils" "zenity" "futex2test" "vkgpltest" "msi" "vcredist" "corefonts")
 if [ "$1" == "clean" ]; then
     echo "Cleaning up"
     rm -f state

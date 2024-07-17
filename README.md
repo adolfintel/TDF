@@ -5,7 +5,6 @@ __TDF is based on the following awesome projects:__
 * [Wine](https://winehq.org), for Windows emulation, more specifically it includes two custom builds made with [tkg](https://github.com/Frogging-Family/wine-tkg-git), one best suited for modern games, and one more suited for applications and older games
 * [DXVK](https://github.com/doitsujin/dxvk), for DirectX 8/9/10/11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
-* [Steam Runtime](https://github.com/ValveSoftware/steam-runtime), to make the Wine dependency hell a bit easier (it still depends on some things of course)
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
 * [Zenity](https://gitlab.gnome.org/GNOME/zenity), a tool to display simple graphical interfaces such as loading bars, error messages, etc.
 * ...and a handful of other useful things
@@ -415,14 +414,6 @@ The command line arguments used to start Gamescope. You can see a complete list 
 By default, TDF sets this variable to `-f -r 60 -w $XRES -h $YRES`, where `XRES` and `YRES` are two read only variables provided by TDF for conveninece that contain the horizontal and vertical resolution of the main display. This default value emulates a virutal screen with the same resolution as the real display, with a refresh rate of 60hz and sets Gamescope to run in fullscreen without any special scaling.
 
 #### Miscellaneous variables
-__`TDF_STEAM_RUNTIME`__  
-Whether to launch TDF using the Steam Runtime or not. This is generally a good idea as it makes TDF extermely portable, but if it fails to launch you might want to disable it. If you disable this feature, you must have Wine and all its dependencies installed on your system, as well as Zenity.
-
-Possible values:  
-* `2` (default): use Steam Runtime only if Wine is not already installed in the system
-* `0`: don't use Steam Runtime
-* `1` : use Steam Runtime
-
 __`TDF_GAMEMODE`__  
 Whether to launch the game using Feral Gamemode or not, which can improve performance especially on weaker or mobile systems. If Gamemode is not installed in the system, it has no effect.
 
@@ -794,7 +785,7 @@ Example for Mass Effect Legendary Edition:
         }
     ```
 
-Note: the `TDF_STEAM_RUNTIME` and `TDF_UI_LANGUAGE` variables can only be set in `vars.conf`, since they're applied before TDF is started, all other variables can be changed at any moment.
+Note: the `TDF_UI_LANGUAGE` variable can only be set in `vars.conf`, since it's applied before TDF is started, all other variables can be changed at any moment.
 
 By default, when the list of games is displayed, they are shown in alphabetical order. If you want them to appear in a specific order, create a file called `_list.txt` in the `confs` folder, with the list of the configuration files in the order in which you want them to appear (filenames only, no extension).
 
@@ -843,7 +834,6 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `futex2test`
 * `localization`
 * `msi`
-* `steamrt`
 * `vcredist`
 * `vkd3d`
 * `vkgpltest`
@@ -872,7 +862,6 @@ The following folders can be deleted from the `system` folder of a TDF instance 
 * `dxvk-nvapi`
 * `msi/winemono.msi`
 * `msi/winegecko32.msi` and `msi/winegecko64.msi`
-* `steamrt`
 * `vcredist`
 * `vkd3d`
 * `wine-games` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="mainline"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-mainline` as a last resort. If neither are available, TDF will fail to start)
@@ -893,7 +882,7 @@ This section covers troubleshooting games on Wine in general, with a focus on ho
 If a game doesn't work out of the box, before you even start troubleshooting, check [ProtonDB](https://www.protondb.com/) for known issues/fixes for this game. Solutions that work on Proton can easily be adapted to work in TDF.
 
 #### TDF won't start (Failed to load Wine)
-TDF comes with the Steam Runtime which provides a lot of libraries required to run Wine, but some basic libraries must still be installed on your system, both in 32 and 64-bit variants.
+Wine depends on a lot of libraries, both 32 and 64 bit. The easiest way to obtain these is to simply install Wine on your system and then removing it.
 * Install missing 32-bit libraries
     * For Arch-based distros see here: [Enabling multilib](https://wiki.archlinux.org/title/Official_repositories#Enabling_multilib) (not required for Manjaro)
     * For Debian-based distros:  
@@ -1048,7 +1037,6 @@ The following dependencies must be installed on your system:
 The following components will be downloaded:  
 * Wine Mono: latest version from [Github](https://github.com/madewokherd/wine-mono/releases/)
 * Wine Gecko: latest 32 and 64-bit versions from the [Wine website](https://dl.winehq.org/wine/wine-gecko/)
-* Steam Runtime: latest "scout" version from [Valve](https://repo.steampowered.com/steamrt-images-scout/snapshots/)
 * Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
 * Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
 
@@ -1081,7 +1069,7 @@ This is not really a problem if you're just running games, the chances of games 
 To put it short: if you're worried about telemetry and data collection in games, you just don't want games to put files all over your system or you just want to package games, TDF is good; if you're going to run GTAV_Installer.exe (2.9MB) downloaded from SkidEmpressReloadedLegitCracks69.ru it is very much not.
 
 ## TODOs and future improvements
-* Replace Steam Runtime "scout" with "sniper" or similar alternative to make TDF less dependant on system libraries
+* Implement something similar to the Steam Runtime but based on Arch to mitigate Wine's dependency hell
 * Localization (TDF has hardcoded English strings at the moment)
 * Automatically recognize some known problematic games and apply tweaks to the configuration
 * Find some way to build against old versions of glibc for better compatibility, ideally using the Steam Runtime SDK (Wine-tkg currently fails to build on Debian-based distros due to conflicting dependencies)
