@@ -199,7 +199,7 @@ function _applyDLLs {
     _outputDetail "$(_loc "$TDF_LOCALE_COPYINGDLLS")"
     local windows_dir="$WINEPREFIX/drive_c/windows"
     if [ "$TDF_DXVK_ASYNC" -eq 2 ]; then
-        ./system/vkgpltest/vkgpltest
+        ./system/tdfutils/vkgpltest
         if [ $? -eq 2 ]; then
             TDF_DXVK_ASYNC=0
         else
@@ -719,14 +719,14 @@ function _applyFakeHomeDir {
     fi
 }
 function _wineSmokeTest {
-    if [[ "$TDF_WINE_SMOKETEST" -eq 0 || ! -d "system/winesmoketest" ]]; then
+    if [[ "$TDF_WINE_SMOKETEST" -eq 0 ]]; then
         return 0
     fi
     if [ -d "$WINEPREFIX/drive_c" ]; then
         if [ -e "$WINEPREFIX/drive_c/smoke.txt" ]; then
             rm "$WINEPREFIX/drive_c/smoke.txt"
         fi
-        \cp "system/winesmoketest/smoke32.exe" "$WINEPREFIX/drive_c/"
+        \cp "system/tdfutils/smoke32.exe" "$WINEPREFIX/drive_c/"
         local _r=$RANDOM
         wine 'C:\smoke32.exe' $_r
         wait
@@ -740,7 +740,7 @@ function _wineSmokeTest {
             if [ "$WINEARCH" = "win32" ]; then
                 return 0
             fi
-            \cp "system/winesmoketest/smoke64.exe" "$WINEPREFIX/drive_c/"
+            \cp "system/tdfutils/smoke64.exe" "$WINEPREFIX/drive_c/"
             wine 'C:\smoke64.exe' $_r
             wait
             rm "$WINEPREFIX/drive_c/smoke64.exe"
@@ -766,7 +766,7 @@ function _tdfmain {
     if [ "$1" = "manualInit" ]; then
         _manualInit=1
     fi
-    ./system/vkgpltest/vkgpltest
+    ./system/tdfutils/vkgpltest
     local _res=$?
     if [[ $_res -eq 0 || $_res -gt 2 || $_res -lt 0 ]]; then
         zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKAN")"
@@ -888,7 +888,7 @@ function _tdfmain {
         exit
     fi
     if [ "$TDF_WINE_SYNC" = "fsync" ]; then
-        ./system/futex2test/futex2test
+        ./system/tdfutils/futex2test
         if [ $? -eq 1 ]; then
             export WINEFSYNC=1
             export WINEESYNC=0
