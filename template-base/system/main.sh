@@ -22,7 +22,7 @@ TDF_HIDE_GAME_RUNNING_DIALOG=0
 TDF_SHOW_PLAY_TIME=0
 
 # --- VARIABLES - Wine ---
-TDF_WINE_PREFERRED_VERSION="games" #games=game-optimized build, mainline=regular wine, system=the version of wine that's installed on the system, or mainline if not installed
+TDF_WINE_PREFERRED_VERSION="games" #games=game-optimized build, mainline=regular wine, custom=the build in the wine-custom folder outside the system folder, system=the version of wine that's installed on the system, or mainline if not installed, any other value will use system/wine-yourValue or system wine if not found
 TDF_WINE_HIDE_CRASHES=1
 TDF_WINE_AUDIO_DRIVER="default" #pulse,alsa,jack,default (let wine decide)
 TDF_WINE_GRAPHICS_DRIVER="default" #x11,wayland,default (let wine decide)
@@ -825,12 +825,12 @@ function _tdfmain {
         export GST_DEBUG_NO_COLOR=1
         export GST_DEBUG=4,WINE:9
     fi
-    if [ "$TDF_WINE_PREFERRED_VERSION" = "games" ]; then
-        export PATH="$(pwd)/system/wine-games/bin:$PATH:$(pwd)/system/wine-mainline/bin"
-    elif [ "$TDF_WINE_PREFERRED_VERSION" = "mainline" ]; then
-        export PATH="$(pwd)/system/wine-mainline/bin:$PATH:$(pwd)/system/wine-games/bin"
+    if [ "$TDF_WINE_PREFERRED_VERSION" = "custom" ]; then
+       export PATH="$(pwd)/wine-custom/bin:$PATH"
     elif [ "$TDF_WINE_PREFERRED_VERSION" = "system" ]; then
-        export PATH="$PATH:$(pwd)/system/wine-mainline/bin:$(pwd)/system/wine-games/bin"
+       export PATH="$PATH:$(pwd)/system/wine-mainline/bin"
+    else
+       export PATH="$(pwd)/system/wine-$TDF_WINE_PREFERRED_VERSION/bin:$PATH"
     fi
     if [ "$TDF_WINEMONO" -eq 0 ]; then
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;mscoree="
