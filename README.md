@@ -7,6 +7,7 @@ __TDF is based on the following awesome projects:__
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
 * [Steam Runtime](https://github.com/ValveSoftware/steam-runtime), to make the Wine dependency hell a bit easier (it still depends on some things of course)
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
+* [Zenity](https://gitlab.gnome.org/GNOME/zenity), a tool to display simple graphical interfaces such as loading bars, error messages, etc.
 * ...and a handful of other useful things
 
 __TDF's main goals are are:__  
@@ -89,13 +90,6 @@ Whether to show the details of what's happening above the progress bar in the TD
 Possible values:  
 * `1` (default): show details like "Starting wine", "Registering DLLs", etc.
 * `0`: show a generic message like "Launching..." or "Creating a new wineprefix, this will take a while..."
-
-__`TDF_ZENITY_PREFER_SYSTEM`__  
-Zenity is the tool that displays the TDF windows with the progress bar and the various messages. TDF comes with its own version of Zenity but it can use the one in the system (if installed), which looks better.
-
-Possible values:  
-* `1` (default): use Zenity provided by the system, keep the builtin one as a fallback
-* `0`: always use the builtin Zenity
 
 __`TDF_MULTIPLE_INSTANCES`__  
 What to do if the user tries to launch `run.sh` while it's already running.
@@ -884,6 +878,7 @@ The following folders can be deleted from the `system` folder of a TDF instance 
 * `wine-games` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="mainline"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-mainline` as a last resort. If neither are available, TDF will fail to start)
 * `wine-mainline` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="games"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-games` as a last resort. If neither are available, TDF will fail to start)
 * `winesmoketest`
+* `zenity` (Note: if this is removed and Zenity is not installed in the system, TDF will still work but it will not have a GUI)
 
 Folders and files not mentioned in this list should not be removed to avoid breaking TDF.
 

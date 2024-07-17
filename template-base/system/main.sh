@@ -16,7 +16,6 @@ game_workingDir=''
 TDF_VERSION="$(cat system/version)"
 TDF_TITLE="$(_loc "$TDF_LOCALE_DEFAULTTITLE")"
 TDF_DETAILED_PROGRESS=1
-TDF_ZENITY_PREFER_SYSTEM=1
 TDF_MULTIPLE_INSTANCES="askcmd" #deny=exit without error messages, error=show an error message and close, askcmd=ask the user if they want to run cmd inside the running prefix, cmd=run command prompt inside the running prefix, allow=allow multiple instances of the game
 TDF_IGNORE_EXIST_CHECKS=0
 TDF_HIDE_GAME_RUNNING_DIALOG=0
@@ -75,9 +74,8 @@ TDF_VCREDIST=1
 
 # Note: there are a few other variables defined elsewhere, see the documentation for a complete list
 
-alias zenity='zenity --title="$TDF_TITLE"'
-if [ "$TDF_ZENITY_PREFER_SYSTEM" -eq 1 ] && [ -f "/usr/bin/zenity" ]; then
-    alias zenity='/usr/bin/zenity --title="$TDF_TITLE"'
+if [ -d "./system/zenity" ]; then
+    export PATH="$PATH:$(pwd)/system/zenity"
 fi
 function _outputDetail {
     if [ "$TDF_DETAILED_PROGRESS" -eq 1 ];then
