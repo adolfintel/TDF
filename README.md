@@ -841,6 +841,7 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `wine-mainline`
 * `winesmoketest`
 * `xutils`
+* `zenity`
 
 So for instance, if you need to test a custom version of DXVK, simply replace the DLLs in `system/dxvk` with your build (making sure to keep the same folder structure), when you launch `run.sh`, TDF will detect that these DLLs don't match the ones in the wineprefix and reinstall DXVK. The same goes for Wine and other components in the list above.
 
@@ -1047,6 +1048,7 @@ The following components will be built from source:
 * DXVK-nvapi: latest master from [Github](https://github.com/jp7677/dxvk-nvapi)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
+* zenity: version 3.44 from [Gnome's GitLab](https://gitlab.gnome.org/GNOME/zenity)
 * Some C programs included with the TDF source code used
 
 The first build will take a good 30-60 minutes to download and compile everything, but subsequent builds will be quicker as the download phase will only download updates for the components and the TDF repo itself.
@@ -1070,7 +1072,6 @@ To put it short: if you're worried about telemetry and data collection in games,
 
 ## TODOs and future improvements
 * Implement something similar to the Steam Runtime but based on Arch to mitigate Wine's dependency hell
-* Localization (TDF has hardcoded English strings at the moment)
 * Automatically recognize some known problematic games and apply tweaks to the configuration
 * Find some way to build against old versions of glibc for better compatibility, ideally using the Steam Runtime SDK (Wine-tkg currently fails to build on Debian-based distros due to conflicting dependencies)
 
