@@ -726,11 +726,11 @@ function _wineSmokeTest {
         if [ -e "$WINEPREFIX/drive_c/smoke.txt" ]; then
             rm "$WINEPREFIX/drive_c/smoke.txt"
         fi
-        \cp "system/tdfutils/smoke32.exe" "$WINEPREFIX/drive_c/"
+        \cp "system/tdfutils/winesmoke32.exe" "$WINEPREFIX/drive_c/"
         local _r=$RANDOM
-        wine 'C:\smoke32.exe' $_r
+        wine 'C:\winesmoke32.exe' $_r
         wait
-        rm "$WINEPREFIX/drive_c/smoke32.exe"
+        rm "$WINEPREFIX/drive_c/winesmoke32.exe"
         if [ -f "$WINEPREFIX/drive_c/smoke.txt" ]; then
             local _out=$(cat "$WINEPREFIX/drive_c/smoke.txt")
             rm "$WINEPREFIX/drive_c/smoke.txt"
@@ -740,10 +740,10 @@ function _wineSmokeTest {
             if [ "$WINEARCH" = "win32" ]; then
                 return 0
             fi
-            \cp "system/tdfutils/smoke64.exe" "$WINEPREFIX/drive_c/"
-            wine 'C:\smoke64.exe' $_r
+            \cp "system/tdfutils/winesmoke64.exe" "$WINEPREFIX/drive_c/"
+            wine 'C:\winesmoke64.exe' $_r
             wait
-            rm "$WINEPREFIX/drive_c/smoke64.exe"
+            rm "$WINEPREFIX/drive_c/winesmoke64.exe"
             if [ -f "$WINEPREFIX/drive_c/smoke.txt" ]; then
                 _out=$(cat "$WINEPREFIX/drive_c/smoke.txt")
                 rm "$WINEPREFIX/drive_c/smoke.txt"
@@ -757,6 +757,17 @@ function _wineSmokeTest {
     fi
     return 0
 }
+function _glibcSmokeTest(){
+    local _ok="$(./system/tdfutils/glibcsmoke64)"
+    if [ "$_ok" != "OK" ]; then
+        return 1
+    fi
+    _ok="$(./system/tdfutils/glibcsmoke32)"
+    if [ "$_ok" != "OK" ]; then
+        return 2
+    fi
+    return 0
+}
 function _showWineError {
     zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_BROKEN")"
 }
@@ -766,8 +777,26 @@ function _tdfmain {
     if [ "$1" = "manualInit" ]; then
         _manualInit=1
     fi
-    ./system/tdfutils/vkgpltest
+    if [ "$(uname -s)" != "Linux" ]; then
+        echo "$(_loc "$TDF_LOCALE_OS_WRONGOS")"
+        exit
+    fi
+    if [ "$(uname -m)" != "x86_64" ]; then
+        echo "$(_loc "$TDF_LOCALE_OS_WRONGARCH")"
+        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WRONGARCH")"
+        exit
+    fi
+    _glibcSmokeTest
     local _res=$?
+    if [ $_res -eq 1 ]; then
+        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_GLIBC_WRONG")"
+        exit
+    elif [ $_res -eq 2 ]; then
+        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_GLIBC_NO32")"
+        exit
+    fi
+    ./system/tdfutils/vkgpltest
+    _res=$?
     if [[ $_res -eq 0 || $_res -gt 2 || $_res -lt 0 ]]; then
         zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKAN")"
         exit
