@@ -104,8 +104,8 @@ __`TDF_IGNORE_EXIST_CHECKS`__
 By default, TDF checks whether the executable specified in `game_exe` actually exists before trying to launch it, but this is not always desirable and can be disabled, which can be useful to run certain commands.
 
 Possible values:  
-* `1` (default): check that the executable actually exists and show an error if it doesn't
-* `0`: don't check and don't show an error if it doesn't exist
+* `0` (default): check that the executable actually exists and show an error if it doesn't
+* `1`: don't check and don't show an error if it doesn't exist
 
 __`TDF_HIDE_GAME_RUNNING_DIALOG`__  
 Whether to hide the TDF window that says "Game running". By default, TDF shows it so you can know if the process has stalled.
