@@ -1,46 +1,58 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2164,SC2103,SC2317
+
 modules=("vkd3d" "dxvk" "dxvk-async" "dxvk-nvapi" "wine-games" "wine-mainline" "tdfutils" "xutils" "zenity" "msi" "vcredist" "corefonts")
+if [[ "$PWD" = *" "* ]]; then
+    fail "The current path ($PWD) contains spaces, this will cause Wine to fail to build, move TDF somewhere else"
+fi
 if [ "$1" == "clean" ]; then
     echo "Cleaning up"
     rm -f state
     for module in "${modules[@]}"; do
         cd "$module"
-        ./clean.sh
-        if [ $? -ne 0 ]; then
+        if ! ./clean.sh; then
             fail "Clean failed for module $module"
         fi
         cd ..
     done
     echo "Done!"
 fi
-if [ -z "$TDF_BUILD_NOUPDATES" ]; then
-    if [ -d .git ]; then
-        echo "This is a git repo, checking for TDF updates"
-        git fetch --all -p
-        git reset --hard origin/"$(git branch --show-current)" > /dev/null
-        TDF_BUILD_NOUPDATES=1 ./makeTemplate.sh && exit 0
-        exit 0
+if [ -z "$TDF_BUILD_STARTED" ]; then
+    if [ -n "$TDF_BUILD_AUTOUPDATE" ]; then
+        if [ -d .git ]; then
+            echo "Checking for TDF updates"
+            git fetch --all -p
+            git reset --hard origin/"$(git branch --show-current)" > /dev/null
+            TDF_BUILD_STARTED=1 ./makeTemplate.sh && exit 0
+            exit 0
+        else
+            echo "Not a git repo, please check for TDF updates manually"
+        fi
     else
-        echo "Not a git repo, please check for TDF updates manually"
+        echo "This is a git repo, use TDF_BUILD_AUTOUPDATE=1 ./makeTemplate.sh to automatically download TDF updates"
+        sleep 1
     fi
 fi
 fail(){
     echo "Build failed: $1"
     exit 1
 }
+hasCommand(){
+    command -v "$1" > /dev/null
+    return $?
+}
+export -f hasCommand
 failedDepsCheck=0
 for module in "${modules[@]}"; do
     cd "$module"
     for f in ./0-*.sh; do
-        "$f"
-        if [ $? -ne 0 ]; then
+        if ! "$f"; then
             failedDepsCheck=1
         fi
     done
     cd ..
 done
-command -v zstd > /dev/null
-if [ $? -ne 0 ]; then
+if ! command -v zstd > /dev/null; then
     echo "zstd not installed"
     failedDepsCheck=1
 fi
@@ -55,7 +67,7 @@ if [ -f state ]; then
     startState=$((startState))
 fi
 for state in {1..3}; do
-    echo $state > state
+    echo "$state" > state
     for module in "${modules[@]}"; do
         skip=0
         for f in "${failedModules[@]}"; do
@@ -74,22 +86,25 @@ for state in {1..3}; do
             modState="$(cat state)"
             modState=$((modState))
         fi
-        if [ $modState -gt $state ]; then
+        if [ "$modState" -gt "$state" ]; then
             echo "RESUME: $module is in state $modState, current state is $state, skipping this phase"
             cd ..
             continue
         fi
+        ok=0
         for f in "./$state"-*.sh; do
-            "$f"
-            if [ $? -ne 0 ]; then
+            if [ ! -f "$f" ]; then
+                continue
+            fi
+            if ! "$f"; then
                 echo "FAILED: $module, phase $state, script $f"
                 if [ -x fallback.sh ]; then
                     echo "Attempting fallback for module $module"
                     failedModules+=("$module")
-                    ./fallback.sh
-                    if [ $? -ne 0 ]; then
+                    if ! ./fallback.sh; then
                         fail "$module, both the regular build and the fallback have failed"
                     fi
+                    ok=1
                     break
                 else
                     echo "No fallback available for this module"
@@ -97,6 +112,10 @@ for state in {1..3}; do
                 fi
             fi
         done
+        if [ "$ok" -ne 1 ]; then
+            echo "$module has no scripts for phase $state, skipping"
+            echo "$((state+1))" > state
+        fi
         cd ..
     done
 done

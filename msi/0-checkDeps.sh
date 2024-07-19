@@ -1,37 +1,30 @@
 #!/usr/bin/env bash
 failed=0
-command -v curl > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand curl; then
     echo "curl not installed"
     failed=1
 fi
-command -v wget > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand wget; then
     echo "wget not installed"
     failed=1
 fi
-command -v grep > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand grep; then
     echo "GNU grep not installed"
     failed=1
 fi
-command -v sed > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand sed; then
     echo "GNU sed not installed"
     failed=1
 fi
-command -v sort > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand sort; then
     echo "GNU sort not installed"
     failed=1
 fi
-command -v tar > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand tar; then
     echo "GNU tar not installed"
     failed=1
 fi
-command -v patch > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand patch; then
     echo "GNU patch not installed"
     failed=1
 fi

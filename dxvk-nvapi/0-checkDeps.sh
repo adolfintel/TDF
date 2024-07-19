@@ -1,55 +1,38 @@
 #!/usr/bin/env bash
 failed=0
-command -v git > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand git; then
     echo "Git not installed"
     failed=1
 fi
-command -v wine > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand wine; then
     echo "Wine not installed"
     failed=1
 fi
-command -v meson > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand meson; then
     echo "Meson not installed"
     failed=1
 fi
-command -v i686-w64-mingw32-gcc > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand i686-w64-mingw32-gcc || ! hasCommand x86_64-w64-mingw32-gcc; then
     echo "Mingw-w64 not installed"
     failed=1
 fi
-command -v x86_64-w64-mingw32-gcc > /dev/null
-if [ $? -ne 0 ]; then
-    echo "Mingw-w64 not installed"
-    failed=1
-fi
-command -v glslc > /dev/null
-err1=$?
-command -v glslangValidator > /dev/null
-err2=$?
-if [[ $err1 -ne 0 && $err2 -ne 0  ]]; then
+if ! hasCommand glslc && ! hasCommand glslangValidator; then
     echo "glslc or glslangValidator not installed"
     failed=1
 fi
-command -v curl > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand curl; then
     echo "curl not installed"
     failed=1
 fi
-command -v wget > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand wget; then
     echo "wget not installed"
     failed=1
 fi
-command -v grep > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand grep; then
     echo "GNU grep not installed"
     failed=1
 fi
-command -v sed > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand sed; then
     echo "GNU sed not installed"
     failed=1
 fi

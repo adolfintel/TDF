@@ -1055,9 +1055,11 @@ The first build will take a good 30-60 minutes to download and compile everythin
 
 If the build fails (and let's be honest, the first times it probably will), fix the problem and run `./makeTemplate.sh` again, the script will automatically resume from where it left off.
 
-If you don't want to use this caching and resuming system, you can run a clean build using `./makeTemplate.sh clean && ./makeTemplate.sh`, this will delete all saved data and redownload everything, then build TDF. If you don't want to fetch updates for the TDF repo itself, delete the `.git` folder.
+If you don't want to use this caching and resuming system, you can run a clean build using `./makeTemplate.sh clean`, this will delete all saved data and redownload everything, then build TDF.
 
-At the end of the build process, the package will be compressed using a slow but efficient zstd compression and the finished archive will be ~380MB.
+If you're going to build TDF regularly, you can enable automatic updates for the TDF repo using `TDF_BUILD_AUTOUPDATE=1 ./makeTemplate.sh` (git only).
+
+At the end of the build process, the package will be compressed using a slow but efficient zstd compression and the finished archive will be ~310MB.
 
 ## Important security notice
 While TDF provides some additional security compared to a standard installation of Wine or Proton, it is important to understand that Wine is simply not designed for security, quite the opposite, it's designed to seamlessly integrate Windows stuff into Linux.

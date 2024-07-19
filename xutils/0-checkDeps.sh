@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 failed=0
-command -v git > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand git; then
     echo "Git not installed"
     failed=1
 fi
-command -v gcc > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand gcc; then
     echo "GCC not installed"
     failed=1
 fi

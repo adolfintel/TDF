@@ -1,12 +1,10 @@
 #!/usr/bin/env bash
 failed=0
-command -v wget > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand wget; then
     echo "wget not installed"
     failed=1
 fi
-command -v cabextract > /dev/null
-if [ $? -ne 0 ]; then
+if ! hasCommand cabextract; then
     echo "cabextract not installed"
     failed=1
 fi
