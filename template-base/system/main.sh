@@ -768,8 +768,56 @@ function _glibcSmokeTest(){
     fi
     return 0
 }
-function _showWineError {
-    zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_BROKEN")"
+_missingLibs32=""
+_missingLibs64=""
+function _checkMissingLibs(){
+    local oldDir="$PWD"
+    cd "$1"
+    if [ $? -ne 0 ]; then
+        return 0;
+    fi
+    local canRun=1
+    _missingLibs32=""
+    _missingLibs64=""
+    local oldIFS="$IFS"
+    IFS=$'\n'
+    local missing=$(ldd bin/* lib/wine/*-unix/* 2>/dev/null | grep "=> not found" | sort | uniq)
+    for f in $missing; do
+        f="${f:1:-13}"
+        if [ $(find . -name "$f" | wc -l) -eq 0 ]; then
+            _missingLibs64="$f $_missingLibs64"
+            canRun=0
+        fi
+    done
+    missing=$(ldd lib32/wine/*-unix/* 2>/dev/null | grep "=> not found" | sort | uniq)
+    for f in $missing; do
+        f="${f:1:-13}"
+        if [ $(find . -name "$f" | wc -l) -eq 0 ]; then
+            _missingLibs32="$f $_missingLibs32"
+            canRun=0
+        fi
+    done
+    IFS="$oldIFS"
+    cd "$oldDir"
+    return $canRun
+}
+function _diagnoseBrokenWine {
+    local wineexe="$(command -v wine)"
+    if [ -z "$wineexe" ]; then
+        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_NOTINPATH")"
+        return
+    fi
+    wineexe="$(dirname "$wineexe")"
+    if [[ "$wineexe" = "$PWD/"* ]]; then
+        _checkMissingLibs "$wineexe/.."
+        if [ $? -eq 0 ]; then
+            zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_MISSINGDEPS")"
+        else
+            zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_BROKEN")"
+        fi
+    else
+        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_BROKEN")"
+    fi
 }
 
 function _tdfmain {
@@ -913,7 +961,7 @@ function _tdfmain {
     fi
     wine --version > /dev/null
     if [ $? -ne 0 ]; then
-        _showWineError
+        _diagnoseBrokenWine
         exit
     fi
     if [ "$TDF_WINE_SYNC" = "fsync" ]; then
@@ -1009,7 +1057,7 @@ function _tdfmain {
                 wait
                 _wineSmokeTest
                 if [ $? -ne 0 ]; then
-                    _showWineError
+                    _diagnoseBrokenWine
                     touch "$WINEPREFIX/.abort"
                     exit
                 fi
@@ -1069,7 +1117,7 @@ function _tdfmain {
             wait
             _wineSmokeTest
             if [ $? -ne 0 ]; then
-                _showWineError
+                _diagnoseBrokenWine
                 touch "$WINEPREFIX/.abort"
                 exit
             fi
