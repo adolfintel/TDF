@@ -950,7 +950,7 @@ function _tdfmain {
     fi
     local _gamemodeCommand="gamemoderun"
     if [ "$TDF_GAMEMODE" -eq 1 ]; then
-        if command -v gamemoderun > /dev/null; then
+        if ! command -v gamemoderun > /dev/null; then
             _gamemodeCommand=""
         fi
     else
@@ -958,7 +958,7 @@ function _tdfmain {
     fi
     local _mangohudCommand="mangohud"
     if [ "$TDF_MANGOHUD" -eq 1 ]; then
-        if command -v mangohud > /dev/null; then
+        if ! command -v mangohud > /dev/null; then
             _mangohudCommand=""
         fi
     else
