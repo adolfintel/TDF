@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2181,SC2034,SC2046,SC2155
 
 WINDOWS=()
 WINDOW=""
 _savedGamma="1:1:1"
+_primaryDisplay="$(xrandr | grep "primary" | cut -d ' ' -f1)"
 
 TDF_XDOTOOL_ONLY_VISIBLE=0
 
 function pressKey {
     local n=1
-    if [ ! -z "$2" ]; then
+    if [ -n "$2" ]; then
         n="$2"
     fi
-    for i in $(seq 1 $n); do
+    for i in $(seq 1 "$n"); do
         xdotool key "$1"
         sleep 0.5
     done
@@ -29,7 +31,7 @@ function focusWindow {
 
 function makeFullscreen {
     xdotool windowstate --add FULLSCREEN "$1"
-    focusWindow $1
+    focusWindow "$1"
 }
 
 function removeFullscreen {
@@ -64,23 +66,24 @@ function resizeWindow {
 
 function waitForWindow {
     local timeout=30
-    if [ ! -z "$3" ]; then
+    if [ -n "$3" ]; then
         timeout="$3"
     fi
     local args="--shell"
     if [ "$TDF_XDOTOOL_ONLY_VISIBLE" -eq 1 ]; then
         args="$args --onlyvisible"
     fi
-    for i in $(seq 1 $timeout); do
+    # shellcheck disable=SC2086
+    for j in $(seq 1 $timeout); do
         local idE=()
         local idN=()
-        if [ ! -z "$1" ]; then
+        if [ -n "$1" ]; then
             eval $(xdotool search $args --classname "$1")
             for i in "${WINDOWS[@]}"; do
                 idE+=("$i")
             done
         fi
-        if [ ! -z "$2" ]; then
+        if [ -n "$2" ]; then
             eval $(xdotool search $args --name "$2")
             for i in "${WINDOWS[@]}"; do
                 idN+=("$i")
@@ -123,7 +126,7 @@ function waitForWindow {
 
 function keepWindowFocused {
     local timeout=30
-    if [ ! -z "$3" ]; then
+    if [ -n "$3" ]; then
         timeout="$3"
     fi
     waitForWindow "$1" "$2" "$timeout"
@@ -160,9 +163,8 @@ function saveGamma {
     if [ $? -ne 0 ]; then
         return 1
     fi
-    local primaryDisplay="$(xrandr | grep "primary" | cut -d ' ' -f1)"
-    if [ -n "$primaryDisplay" ]; then
-        local g=$(xrandr --verbose | sed -n "/$primaryDisplay/,/Gamma/p" | grep "Gamma")
+    if [ -n "$_primaryDisplay" ]; then
+        local g=$(xrandr --verbose | sed -n "/$_primaryDisplay/,/Gamma/p" | grep "Gamma")
         if [ -n "$g" ]; then
             _savedGamma=$(echo "$g" | cut -d ':' -f2):$(echo "$g" | cut -d ':' -f3):$(echo "$g" | cut -d ':' -f4)
         fi
@@ -176,15 +178,15 @@ function setGamma {
         return 1
     fi
     if [[ "$1" =~ ^[0-9.]*$ ]]; then
-        xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --gamma $1:$1:$1
+        xrandr --output "$_primaryDisplay" --gamma "$1:$1:$1"
     else
-        xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --gamma $1
+        xrandr --output "$_primaryDisplay" --gamma "$1"
     fi
     return 0
 }
 
 function restoreGamma {
-    setGamma $_savedGamma
+    setGamma "$_savedGamma"
     return $?
 }
 
@@ -198,9 +200,9 @@ function resetResolution {
     if [ $? -ne 0 ]; then
         return 1
     fi
-    xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --gamma "$_savedGamma"
-    xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --auto
-    xrandr --output $(xrandr | grep "primary" | cut -d ' ' -f1) --set "scaling mode" "Full aspect"
+    xrandr --output "$_primaryDisplay" --gamma "$_savedGamma"
+    xrandr --output "$_primaryDisplay" --auto
+    xrandr --output "$_primaryDisplay" --set "scaling mode" "Full aspect"
     sleep 1
     return 0
 }

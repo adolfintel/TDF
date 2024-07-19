@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1090,SC1091,SC2155,SC2068,SC2164,SC2086
 shopt -s expand_aliases
 source "system/localization/load.sh"
 export LC_ALL=C.UTF-8
 if [ $# -eq 0 ]; then
-    echo "$(_loc "$TDF_LOCALE_DONTRUNDIRECTLY")"
+    _loc "$TDF_LOCALE_DONTRUNDIRECTLY"
     exit
 fi
 
@@ -39,7 +40,7 @@ TDF_WINE_SMOKETEST=1
 TDF_WINEMONO=0
 TDF_WINEGECKO=0
 export WINE_LARGE_ADDRESS_AWARE=1
-export WINEPREFIX="$(pwd)/zzprefix"
+export WINEPREFIX="$PWD/zzprefix"
 export WINEDEBUG=-all
 export USER="wine"
 
@@ -75,8 +76,9 @@ TDF_VCREDIST=1
 # Note: there are a few other variables defined elsewhere, see the documentation for a complete list
 
 if [ -d "./system/zenity" ]; then
-    export PATH="$PATH:$(pwd)/system/zenity"
+    export PATH="$PATH:$PWD/system/zenity"
 fi
+alias zenity='zenity --title="$TDF_TITLE" '
 function _outputDetail {
     if [ "$TDF_DETAILED_PROGRESS" -eq 1 ];then
         echo "#$1"
@@ -164,7 +166,7 @@ function _runGame {
         fi
         if [[ -f "$fpath" || "$TDF_IGNORE_EXIST_CHECKS" -eq 1 ]]; then
             local startedAt=$SECONDS
-            if [ $TDF_HIDE_GAME_RUNNING_DIALOG -eq 1 ]; then
+            if [ "$TDF_HIDE_GAME_RUNNING_DIALOG" -eq 1 ]; then
                 _realRunGame
             else
                 (
@@ -596,7 +598,7 @@ function _applyWineDrivers {
 function _removeBrokenDosdevices {
     _outputDetail "$(_loc "$TDF_LOCALE_LINKS_CHECK")"
     _dosdevices_unprotect
-    local before="$(pwd)"
+    local before="$PWD"
     cd "$WINEPREFIX/dosdevices"
     find -L . -name . -o -type d -prune -o -type l -exec rm {} +
     cd "$before"
@@ -669,6 +671,7 @@ function _applyBlockBrowser {
     fi
 }
 function _applyCorefonts {
+    # shellcheck disable=SC2089,SC2090
     local windows_dir="$WINEPREFIX/drive_c/windows"
     local corefonts_dir="system/corefonts"
     local corefonts_info=("AndaleMo.TTF:Andale Mono" "Arial.TTF:Arial" "Arialbd.TTF:Arial Bold" "Arialbi.TTF:Arial Bold Italic" "Ariali.TTF:Arial Italic" "AriBlk.TTF:Arial Black" "Comic.TTF:Comic Sans MS" "Comicbd.TTF:Comic Sans MS Bold" "cour.ttf:Courier New" "courbd.ttf:Courier New Bold" "courbi.ttf:Courier New Bold Italic" "couri.ttf:Courier New Italic" "Georgia.TTF:Georgia" "Georgiab.TTF:Georgia Bold" "Georgiai.TTF:Georgia Italic" "Georgiaz.TTF:Georgia Bold Italic" "Impact.TTF:Impact" "Times.TTF:Times New Roman" "Timesbd.TTF:Times New Roman Bold" "Timesbi.TTF:Times New Roman Bold Italic" "Timesi.TTF:Times New Roman Italic" "trebuc.ttf:Trebuchet MS" "Trebucbd.ttf:Trebuchet MS Bold" "trebucbi.ttf:Trebuchet MS Bold Italic" "trebucit.ttf:Trebuchet MS Italic" "Verdana.TTF:Verdana" "Verdanab.TTF:Verdana Bold" "Verdanai.TTF:Verdana Italic" "Verdanaz.TTF:Verdana Bold Italic" "Webdings.TTF:Webdings")
@@ -679,12 +682,15 @@ function _applyCorefonts {
                 local commands=""
                 function copyAndRegister {
                     cp -f "$corefonts_dir/$1" "$windows_dir/Fonts"
+                    # shellcheck disable=SC2089
                     commands="$commands /v '$2' /t REG_SZ /d '$1' "
                 }
                 for f in "${corefonts_info[@]}"; do
                     copyAndRegister "$(echo $f | cut -d ':' -f 1)" "$(echo $f | cut -d ':' -f 2)"
                 done
+                # shellcheck disable=SC2090
                 wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' $commands /f
+                # shellcheck disable=SC2090,SC2016
                 wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' /v '$2' /t REG_SZ /d '$1' $commands /f
                 touch "$WINEPREFIX/.corefonts-installed"
             fi
@@ -694,12 +700,15 @@ function _applyCorefonts {
                 local commands=""
                 function deleteAndUnregister {
                     rm -f "$windows_dir/Fonts/$1"
+                    # shellcheck disable=SC2089
                     commands="$commands /v '$2'"
                 }
                 for f in "${corefonts_info[@]}"; do
                     deleteAndUnregister "$(echo $f | cut -d ':' -f 1)" "$(echo $f | cut -d ':' -f 2)"
                 done
+                # shellcheck disable=SC2090
                 wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' $commands /f
+                # shellcheck disable=SC2090
                 wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' $commands /f
                 rm -f "$WINEPREFIX/.corefonts-installed"
             fi
@@ -708,13 +717,13 @@ function _applyCorefonts {
 }
 function _applyFakeHomeDir {
     if [ "$TDF_FAKE_HOMEDIR" -eq 1 ]; then
-        export HOME="$(pwd)/zzhome"
+        export HOME="$PWD/zzhome"
         if [ ! -d "$HOME" ]; then
             mkdir "$HOME"
         fi
     else
-        if [ -d "$(pwd)/zzhome" ]; then
-            rm -rf "$(pwd)/zzhome"
+        if [ -d "$PWD/zzhome" ]; then
+            rm -rf "$PWD/zzhome"
         fi
     fi
 }
@@ -758,12 +767,10 @@ function _wineSmokeTest {
     return 0
 }
 function _glibcSmokeTest(){
-    local _ok="$(./system/tdfutils/glibcsmoke64)"
-    if [ "$_ok" != "OK" ]; then
+    if [ "$(./system/tdfutils/glibcsmoke64)" != "OK" ]; then
         return 1
     fi
-    _ok="$(./system/tdfutils/glibcsmoke32)"
-    if [ "$_ok" != "OK" ]; then
+    if [ "$(./system/tdfutils/glibcsmoke32)" != "OK" ]; then
         return 2
     fi
     return 0
@@ -772,8 +779,7 @@ _missingLibs32=""
 _missingLibs64=""
 function _checkMissingLibs(){
     local oldDir="$PWD"
-    cd "$1"
-    if [ $? -ne 0 ]; then
+    if ! cd "$1" ; then
         return 0;
     fi
     local canRun=1
@@ -784,6 +790,7 @@ function _checkMissingLibs(){
     local missing=$(ldd bin/* lib/wine/*-unix/* 2>/dev/null | grep "=> not found" | sort | uniq)
     for f in $missing; do
         f="${f:1:-13}"
+        # shellcheck disable=SC2046
         if [ $(find . -name "$f" | wc -l) -eq 0 ]; then
             _missingLibs64="$f $_missingLibs64"
             canRun=0
@@ -792,6 +799,7 @@ function _checkMissingLibs(){
     missing=$(ldd lib32/wine/*-unix/* 2>/dev/null | grep "=> not found" | sort | uniq)
     for f in $missing; do
         f="${f:1:-13}"
+        # shellcheck disable=SC2046
         if [ $(find . -name "$f" | wc -l) -eq 0 ]; then
             _missingLibs32="$f $_missingLibs32"
             canRun=0
@@ -810,6 +818,7 @@ function _diagnoseBrokenWine {
     wineexe="$(dirname "$wineexe")"
     if [[ "$wineexe" = "$PWD/"* ]]; then
         _checkMissingLibs "$wineexe/.."
+        # shellcheck disable=SC2181
         if [ $? -eq 0 ]; then
             zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_MISSINGDEPS")"
         else
@@ -826,11 +835,11 @@ function _tdfmain {
         _manualInit=1
     fi
     if [ "$(uname -s)" != "Linux" ]; then
-        echo "$(_loc "$TDF_LOCALE_OS_WRONGOS")"
+        _loc "$TDF_LOCALE_OS_WRONGOS"
         exit
     fi
     if [ "$(uname -m)" != "x86_64" ]; then
-        echo "$(_loc "$TDF_LOCALE_OS_WRONGARCH")"
+        _loc "$TDF_LOCALE_OS_WRONGARCH"
         zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WRONGARCH")"
         exit
     fi
@@ -850,9 +859,9 @@ function _tdfmain {
         exit
     fi
     if [ -d "system/xutils" ]; then
-        export PATH="$PATH:$(pwd)/system/xutils"
+        export PATH="$PATH:$PWD/system/xutils"
     fi
-    source "$(pwd)/system/builtinFunctions.sh"
+    source "$PWD/system/builtinFunctions.sh"
     XRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 1)
     YRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 2)
     if [ -f "vars.conf" ]; then
@@ -861,6 +870,7 @@ function _tdfmain {
     if [ -d "confs" ]; then
         local _confs=()
         if [ -f "confs/_list.txt" ]; then
+            # shellcheck disable=SC2162
             while read f; do
                 _confs+=("$f")
             done < "confs/_list.txt"
@@ -893,8 +903,7 @@ function _tdfmain {
     fi
     _applyFakeHomeDir
     if [ "$(type -t customChecks)" = "function" ]; then
-        customChecks
-        if [ $? -ne 0 ]; then
+        if ! customChecks; then
             exit
         fi
     fi
@@ -903,11 +912,11 @@ function _tdfmain {
         export GST_DEBUG=4,WINE:9
     fi
     if [ "$TDF_WINE_PREFERRED_VERSION" = "custom" ]; then
-       export PATH="$(pwd)/wine-custom/bin:$PATH"
+       export PATH="$PWD/wine-custom/bin:$PATH"
     elif [ "$TDF_WINE_PREFERRED_VERSION" = "system" ]; then
-       export PATH="$PATH:$(pwd)/system/wine-mainline/bin"
+       export PATH="$PATH:$PWD/system/wine-mainline/bin"
     else
-       export PATH="$(pwd)/system/wine-$TDF_WINE_PREFERRED_VERSION/bin:$PATH"
+       export PATH="$PWD/system/wine-$TDF_WINE_PREFERRED_VERSION/bin:$PATH"
     fi
     if [ "$TDF_WINEMONO" -eq 0 ]; then
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;mscoree="
@@ -922,8 +931,7 @@ function _tdfmain {
     _applyFakeHomeDir
     local _blockNetworkCommand="unshare -nc"
     if [ "$TDF_BLOCK_NETWORK" -eq 2 ]; then
-        command -v firejail > /dev/null
-        if [ $? -eq 0 ]; then
+        if command -v firejail > /dev/null; then
             _blockNetworkCommand="firejail --noprofile --net=none"
         fi
     fi
@@ -932,8 +940,7 @@ function _tdfmain {
     fi
     local _gamescopeCommand=""
     if [ "$TDF_GAMESCOPE" -ge 1 ]; then
-        command -v gamescope > /dev/null
-        if [ $? -eq 0 ]; then
+        if command -v gamescope > /dev/null; then
             if [ -z "$TDF_GAMESCOPE_PARAMETERS" ]; then
                 TDF_GAMESCOPE_PARAMETERS="-f -r 60 -w $XRES -h $YRES"
             fi
@@ -943,8 +950,7 @@ function _tdfmain {
     fi
     local _gamemodeCommand="gamemoderun"
     if [ "$TDF_GAMEMODE" -eq 1 ]; then
-        command -v gamemoderun > /dev/null
-        if [ $? -ne 0 ]; then
+        if command -v gamemoderun > /dev/null; then
             _gamemodeCommand=""
         fi
     else
@@ -952,15 +958,13 @@ function _tdfmain {
     fi
     local _mangohudCommand="mangohud"
     if [ "$TDF_MANGOHUD" -eq 1 ]; then
-        command -v mangohud > /dev/null
-        if [ $? -ne 0 ]; then
+        if command -v mangohud > /dev/null; then
             _mangohudCommand=""
         fi
     else
         _mangohudCommand=""
     fi
-    wine --version > /dev/null
-    if [ $? -ne 0 ]; then
+    if ! wine --version > /dev/null; then
         _diagnoseBrokenWine
         exit
     fi
@@ -997,8 +1001,7 @@ function _tdfmain {
     fi
     local _skipInitializations=0
     exec {_flockid}<"$0"
-    flock -n -e $_flockid
-    if [ $? -ne 0 ]; then
+    if ! flock -n -e $_flockid; then
         if [ -e "$WINEPREFIX/.initialized" ]; then
             local _pfxversion=$(cat "$WINEPREFIX/.initialized")
             if [ "$_pfxversion" = "$TDF_VERSION" ]; then
@@ -1008,8 +1011,7 @@ function _tdfmain {
                     zenity --error --text="$(_loc "$TDF_LOCALE_ALREADYRUNNING_ERROR")"
                     exit
                 elif [ "$TDF_MULTIPLE_INSTANCES" = "askcmd" ]; then
-                    zenity --question --width=400 --text="$(_loc "$TDF_LOCALE_ALREADYRUNNING_ASKCMD")"
-                    if [ $? -eq 0 ]; then
+                    if zenity --question --width=400 --text="$(_loc "$TDF_LOCALE_ALREADYRUNNING_ASKCMD")"; then
                         _realRunCommandPrompt
                     fi
                     exit
@@ -1036,7 +1038,7 @@ function _tdfmain {
     fi
     if [ -d "$WINEPREFIX" ]; then
         if [ -n "$WINEARCH" ]; then
-            local _pfxarch=$(cat "$WINEPREFIX/system.reg" | grep -m 1 '#arch' | cut -d '=' -f2)
+            local _pfxarch=$(grep -m 1 '#arch' "$WINEPREFIX/system.reg" | cut -d '=' -f2)
             if [ "$_pfxarch" != "$WINEARCH" ]; then
                 zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_WRONGARCH")"
                 exit
@@ -1052,11 +1054,11 @@ function _tdfmain {
                 echo "10"
                 _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
                 local _realOverrides="$WINEDLLOVERRIDES"
+                # shellcheck disable=SC2030
                 export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
                 wineboot
                 wait
-                _wineSmokeTest
-                if [ $? -ne 0 ]; then
+                if ! _wineSmokeTest; then
                     _diagnoseBrokenWine
                     touch "$WINEPREFIX/.abort"
                     exit
@@ -1109,14 +1111,15 @@ function _tdfmain {
         (
             echo "10"
             _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
+            # shellcheck disable=SC2031
             local _realOverrides="$WINEDLLOVERRIDES"
+            # shellcheck disable=SC2031
             export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
             mkdir -p "$WINEPREFIX"
             echo $_flockid > "$WINEPREFIX/.flockid"
             wineboot -i
             wait
-            _wineSmokeTest
-            if [ $? -ne 0 ]; then
+            if ! _wineSmokeTest; then
                 _diagnoseBrokenWine
                 touch "$WINEPREFIX/.abort"
                 exit

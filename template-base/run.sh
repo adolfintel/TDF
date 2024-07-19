@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC2164,SC1091
 export LC_ALL=C
 
 #cd to run.sh location
@@ -16,8 +17,7 @@ source "vars.conf"
 source "system/localization/load.sh"
 if [ "$1" == "archive" ]; then
     if [ "$(type -t onArchiveStart)" == "function" ]; then
-        onArchiveStart "$@"
-        if [ $? -ne 0 ]; then
+        if ! onArchiveStart "$@"; then
             exit 1
         fi
     fi

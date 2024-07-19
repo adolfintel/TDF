@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# shellcheck disable=SC1090
 
 if [ -n "$TDF_UI_LANGUAGE" ]; then
     _l="$TDF_UI_LANGUAGE"
