@@ -5,7 +5,7 @@ echo "Downloading dxvk-gplasync (stable build)"
 rm -rf build dxvk-gplasync
 touch incomplete
 git clone https://gitlab.com/Ph42oN/dxvk-gplasync/
-filename=$(ls dxvk-gplasync/releases/*.tar.gz | tail -n 1)
+filename=$(find dxvk-gplasync/releases/*.tar.gz | tail -n 1)
 mkdir build
 tar -xf "$filename" --directory build
 mv build/dxvk-*/* build

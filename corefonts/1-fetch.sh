@@ -15,10 +15,10 @@ rm -rf build temp
 mkdir temp
 cd temp
 set +e
-for exe in ${exes[@]}; do
+for exe in "${exes[@]}"; do
+    # shellcheck disable=SC2034
     for i in {1..20}; do #sometimes a sourceforge mirror is down and if we do this it will try a different one
-        wget --tries=1 "https://sourceforge.net/projects/corefonts/files/the fonts/final/$exe.exe"
-        if [ $? -eq 0 ]; then
+        if wget --tries=1 "https://sourceforge.net/projects/corefonts/files/the fonts/final/$exe.exe"; then
             break;
         fi
     done
@@ -28,8 +28,8 @@ for exe in ${exes[@]}; do
 done
 set -e
 mkdir ../build
-cabextract *.exe
-mv *.TTF *.ttf ../build
+cabextract "./"*.exe
+mv "./"*.TTF "./"*.ttf ../build
 cd ..
 rm -rf temp
 rm -f incomplete

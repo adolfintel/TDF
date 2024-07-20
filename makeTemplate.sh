@@ -2,10 +2,20 @@
 # shellcheck disable=SC2164,SC2103,SC2317
 
 modules=("vkd3d" "dxvk" "dxvk-async" "dxvk-nvapi" "wine-games" "wine-mainline" "tdfutils" "xutils" "zenity" "msi" "vcredist" "corefonts")
+fail(){
+    echo "Build failed: $1"
+    exit 1
+}
+hasCommand(){
+    command -v "$1" > /dev/null
+    return $?
+}
+export -f fail
+export -f hasCommand
 if [[ "$PWD" = *" "* ]]; then
     fail "The current path ($PWD) contains spaces, this will cause Wine to fail to build, move TDF somewhere else"
 fi
-if [ "$1" == "clean" ]; then
+if [ "$1" = "clean" ]; then
     echo "Cleaning up"
     rm -f state
     for module in "${modules[@]}"; do
@@ -33,15 +43,6 @@ if [ -z "$TDF_BUILD_STARTED" ]; then
         sleep 1
     fi
 fi
-fail(){
-    echo "Build failed: $1"
-    exit 1
-}
-hasCommand(){
-    command -v "$1" > /dev/null
-    return $?
-}
-export -f hasCommand
 failedDepsCheck=0
 for module in "${modules[@]}"; do
     cd "$module"
@@ -71,7 +72,7 @@ for state in {1..3}; do
     for module in "${modules[@]}"; do
         skip=0
         for f in "${failedModules[@]}"; do
-            if [ "$module" == "$f" ]; then
+            if [ "$module" = "$f" ]; then
                 skip=1
                 break
             fi
