@@ -97,6 +97,7 @@ for state in {1..3}; do
             if [ ! -f "$f" ]; then
                 continue
             fi
+            ok=1
             if ! "$f"; then
                 echo "FAILED: $module, phase $state, script $f"
                 if [ -x fallback.sh ]; then
@@ -105,7 +106,6 @@ for state in {1..3}; do
                     if ! ./fallback.sh; then
                         fail "$module, both the regular build and the fallback have failed"
                     fi
-                    ok=1
                     break
                 else
                     echo "No fallback available for this module"
