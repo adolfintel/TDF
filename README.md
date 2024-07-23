@@ -303,6 +303,9 @@ Example:
 export WINEDEBUG=+loaddll,+pid
 ```
 
+__`export WINE_NEW_MEDIA_SOURCE`__  
+Enables/disables some the new gstreamer media source implemented in Valve Wine (the games-optimized build) around July 2024. It's not stable yet so it's set to `0` by default, but you can try setting it to `1` if you have video issues.
+
 #### DXVK and VKD3D variables
 __`TDF_DXVK`__  
 Whether to install DXVK or not, which provides DirextX 9-11 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which is better for some older games.
