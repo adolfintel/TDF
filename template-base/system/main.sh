@@ -43,7 +43,6 @@ export WINE_LARGE_ADDRESS_AWARE=1
 export WINEPREFIX="$PWD/zzprefix"
 export WINEDEBUG=-all
 export USER="wine"
-export WINE_NEW_MEDIA_SOURCE=0 #the new media source in valve wine is not stable yet
 
 # --- VARIABLES - DXVK ---
 TDF_DXVK=1

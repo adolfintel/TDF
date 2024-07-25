@@ -304,7 +304,7 @@ export WINEDEBUG=+loaddll,+pid
 ```
 
 __`export WINE_NEW_MEDIA_SOURCE`__  
-Enables/disables some the new gstreamer media source implemented in Valve Wine (the games-optimized build) around July 2024. It's not stable yet so it's set to `0` by default, but you can try setting it to `1` if you have video issues.
+Enables/disables some the new gstreamer media source implemented in Valve Wine (the games-optimized build) around July 2024. By default it lets Wine decide based on the game, but you can try setting it to `0` or `1` if you have video playback issues.
 
 #### DXVK and VKD3D variables
 __`TDF_DXVK`__  
