@@ -18,7 +18,7 @@ set +e
 for exe in "${exes[@]}"; do
     # shellcheck disable=SC2034
     for i in {1..20}; do #sometimes a sourceforge mirror is down and if we do this it will try a different one
-        if wget --tries=1 "https://sourceforge.net/projects/corefonts/files/the fonts/final/$exe.exe"; then
+        if wget --tries=1 --timeout=10 "https://sourceforge.net/projects/corefonts/files/the fonts/final/$exe.exe"; then
             break;
         fi
     done
