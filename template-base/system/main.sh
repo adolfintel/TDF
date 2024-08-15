@@ -39,6 +39,10 @@ TDF_WINE_DEBUG_GSTREAMER=0
 TDF_WINE_SMOKETEST=1
 TDF_WINEMONO=0
 TDF_WINEGECKO=0
+TDF_WINE_NOSMT=0 #1=don't show hyperthreading/SMT to the application (if present in the system). Only supported by games build, other versions will ignore this parameter
+TDF_WINE_NOECORES=0 #1=don't show e-cores to the application. Only supported by games build, other versions will ignore this parameter
+TDF_WINE_PREFER_SAMESOCKET=1 #0=assign cores based on speed exclusively, 1=assign based on speed, but first use all the cores on the first CPUs then use the others, 2=only show the first CPU to the application and ignore the others. This can be useful if you're gaming on a multi-CPU server or something. Only supported by games build, other versions will ignore this parameter
+TDF_WINE_MAXLOGICALCPUS=0 #the maximum number of logical CPUs (aka hardware threads, the ones you see in task manager) that the application can use. If the number of logical CPUs in the machine exceeds this, TDF will limit how many can be used by the application assigning them "intelligently" to maximize gaming performance. Set to 0 to disable limit. Only supported by games build, other versions will ignore this parameter
 export WINE_LARGE_ADDRESS_AWARE=1
 export WINEPREFIX="$PWD/zzprefix"
 export WINEDEBUG=-all
@@ -111,6 +115,150 @@ function _applyLocale {
 function _restoreLocale {
     export LC_ALL=C.UTF-8
 }
+function _applyCPULimits {
+    #if for some reason lscpu is missing or WINE_CPU_TOPOLOGY is already set by the user, do nothing
+    if ! command -v lscpu > /dev/null; then
+        return
+    fi
+    if [ -n "$WINE_CPU_TOPOLOGY" ]; then
+        return
+    fi
+    local topology=""
+    local data=(); local ci=(); local cj=(); local b=(); local c=(); local mi=(); local mj=();
+    #fetch CPU topology
+    readarray -t data < <(lscpu --all --e=cpu,socket,core,maxmhz|tail -n +2)
+    local nCPUs=${#data[@]} #number of logical CPUs in the machine
+    #if the number of logical CPUs doesn't exceed TDF_WINE_MAXLOGICALCPUS, do nothing. Continue if TDF_WINE_MAXLOGICALCPUS is set to -1 (force limits even when not necessary)
+    if [[ "$nCPUs" -le "$TDF_WINE_MAXLOGICALCPUS" ]]; then
+        return
+    fi
+    #if TDF_WINE_PREFER_SAMESOCKET is set to 2, exclude all logical CPUs from CPUs except for the one in socket 0
+    if [ "$TDF_WINE_PREFER_SAMESOCKET" -eq 2 ]; then
+        for ((i=0; i<${#data[@]}; ++i)) ; do
+            if [ -n "${data[i]}" ]; then
+                read -r -a c <<< "${data[i]}"
+                if [ "${c[1]}" != "0" ]; then
+                    data[i]=""
+                fi
+            fi
+        done
+    fi
+    #if TDF_WINE_NOSMT is enabled, keep only one logical CPU per physical core. The order of the logical CPUs in lscpu is not guaranteed so we have to do it the dumb way 
+    if [ "$TDF_WINE_NOSMT" -eq 1 ]; then
+        for ((i=0; i<${#data[@]}; ++i)) ; do
+            read -r -a ci <<< "${data[i]}"
+            if [ -n "${data[i]}" ]; then
+                for ((j=i+1; j<${#data[@]}; ++j)); do
+                    read -r -a cj <<< "${data[j]}"
+                    if [ "${ci[2]}" == "${cj[2]}" ]; then
+                        data[j]=""
+                    fi
+                done
+            fi
+        done
+    fi
+    #there is no easy way to identify e-cores on intel, so if TDF_WINE_NOECORES is enabled, exclude all cores whose maximum frequency is <75% than the frequency of any other core of the same CPU
+    if [ "$TDF_WINE_NOECORES" -ge 1 ]; then
+        for ((i=0; i<${#data[@]}; ++i)) ; do
+            if [ -n "${data[i]}" ]; then
+                read -r -a ci <<< "${data[i]}"
+                IFS="." read -r -a mi <<< "${ci[3]}"
+                mhzi="${mi[0]}"
+                mhzi=$(((75*mhzi)/100))
+                if [ -n "${data[i]}" ]; then
+                    for ((j=i+1; j<${#data[@]}; ++j)); do
+                        if [ -n "${data[j]}" ]; then
+                            read -r -a cj <<< "${data[j]}"
+                            if [[ "${ci[1]}" == "${cj[1]}" ]]; then
+                                IFS="." read -r -a mj <<< "${cj[3]}"
+                                mhzj="${mj[0]}"
+                                if [ "$mhzj" -lt "$mhzi" ]; then
+                                    data[j]=""
+                                fi
+                            fi
+                        fi
+                    done
+                fi
+            fi
+        done
+    fi
+    #sort the logical CPUs by "desirability", this is a bit complicated...
+    local sortedCores=()
+    #first, take the first logical CPU of each core. This includes e-cores, because it's better to assign work to a free e-core than to the second thread of a p-core
+    for ((i=0; i<${#data[@]}; ++i)) ; do
+        if [ -n "${data[i]}" ]; then
+            read -r -a c <<< "${data[i]}"
+            local addC=1
+            for ((j=0; j<${#sortedCores[@]}; ++j)) ; do
+                read -r -a b <<< "${sortedCores[j]}"
+                if [[ "${b[1]}" == "${c[1]}" && "${b[2]}" == "${c[2]}" ]]; then
+                    addC=0
+                    break
+                fi
+            done
+            if [ $addC -eq 1 ]; then
+                sortedCores+=("${data[i]}")
+                data[i]=""
+            fi
+        fi
+    done
+    #now sort the list by frequency desc
+    for ((i=0; i<${#sortedCores[@]}-1; ++i)) ; do
+        for ((j=i+1; j<${#sortedCores[@]}; ++j)) ; do
+            read -r -a ci <<< "${sortedCores[i]}"
+            IFS="." read -r -a mi <<< "${ci[3]}"
+            local mhzi="${mi[0]}"
+            read -r -a cj <<< "${sortedCores[j]}"
+            IFS="." read -r -a mj <<< "${cj[3]}"
+            local mhzj="${mj[0]}"
+            if [ "$mhzi" -lt "$mhzj" ]; then
+                temp="${sortedCores[j]}"
+                sortedCores[j]="${sortedCores[i]}"
+                sortedCores[i]="$temp"
+            fi
+        done
+    done
+    #then add the remaining, less desirable cores
+    for ((i=0; i<${#data[@]}; ++i)) ; do
+        if [ -n "${data[i]}" ]; then
+            sortedCores+=("${data[i]}")
+        fi
+    done
+    #finally, if TDF_WINE_PREFER_SAMESOCKET is set to 1, sort the list by socket id, giving priority to all the logical CPUs in the first socket, then the second socket, and so on
+    if [ "$TDF_WINE_PREFER_SAMESOCKET" -eq 1 ]; then
+        for ((i=0; i<${#sortedCores[@]}-1; ++i)) ; do
+            for ((j=i+1; j<${#sortedCores[@]}; ++j)) ; do
+                read -r -a ci <<< "${sortedCores[i]}"
+                read -r -a cj <<< "${sortedCores[j]}"
+                if [ "${ci[1]}" -gt "${cj[1]}" ]; then
+                    temp="${sortedCores[j]}"
+                    sortedCores[j]="${sortedCores[i]}"
+                    sortedCores[i]="$temp"
+                fi
+            done
+        done
+    fi
+    #at this point, sortedCores has a list of all the logical CPUs in the machine sorted by how much we like them and we start assigning them one by one until we reach TDF_WINE_MAXLOGICALCPUS
+    local n=0
+    for ((i=0; i<${#sortedCores[@]}; ++i)) ; do
+        if [[ "$TDF_WINE_MAXLOGICALCPUS" -gt 0 && $n -ge "$TDF_WINE_MAXLOGICALCPUS" ]]; then
+            break
+        fi
+        read -r -a c <<< "${sortedCores[i]}"
+        if [ -n "$topology" ]; then
+            topology="$topology,${c[0]}"
+        else
+            topology="${c[0]}"
+        fi
+        ((n++))
+    done
+    #failsafe: make sure that the number of assigned logical CPUs is >0 and <nCPUs in the machine. If this is true, set the topology, otherwise do nothing
+    if [[ $n -gt 0 && $n -lt $nCPUs ]]; then
+        export WINE_CPU_TOPOLOGY="$n:$topology"
+    else
+        unset WINE_CPU_TOPOLOGY
+    fi
+}
 function _realRunManualCommand {
     eval "$_blockNetworkCommand wine start /WAIT \"$1\""
 }
@@ -135,6 +283,7 @@ function _realRunGame {
             whileGameRunning
         ) &
     fi
+    _applyCPULimits
     local command="$_gamemodeCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
     if [ "$TDF_WINE_DEBUG_RELAY" -eq 1 ]; then
         local relayPath=$(zenity --file-selection --save --title="$(_loc "$TDF_LOCALE_WINE_RELAYPATH")" --filename="relay.txt")

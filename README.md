@@ -194,7 +194,7 @@ Possible values:
 * `1`: kill all wine instances after the game ends
 
 __`TDF_START_ARGS`__  
-Optional arguments to pass to Wine's start command. [More info](https://ss64.com/nt/start.html). Mostly useful to set CPU affinity for old games.
+Optional arguments to pass to Wine's start command. [More info](https://ss64.com/nt/start.html). Mostly useful to set CPU affinity for old games (in this regard, see also `TDF_WINE_MAXLOGICALCPUS`).
 
 Example: `TDF_START_ARGS='/AFFINITY 1'`
 
@@ -275,21 +275,6 @@ export WINEDLLOVERRIDES="amd_ags_x64=b"
 
 Multiple overrides can be separated by a semicolon `;`.
 
-__`export WINE_CPU_TOPOLOGY`__  
-This is not a TDF variable, but it allows you to set Wine to use specific CPU cores, similar to the `/AFFINITY` option of the `start` command, but more fine grained.
-
-Example:
-```
-#limits wine to one CPU core
-export WINE_CPU_TOPOLOGY="1:0"
-```
-
-Example:
-```
-#limits wine to use the first 4 CPU cores
-export WINE_CPU_TOPOLOGY="4:0,1,2,3"
-```
-
 __`export WINEDEBUG`__  
 Enables/disables some [Wine debug channels](https://wiki.winehq.org/Debug_Channels).
 
@@ -305,6 +290,77 @@ export WINEDEBUG=+loaddll,+pid
 
 __`export WINE_NEW_MEDIA_SOURCE`__  
 Enables/disables some the new gstreamer media source implemented in Valve Wine (the games-optimized build) around July 2024. By default it lets Wine decide based on the game, but you can try setting it to `0` or `1` if you have video playback issues.
+
+#### Limiting CPU cores (and setting CPU topology in general)
+As CPUs get more and more cores and threads, problems such as crashes, inconsistent performance and general instability can occur in older games. For this reason, TDF implements several ways to limit which cores can be used.
+
+__Note: these settings apply to the game-optimized build only__
+
+Before we get into the settings, some terminology:
+* Logical CPU: A "core" as you see it in task manager, also known as physical thread. For CPUs with HyperThreading/SMT, 2+ logical CPUs are present for each physical core. Some games work well with SMT, others hate it.
+* Core: A physical core inside your CPU
+* Sockets (multi-CPU systems): refers to the number of CPU chips physically inside your system. For gaming PCs, this is usually 1, but if you're gaming on a harvested multi-CPU server, this is going to be 2+, and not all games react well to that
+
+If a game doesn't support a high number of cores, TDF can limit the number of logical CPUs assigned to it and choose the best ones to maximize performance.
+
+Note: These limits affect the performance of everything running inside Wine, including DXVK and VKD3D. Use them only if absolutely necessary.
+
+Note: if `WINE_CPU_TOPOLOGY` is set, these settings will have no effect.
+
+__`TDF_WINE_MAXLOGICALCPUS`__  
+The maximum number of logical CPUs that can be assigned to this game.
+
+Possible values:  
+* `0` (default): unlimited
+* any other positive number: limit the number of logical CPUs to this value
+
+If the number of logical CPUs exceeds this value, they are assigned intelligently in this way:
+* For CPUs with P-cores and E-cores, the first logical CPU of P-core is assigned first, then E-cores, then the second logical CPU of each core, etc. until we either run out of logical CPUs to assign or the limit is reached 
+* For CPUs with HyperThreading/SMT: the first logical CPU of each core is assigned first, then the second logical CPU of each core, etc. until we either run out of logical CPUs to assign or the limit is reached
+* For multi-CPU systems, see `TDF_WINE_PREFER_SAMESOCKET` below
+
+__Generally speaking, this is the only limit you should set. Let TDF do the rest for you.__
+
+__`TDF_WINE_NOSMT`__  
+Whether to hide the additional logical CPUs on CPUs that support HyperThreading/SMT.
+
+Possible values:  
+* `0` (default): use SMT
+* `1` : do not use SMT. If this is set, only the first logical CPU of each core will be used, the others will be ignored. This can improve the performance of some older games.
+
+__`TDF_WINE_NOECORES`__  
+Whether to hide E-cores on CPUs like Intel Alder Lake.
+
+Possible values:  
+* `0` (default): use E-cores
+* `1` : do not use E-cores
+
+Note: for compatibility reasons, these CPUs have no easy way to tell which cores are P-cores and each ones are E-cores, so TDF "guesses" that the E-cores are the ones with a maximum clock that's <75% of that of any other core. This may be improved in the future.
+
+__`TDF_WINE_PREFER_SAMESOCKET`__  
+For systems with multiple CPUs only, how to use them.
+
+Possible values:  
+* `1` (default): assign logical CPUs based on speed, but prioritize cores on the same physical CPU (first assign all the logical CPUs in the first socket, then the second, etc.). This is generally the best for games.
+* `0` : logical CPUs are assigned based exclusively on speed, regardless of which CPU they are physically on. This is generally not recommended for games.
+* `2` : restrict to the first CPU
+
+__`export WINE_CPU_TOPOLOGY`__  
+This is not a TDF variable, but it allows you to set Wine to use specific CPU cores, similar to the `/AFFINITY` option of the `start` command in Windows, but more fine grained. This should be used as a last resort or if you want to do dumb things like restrict a game to only use E-cores.
+
+Example:
+```
+#limits wine to one CPU core
+export WINE_CPU_TOPOLOGY="1:0"
+```
+
+Example:
+```
+#limits wine to use the first 4 CPU cores
+export WINE_CPU_TOPOLOGY="4:0,1,2,3"
+```
+
+Note: if `WINE_CPU_TOPOLOGY` is set, the settings above will have no effect.
 
 #### DXVK and VKD3D variables
 __`TDF_DXVK`__  
@@ -945,6 +1001,7 @@ Wine depends on a lot of libraries, both 32 and 64 bit. The easiest way to obtai
         * A useful tool to investigate is Wine's relay feature, which logs all interaction between the application and the system to a file. To enable relay, add `TDF_WINE_DEBUG_RELAY=1` and launch the game, it will ask you where you want to save the trace and then try to launch the game. Keep in mind that Wine runs extremely slow while this is enabled and the generated trace could be several GB in size
         * After the game has crashed, open the trace with a text editor and start looking for clues (especially around the end of the file)
 * If your game is a UWP app (like an extracted appx package), this is not supported by Wine at the moment, you'll need a regular Win32 version of the game. This is easily identifiable by the presence of an .appx version of VCRuntime
+* If this is an older game, it may not support high core count CPUs, try setting `TDF_WINE_MAXLOGICALCPUS=4` to simulate a quad-core
     
 #### Game launcher doesn't work (closes immediately or has garbled graphics)
 * Find some way online to bypass the launcher, usually it involves setting `game_exe` to another file or adding some arguments with `game_args`
@@ -973,9 +1030,10 @@ Wine depends on a lot of libraries, both 32 and 64 bit. The easiest way to obtai
     * For DX9-11 games (DXVK), make sure your system supports the `VK_EXT_graphics_pipeline_library` extension by running this command: `vulkaninfo | grep VK_EXT_graphics_pipeline_library`, if you don't see anything, your GPU/driver doesn't support it and your experience will be miserable
     * You may be running out of VRAM. Linux doesn't handle this very well, games will stutter heavily or have a sudden drop in performance when that happens. Try installing MangoHud and add `TDF_MANGOHUD=1`, this provides a nice overlay for various things, including VRAM usage. When it's above 90%, you'll start running into problems
     * If this is a modern game, your CPU may not be fast enough to handle the game and the emulation overhead
+    * If this is an older game, it may not support high core count CPUs, try setting `TDF_WINE_MAXLOGICALCPUS=4` to simulate a quad-core 
     * The game may have issues with fsync (Uncharted 4 is the only one I've encountered so far), try adding `TDF_WINE_SYNC="esync"`
     * If this is an old UE2-based game like UT2004, this is a known issue and as of August 2023 a solution is in the works
-* If this is an older game, it may not support high core count CPUs, try setting `export WINE_CPU_TOPOLOGY=4:0,1,2,3` to simulate a quad-core
+* If this is an older game, it may not support high core count CPUs, try setting `TDF_WINE_MAXLOGICALCPUS=4` to simulate a quad-core
 * If this is an older game, it may also be a good idea to run it using regular Wine, add `TDF_WINE_PREFERRED_VERSION=mainline`
 * If this is a DX8-11 game, try running it with WineD3D instead of DXVK by adding `TDF_DXVK=0`
 * If this is a DX8-10 game and you see striped shadows, your graphics driver probably doesn't support the `VK_EXT_depth_bias_control` extension yet (added in Mesa 23.3 for AMD/Intel)
