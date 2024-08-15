@@ -297,7 +297,7 @@ As CPUs get more and more cores and threads, problems such as crashes, inconsist
 __Note: these settings apply to the game-optimized build only__
 
 Before we get into the settings, some terminology:
-* Logical CPU: A "core" as you see it in task manager, also known as physical thread. For CPUs with HyperThreading/SMT, 2+ logical CPUs are present for each physical core. Some games work well with SMT, others hate it.
+* Logical CPU: A "core" as you see it in task manager, also known as physical thread. For CPUs with HyperThreading/SMT, 2+ logical CPUs are present for each physical core. Some games work well with SMT, others hate it
 * Core: A physical core inside your CPU
 * Sockets (multi-CPU systems): refers to the number of CPU chips physically inside your system. For gaming PCs, this is usually 1, but if you're gaming on a harvested multi-CPU server, this is going to be 2+, and not all games react well to that
 
@@ -315,11 +315,74 @@ Possible values:
 * any other positive number: limit the number of logical CPUs to this value
 
 If the number of logical CPUs exceeds this value, they are assigned intelligently in this way:
-* For CPUs with P-cores and E-cores, the first logical CPU of P-core is assigned first, then E-cores, then the second logical CPU of each core, etc. until we either run out of logical CPUs to assign or the limit is reached 
+* For CPUs with P-cores and E-cores, the first logical CPU of each P-core are assigned first, then E-cores, then the second logical CPU of each core, etc. until we either run out of logical CPUs to assign or the limit is reached 
 * For CPUs with HyperThreading/SMT: the first logical CPU of each core is assigned first, then the second logical CPU of each core, etc. until we either run out of logical CPUs to assign or the limit is reached
 * For multi-CPU systems, see `TDF_WINE_PREFER_SAMESOCKET` below
 
 __Generally speaking, this is the only limit you should set. Let TDF do the rest for you.__
+
+Example 1: We're on an Intel Core i7 12900K (8 P-cores with 2 threads each, 8 E-cores with 1 thread each, 24 threads in total), the CPU topology is the following (obtained with `lscpu --all --extended`):
+```
+CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ   MINMHZ
+  0    0      0    0 0:0:0:0          yes 6700.0000 800.0000
+  1    0      0    0 0:0:0:0          yes 6700.0000 800.0000
+  2    0      0    1 1:1:1:0          yes 6700.0000 800.0000
+  3    0      0    1 1:1:1:0          yes 6700.0000 800.0000
+  4    0      0    2 2:2:2:0          yes 6500.0000 800.0000
+  5    0      0    2 2:2:2:0          yes 6500.0000 800.0000
+  6    0      0    3 3:3:3:0          yes 6500.0000 800.0000
+  7    0      0    3 3:3:3:0          yes 6500.0000 800.0000
+  8    0      0    4 4:4:4:0          yes 6500.0000 800.0000
+  9    0      0    4 4:4:4:0          yes 6500.0000 800.0000
+ 10    0      0    5 5:5:5:0          yes 6500.0000 800.0000
+ 11    0      0    5 5:5:5:0          yes 6500.0000 800.0000
+ 12    0      0    6 6:6:6:0          yes 6500.0000 800.0000
+ 13    0      0    6 6:6:6:0          yes 6500.0000 800.0000
+ 14    0      0    7 7:7:7:0          yes 6500.0000 800.0000
+ 15    0      0    7 7:7:7:0          yes 6500.0000 800.0000
+ 16    0      0    8 8:8:8:0          yes 3900.0000 800.0000
+ 17    0      0    9 9:9:8:0          yes 3900.0000 800.0000
+ 18    0      0   10 10:10:8:0        yes 3900.0000 800.0000
+ 19    0      0   11 11:11:8:0        yes 3900.0000 800.0000
+ 20    0      0   12 12:12:9:0        yes 3900.0000 800.0000
+ 21    0      0   13 13:13:9:0        yes 3900.0000 800.0000
+ 22    0      0   14 14:14:9:0        yes 3900.0000 800.0000
+ 23    0      0   15 15:15:9:0        yes 3900.0000 800.0000
+```
+
+If you want to play Colin McRae Dirt (2007), a game that supports 4 cores at most, you'll have to set `TDF_WINE_MAXLOGICALCPUS=4`, and with this CPU TDF will select logical CPUs 0,2,4,6, because they are the fastest cores available, one thread per core.
+
+If you want to play Lara Croft and the Guardian of Light (2010), a game that supports 12 cores at most, you'll have to set `TDF_WINE_MAXLOGICALCPUS=12`, and with this CPU TDF will select logical CPUs 0,2,4,6,8,10,12,14,16,17,18,19. The first 8 are the P-cores, one thread per core, the last 4 are E-cores, one thread per core.
+
+If you want to play The Witcher 2 (2010), a game that supports 31 cores at most, you'll have to set `TDF_WINE_MAXLOGICALCPUS=31`, and with this CPU TDF will not apply any special restriction because it only has 24 logical CPUs.
+
+Example 2: We're on an AMD Ryzen 7 5800X (8 cores with 2 threads each, 16 threads in total), the CPU topology is the following:
+```
+CPU NODE SOCKET CORE L1d:L1i:L2:L3 ONLINE    MAXMHZ    MINMHZ
+  0    0      0    0 0:0:0:0          yes 4850.1948 2200.0000
+  1    0      0    1 1:1:1:0          yes 4850.1948 2200.0000
+  2    0      0    2 2:2:2:0          yes 4850.1948 2200.0000
+  3    0      0    3 3:3:3:0          yes 4850.1948 2200.0000
+  4    0      0    4 4:4:4:0          yes 4850.1948 2200.0000
+  5    0      0    5 5:5:5:0          yes 4850.1948 2200.0000
+  6    0      0    6 6:6:6:0          yes 4850.1948 2200.0000
+  7    0      0    7 7:7:7:0          yes 4850.1948 2200.0000
+  8    0      0    0 0:0:0:0          yes 4850.1948 2200.0000
+  9    0      0    1 1:1:1:0          yes 4850.1948 2200.0000
+ 10    0      0    2 2:2:2:0          yes 4850.1948 2200.0000
+ 11    0      0    3 3:3:3:0          yes 4850.1948 2200.0000
+ 12    0      0    4 4:4:4:0          yes 4850.1948 2200.0000
+ 13    0      0    5 5:5:5:0          yes 4850.1948 2200.0000
+ 14    0      0    6 6:6:6:0          yes 4850.1948 2200.0000
+ 15    0      0    7 7:7:7:0          yes 4850.1948 2200.0000
+```
+(Notice the different interleaving in the CORE column compared to the previous example).
+
+If you want to play Colin McRae Dirt (2007), a game that supports 4 cores at most, you'll have to set `TDF_WINE_MAXLOGICALCPUS=4`, and with this CPU TDF will select logical CPUs 0,1,2,3, which are simply the first 4 logical CPUs, one per core.
+
+If you want to play Lara Croft and the Guardian of Light (2010), a game that supports 12 cores at most, you'll have to set `TDF_WINE_MAXLOGICALCPUS=12`, and with this CPU TDF will select logical CPUs 0,1,2,3,4,5,6,7,8,9,10,11. The first 8 are the first logical CPU of each core, one thread per core, the last 4 are the second logical CPU of the first 4 cores.
+
+If you want to play The Witcher 2 (2010), a game that supports 31 cores at most, you'll have to set `TDF_WINE_MAXLOGICALCPUS=31`, and with this CPU TDF will not apply any special restriction because it only has 16 logical CPUs.
 
 __`TDF_WINE_NOSMT`__  
 Whether to hide the additional logical CPUs on CPUs that support HyperThreading/SMT.
