@@ -24,9 +24,9 @@ This section explains how to use TDF to install, play and optionally package a g
 
 ### Requirements
 * A relatively recent PC that's fast enough to run modern games. An x86_64 CPU is required, as well as a GPU with support for Vulkan 1.3 or newer
-* Linux kernel 5.16 or newer is strongly recommended, but it will work on older versions (tested as low as 4.19)
+* Linux kernel 5.16 or newer is strongly recommended, but it will work on older versions. For best compatibility, use the latest kernel.
 * A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, X11, etc. installed, __both 32 and 64-bit versions__. Arch-based distros will work best.
-* An AMD graphics card with the latest Mesa 23.1 driver or newer is recommended, but it will also work on nVidia and Intel cards
+* An AMD graphics card with the Mesa 23.1 driver or newer is recommended, but it will also work on nVidia and Intel cards. For best compatibility, use the latest driver.
 * An SSD is strongly recommended, with a file system like ext4 or btrfs. Do not use NTFS, FAT or exFAT
 * You must be able to use a Linux system, do file and folder management, know how to install games manually, know some basic shell scripting, etc.
 
