@@ -930,14 +930,35 @@ You installed your game(s) in a TDF instance and made sure it works perfectly? D
 
 To start the packaging process, open a terminal inside the TDF instance and type `./run.sh archive`. This will create an archive containing the whole TDF instance that you can easily redistribute (assuming you have the rights to do it). Users will be able to simply extract these archives and launch `run.sh` to start the game.
 
-By default, TDF creates a highly compressed `.tar.zst` archive, which takes a long time to create but can be extracted very quickly. You can choose between different formats by adding one of the following arguments after `./run.sh archive`:
+By default, TDF creates a highly compressed `.tar.zst` archive, which takes a long time to create but can be extracted very quickly.
+
+During the compression process, TDF will show you a progress indicator. At the end of the process, it will tell you the compressed size and the compression ratio.
+
+If you want to customize the way these archives are created, the following short commands can be added after `./run.sh archive`:
 * `nocompress`: creates a simple uncompressed `.tar` archive. Very fast but not ideal for redistribution
 * `fastcompress`: creates a compressed `.tar.xz` archive, compressed with multithread XZ. Compression is relatively fast, decompression is also quite fast, but the compression ratio is not the best
 * `maxcompress`: creates a compressed `.tar.zst` archive, compressed with single thread ZStandard with the highest settings. This is pretty slow but decompression is very fast and also has good compression ratio. This is what Fitgirl would call a "monkey repack"
 
-During the compression process, TDF will show you a progress indicator. At the end of the process, it will tell you the compressed size and the compression ratio.
+Generally speaking, the short commands above are the only ones you should need but if you want to customize it further, you can specify the following options after `./run.sh archive` instead of the short commands above:
+* `-o path`: path to output file (relative or absolute). If the path contains an extension such as .tar.zst, TDF will automatically select the appropriate compression method; otherwise an appropriate extension will be added automatically. If not specified, it creates a file with the same name as the folder containing the TDF instance.
+* `-m method`: compression method to use. Supported values are `zstd` (default), `xz`, `gzip` and `tar` (uncompressed). Not required if a file extension has already been specified with `-o`
+* `-p preset`: compression preset to use. TDF provides 3 presets for each method: `max` (slow but smallest size), `normal` (balances speed and compression), `fast` (favors speed over compression). By default, `zstd` uses `max`, which is very slow, `xz` uses `fast` and `gzip` uses `normal`, `tar` does not compress so this parameter will be ignored
 
-Note: this feature assumes that `tar`, `xz` and `zstd` are installed on your system (they probably are).
+Examples:
+```bash
+#compress using zstd maximum to a file called example.tar.zst in the upper directory
+./run.sh archive -o ../example.tar.zst
+```
+```bash
+#compress using xz normal to a file called example.tar.xz in the home directory
+./run.sh archive -m xz -p normal -o ~/example.tar.xz
+```
+```bash
+#compress using xz fast to a file with the same name as the current folder and put it in the upper directory
+./run.sh archive -m xz -p fast
+```
+
+Note: this feature assumes that `tar`, `xz`, `gzip` and `zstd` are installed on your system (they probably are).
 
 If you want to transfer a TDF instance from one PC to another using an external drive, it is strongly recommended to use the archive function so that it's just one big file. __Never copy a TDF instance to an NTFS, exFAT or a FAT32 partition, it will become unusable.__
 
