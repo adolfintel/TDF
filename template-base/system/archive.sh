@@ -7,12 +7,15 @@ cd ..
 archivePath=""
 compressionMethod=""
 compressionPreset=""
+overwriteAllowed=0
 
 if [ $# -ge 3 ]; then
     args=$#
     for ((i=2; i<=args; i++)); do
         p="${!i}"
-        if [ "$p" == "-m" ]; then
+        if [ "$p" == "-f" ]; then
+            overwriteAllowed=1
+        elif [ "$p" == "-m" ]; then
             if [ -z "$compressionMethod" ]; then
                 ((i++))
                 compressionMethod="${!i}"
@@ -156,10 +159,13 @@ else
     _loc "$TDF_LOCALE_ARCHIVE_ERROR_M_INVALID"
     exit 1
 fi
-
 if [[ "$archivePath" == "$here/"* ]]; then
     _loc "$TDF_LOCALE_ARCHIVE_ERROR_O_INSIDEDIR"
     exit 1
+fi
+if [[ -e "$archivePath" && $overwriteAllowed -eq 0 ]]; then
+    _loc "$TDF_LOCALE_ARCHIVE_ERROR_O_ALREADYEXISTS"
+    exit 2
 fi
 
 startT=$SECONDS
@@ -177,7 +183,7 @@ echo -en "░░░░░░░░░░░░░░░░░░░░░░░�
 eval "$command" > "$archivePath"
 if [ $? -ne 0 ]; then
     echo -e "\n$(_loc "$TDF_LOCALE_ARCHIVE_FAILED")"
-    exit 1
+    exit 3
 else
     time=$((SECONDS - startT))
     ss=$((time % 60))

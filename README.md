@@ -943,6 +943,7 @@ Generally speaking, the short commands above are the only ones you should need b
 * `-o path`: path to output file (relative or absolute). If the path contains an extension such as .tar.zst, TDF will automatically select the appropriate compression method; otherwise an appropriate extension will be added automatically. If not specified, it creates a file with the same name as the folder containing the TDF instance.
 * `-m method`: compression method to use. Supported values are `zstd` (default), `xz`, `gzip` and `tar` (uncompressed). Not required if a file extension has already been specified with `-o`
 * `-p preset`: compression preset to use. TDF provides 3 presets for each method: `max` (slow but smallest size), `normal` (balances speed and compression), `fast` (favors speed over compression). By default, `zstd` uses `max`, which is very slow, `xz` uses `fast` and `gzip` uses `normal`, `tar` does not compress so this parameter will be ignored
+* `-f`: overwrite the output file if it already exists, otherwise it will just show an error
 
 Examples:
 ```bash
