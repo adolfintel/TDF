@@ -162,6 +162,7 @@ if [[ "$archivePath" == "$here/"* ]]; then
     exit 1
 fi
 
+startT=$SECONDS
 _loc "$TDF_LOCALE_ARCHIVE_STARTED1"
 _loc "$TDF_LOCALE_ARCHIVE_STARTED2"
 fromSize=$( du -sk --apparent-size "$folderName" | cut -f 1 )
@@ -178,6 +179,21 @@ if [ $? -ne 0 ]; then
     echo -e "\n$(_loc "$TDF_LOCALE_ARCHIVE_FAILED")"
     exit 1
 else
+    time=$((SECONDS - startT))
+    ss=$((time % 60))
+    mm=$(( ( time / 60 ) % 60 ))
+    hh=$((time / 3600))
+    if [ $hh -lt 1 ]; then
+        hh=""
+    else
+        hh="${hh}h "
+    fi
+    if [[ $hh -lt 1 && $mm -lt 1 ]]; then
+        mm=""
+    else
+        mm="${mm}m "
+    fi
+    ss="${ss}s"
     echo -e "\n$(_loc "$TDF_LOCALE_ARCHIVE_DONE")"
     toSize=$( du -sk "$archivePath" | cut -f 1 )
     ratio=$(( (100 * toSize) / fromSize ))
