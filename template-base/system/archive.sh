@@ -57,10 +57,13 @@ if [ $# -ge 3 ]; then
             ((i++))
             archivePath="${!i}"
             if [ -n "$archivePath" ]; then
-                if [[ "$archivePath" == /* ]]; then
-                    archivePath="$(realpath "$archivePath")"
-                else
-                    archivePath="$(realpath "$here/$archivePath")"
+                if [[ "$archivePath" != /* ]]; then
+                    archivePath="$here/$archivePath"
+                fi
+                archivePath="$(realpath "$archivePath" 2>/dev/null)"
+                if [ $? -ne 0 ]; then
+                    _loc "$TDF_LOCALE_ARCHIVE_ERROR_O_CANTWRITE"
+                    exit 2
                 fi
                 if [ -z "$compressionMethod" ]; then
                     if [[ "$archivePath" == *.tar.zst ]]; then
@@ -102,6 +105,10 @@ fi
 command2=""
 if [ -z "$archivePath" ]; then
     archivePath=$(realpath "$PWD/$folderName")
+else
+    if [ -d "$archivePath" ]; then
+        archivePath="$archivePath/$folderName"
+    fi
 fi
 if [ -z "$compressionMethod" ]; then
     compressionMethod="zstd"
