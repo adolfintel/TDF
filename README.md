@@ -944,6 +944,7 @@ Generally speaking, the short commands above are the only ones you should need b
 * `-m method`: compression method to use. Supported values are `zstd` (default), `xz`, `gzip` and `tar` (uncompressed). Not required if a file extension has already been specified with `-o`
 * `-p preset`: compression preset to use. TDF provides 3 presets for each method: `max` (slow but smallest size), `normal` (balances speed and compression), `fast` (favors speed over compression). By default, `zstd` uses `max`, which is very slow, `xz` uses `fast` and `gzip` uses `normal`, `tar` does not compress so this parameter will be ignored
 * `-f`: overwrite the output file if it already exists, otherwise it will just show an error
+* `-s size`: split the output file in a multipart archive of the specified size. Supported values are any positive integer followed by `M` or `G`, such as `100M` or `1G`. `auto` can also be used to automatically decide the split size based on input size, similar to scene releases (<1G: 100M parts, 1G-10G: 1G parts, 10G-100G: 5G parts, 100G-250G: 10G parts, 250G-500G: 25G parts, >500G: 100G parts). A script to extract the multipart archive will also be created, in case your archive manager doesn't support it.
 
 Examples:
 ```bash
@@ -957,6 +958,10 @@ Examples:
 ```bash
 #compress using xz fast to a file with the same name as the current folder and put it in the upper directory
 ./run.sh archive -m xz -p fast
+```
+```bash
+#compress using zstd maximum to a file called example.tar.zst in the upper directory, split in 5G parts
+./run.sh archive -o ../example.tar.zst -s 5G
 ```
 
 Note: this feature assumes that `tar`, `xz`, `gzip` and `zstd` are installed on your system (they probably are).
