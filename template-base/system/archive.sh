@@ -221,7 +221,7 @@ if [ -n "$split" ]; then
         _loc "$TDF_LOCALE_ARCHIVE_ERROR_S_INVALID"
         exit 1
     fi
-    command3="split - -b $split \"$archivePath\""
+    command3="split - -b $split -a 2 \"$archivePath\""
 fi
 if [ -n "$split" ]; then
     _loc "$TDF_LOCALE_ARCHIVE_STARTED3"
@@ -270,14 +270,15 @@ else
     if [ -n "$command3" ]; then
         archiveName=$(basename "$archivePath")
         echo "#!/usr/bin/env bash" > "$archivePath.extract"
+        echo "shopt -s extglob" >> "$archivePath.extract"
         if [ "$compressionMethod" == "zstd" ]; then
-            echo "cat \"$archiveName\"* | tar --zstd -x -v -f -" >> "$archivePath.extract"
+            echo "cat \"$archiveName\"[a-z][a-z] | tar --zstd -x -v -f -" >> "$archivePath.extract"
         elif [ "$compressionMethod" == "xz" ]; then
-            echo "cat \"$archiveName\"* | tar -J -x -v -f -" >> "$archivePath.extract"
+            echo "cat \"$archiveName\"[a-z][a-z] | tar -J -x -v -f -" >> "$archivePath.extract"
         elif [ "$compressionMethod" == "gzip" ]; then
-            echo "cat \"$archiveName\"* | tar -z -x -v -f -" >> "$archivePath.extract"
+            echo "cat \"$archiveName\"[a-z][a-z] | tar -z -x -v -f -" >> "$archivePath.extract"
         elif [ "$compressionMethod" == "tar" ]; then
-            echo "cat \"$archiveName\"* | tar -x -v -f -" >> "$archivePath.extract"
+            echo "cat \"$archiveName\"[a-z][a-z] | tar -x -v -f -" >> "$archivePath.extract"
         fi
         chmod +x "$archivePath.extract"
     fi
