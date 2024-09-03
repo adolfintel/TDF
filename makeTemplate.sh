@@ -43,6 +43,7 @@ if [ -z "$TDF_BUILD_STARTED" ]; then
         sleep 1
     fi
 fi
+startT=$SECONDS
 failedDepsCheck=0
 for module in "${modules[@]}"; do
     cd "$module"
@@ -121,6 +122,22 @@ for state in {1..3}; do
     done
 done
 rm -f state
+time=$((SECONDS - startT))
+ss=$((time % 60))
+mm=$(( ( time / 60 ) % 60 ))
+hh=$((time / 3600))
+if [ $hh -lt 1 ]; then
+    hh=""
+else
+    hh="${hh}h "
+fi
+if [[ $hh -lt 1 && $mm -lt 1 ]]; then
+    mm=""
+else
+    mm="${mm}m "
+fi
+ss="${ss}s"
+echo "Build completed in $hh$mm$ss"
 echo "Copying files"
 dir="template-$version"
 rm -rf "$dir"
@@ -135,7 +152,7 @@ if [ ${#failedModules[@]} -ne 0 ]; then
     done
 fi
 echo "v$version" > "$dir/system/version"
-echo "Compressing template, this will take a few minutes"
+echo "Packaging template, this will take a few minutes"
 cd "$dir"
 chmod -R 777 .
 ./run.sh archive
