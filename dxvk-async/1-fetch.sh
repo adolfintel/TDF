@@ -24,7 +24,7 @@ if [ -d dxvk-gplasync ]; then
 else
     git clone https://gitlab.com/Ph42oN/dxvk-gplasync/
     cd dxvk-gplasync
-    git checkout test
+    git checkout main
     cd ..
 fi
 rm -f incomplete
