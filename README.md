@@ -576,6 +576,19 @@ export DRI_PRIME=1
 
 This is not a TDF variable and you can find more about it [here](https://wiki.archlinux.org/title/PRIME).
 
+__`export SteamGameId`__  
+The games-optimized build contains some game fixes from Proton that are activated by setting this variable with the game's Steam appid.
+
+Example:  
+```
+#fix black screen in GOW:Ragnarok
+export SteamGameId=2322010
+```
+
+You can find the appid for a specific game by searching for it on Steam and copying it from the URL, for instance: `https://store.steampowered.com/app/2322010/God_of_War_Ragnark/`, the appid is `2322010`.
+
+Always copy the appid for the main game, not for a DLC.
+
 ### Callbacks
 You can optionally define the following functions inside `vars.conf` and they will be called at specific moments during operation. This can be useful to fix games that have issues with window positioning, focusing, etc. or that have some special requirements. The language is just bash.
 
