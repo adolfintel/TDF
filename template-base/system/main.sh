@@ -126,7 +126,7 @@ function _applyCPULimits {
     local topology=""
     local data=(); local ci=(); local cj=(); local b=(); local c=(); local mi=(); local mj=();
     #fetch CPU topology
-    readarray -t data < <(lscpu --all --e=cpu,socket,core,maxmhz|tail -n +2)
+    readarray -t data < <(LC_ALL=C.UTF-8 lscpu --all --e=cpu,socket,core,maxmhz|tail -n +2)
     local nCPUs=${#data[@]} #number of logical CPUs in the machine
     #if the number of logical CPUs doesn't exceed TDF_WINE_MAXLOGICALCPUS, do nothing. Continue if TDF_WINE_MAXLOGICALCPUS is set to -1 (force limits even when not necessary)
     if [[ "$nCPUs" -le "$TDF_WINE_MAXLOGICALCPUS" ]]; then
