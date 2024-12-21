@@ -34,6 +34,7 @@ TDF_START_ARGS='' #additional arguments to pass to wine's start command, such as
 TDF_WINE_LANGUAGE=''
 TDF_WINE_ARCH="win64" #win64=emulate 64bit windows, win32=emulate 32bit windows (useful for older games). cannot be changed after wineprefix initialization
 TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, esync=always use esync, default=let wine decide. Only supported by games build, other versions will ignore this parameter
+TDF_WINE_WINVER="" #the windows version to emulate. sensible values: win10, win11, win7, win8, win81, vista, winxp, winxp64. other values: win2003, win2008, win2008r2, winme, win2k, win98, win95, nt40, nt351, win31, win30, win20. If left empty, wine decides what version to emulate (currently the default is win10), and it can be changed by the user with winecfg
 TDF_WINE_DEBUG_RELAY=0
 TDF_WINE_DEBUG_GSTREAMER=0
 TDF_WINE_SMOKETEST=1
@@ -877,6 +878,22 @@ function _applyFakeHomeDir {
         fi
     fi
 }
+function _applyWinver {
+    _outputDetail "$(_loc "$TDF_LOCALE_WINE_WINVER_SETTING")"
+    if [ -n "$TDF_WINE_WINVER" ]; then
+        case "$TDF_WINE_WINVER" in
+            win11|win10|win81|win8|win2008r2|win7|win2008|vista|win2003|winxp64|winxp|win2k|winme|win98|win95|nt40|nt351|win31|win30|win20)
+                winecfg -v "$TDF_WINE_WINVER"
+                wineserver -k -w
+                return 0
+                ;;
+            *)
+                zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_WINVER_INVALID")"
+                return 1
+                ;;
+        esac
+    fi
+}
 function _wineSmokeTest {
     if [[ "$TDF_WINE_SMOKETEST" -eq 0 ]]; then
         return 0
@@ -1220,6 +1237,10 @@ function _tdfmain {
                 echo "55"
                 _applyWineDrivers
                 _applyHideCrashes
+                if ! _applyWinver; then
+                    touch "$WINEPREFIX/.abort"
+                    exit
+                fi
                 echo "60"
                 _applyCorefonts
                 echo "70"
@@ -1285,6 +1306,10 @@ function _tdfmain {
             echo "55"
             _applyWineDrivers
             _applyHideCrashes
+            if ! _applyWinver; then
+                touch "$WINEPREFIX/.abort"
+                exit
+            fi
             echo "60"
             _applyCorefonts
             echo "70"
@@ -1305,6 +1330,10 @@ function _tdfmain {
             echo "$TDF_VERSION" > "$WINEPREFIX/.initialized"
         ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_INITPREFIX")" --width=500 --auto-close --auto-kill
         wait
+        if [ -f "$WINEPREFIX/.abort" ]; then
+            rm -f "$WINEPREFIX/.abort"
+            exit
+        fi
         _applyBlockBrowser
         if [ $_manualInit -eq 1 ]; then
             if [ -n "$2" ]; then

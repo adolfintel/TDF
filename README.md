@@ -218,6 +218,16 @@ Possible values:
 * `esync`: use the older esync method
 * `default`: let Wine decide
 
+__`TDF_WINE_WINVER`__  
+Sets the Windows version to emulate.
+
+Possible values:  
+* `""` (empty string) (default): let Wine decide on prefix creation (at the moment it's `win10`). Can be changed through `winecfg`
+* Sensible values: `win10`, `win11`, `win7`, `win8`, `win81`, `vista`, `winxp`, `winxp64`
+* Other values: `win2003`, `win2008`, `win2008r2`, `winme`, `win2k`, `win98`, `win95`, `nt40`, `nt351`, `win31`, `win30`, `win20`
+
+Note: If using an older Windows version, `TDF_WINE_ARCH` should also be set accordingly. It usually doesn't break anything, but applications may not expect to see 64-bit versions of legacy systems.
+
 __`TDF_WINE_DEBUG_RELAY`__  
 Enables the Wine relay feature, which traces all interaction between the application and the rest of the system to a file. Extremely slow but can be useful to debug weird issues and crashes.
 
