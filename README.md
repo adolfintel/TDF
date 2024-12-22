@@ -228,6 +228,16 @@ Possible values:
 
 Note: If using an older Windows version, `TDF_WINE_ARCH` should also be set accordingly. It usually doesn't break anything, but applications may not expect to see 64-bit versions of legacy systems.
 
+__`TDF_WINE_THEME`__  
+Sets the Wine theme.
+
+Possible values:  
+* `""` (empty string) (default): let Wine decide on prefix creation (at the moment it's `light`). Can be changed through `winecfg`
+* `classic`: use the classic 9x style theme (can fix some old apps that have drawing issues with modern themes)
+* `light`: use the modern 11-ish style theme
+
+Note: It's possible to install msstyles themes, in this case, leave this empty and install them through `winecfg`.
+
 __`TDF_WINE_DEBUG_RELAY`__  
 Enables the Wine relay feature, which traces all interaction between the application and the rest of the system to a file. Extremely slow but can be useful to debug weird issues and crashes.
 

@@ -35,6 +35,7 @@ TDF_WINE_LANGUAGE=''
 TDF_WINE_ARCH="win64" #win64=emulate 64bit windows, win32=emulate 32bit windows (useful for older games). cannot be changed after wineprefix initialization
 TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, esync=always use esync, default=let wine decide. Only supported by games build, other versions will ignore this parameter
 TDF_WINE_WINVER="" #the windows version to emulate. sensible values: win10, win11, win7, win8, win81, vista, winxp, winxp64. other values: win2003, win2008, win2008r2, winme, win2k, win98, win95, nt40, nt351, win31, win30, win20. If left empty, wine decides what version to emulate (currently the default is win10), and it can be changed by the user with winecfg
+TDF_WINE_THEME="" #the name of the theme to use (all reg files are in system/themes). Leaving this empty lets wine decide (or the user through winecfg)
 TDF_WINE_DEBUG_RELAY=0
 TDF_WINE_DEBUG_GSTREAMER=0
 TDF_WINE_SMOKETEST=1
@@ -894,6 +895,21 @@ function _applyWinver {
         esac
     fi
 }
+function _applyWineTheme {
+    _outputDetail "$(_loc "$TDF_LOCALE_WINE_THEME")"
+    local themes_dir="system/themes"
+    if [ -n "$TDF_WINE_THEME" ]; then
+        if [ -f "$themes_dir/$TDF_WINE_THEME.reg" ]; then
+            cp "$themes_dir/$TDF_WINE_THEME.reg" "$WINEPREFIX/drive_c/theme.reg"
+            wine reg import "C:\\theme.reg"
+            rm "$WINEPREFIX/drive_c/theme.reg"
+            return 0
+        else
+            zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_WINE_THEME_NOTFOUND")"
+            return 1
+        fi
+    fi
+}
 function _wineSmokeTest {
     if [[ "$TDF_WINE_SMOKETEST" -eq 0 ]]; then
         return 0
@@ -1266,13 +1282,17 @@ function _tdfmain {
             touch "$WINEPREFIX/.abort"
             exit
         fi
-        echo "64"
+        echo "65"
+        if ! _applyWineTheme; then
+            touch "$WINEPREFIX/.abort"
+            exit
+        fi
         _applyScaling
-        echo "67"
-        _removeIntegrations
         echo "70"
-        _applyCorefonts
+        _removeIntegrations
         echo "75"
+        _applyCorefonts
+        echo "80"
         _applyVCRedists
         echo "90"
         _removeUnwantedDosdevices
