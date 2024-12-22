@@ -1043,6 +1043,7 @@ The following folders can be deleted from the `system` folder of a TDF instance 
 * `msi/winemono.msi`
 * `msi/winegecko32.msi` and `msi/winegecko64.msi`
 * `tdfutils`
+* `themes` (Note: if this is removed, leave `TDF_WINE_THEME` empty)
 * `vcredist`
 * `vkd3d`
 * `wine-games` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="mainline"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-mainline` as a last resort. If neither are available, TDF will fail to start)
