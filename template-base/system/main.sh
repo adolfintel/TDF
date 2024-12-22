@@ -1203,7 +1203,9 @@ function _tdfmain {
     if [[ "$TDF_DXVK" -eq 1 && "$TDF_DXVK_NVAPI" -eq 1 && -z "$DXVK_ENABLE_NVAPI" ]]; then
         export DXVK_ENABLE_NVAPI=1
     fi
+    local _pfxinitialized=0
     if [ -d "$WINEPREFIX" ]; then
+        _pfxinitialized=1
         if [ -n "$WINEARCH" ]; then
             local _pfxarch=$(grep -m 1 '#arch' "$WINEPREFIX/system.reg" | cut -d '=' -f2)
             if [ "$_pfxarch" != "$WINEARCH" ]; then
@@ -1211,62 +1213,96 @@ function _tdfmain {
                 exit
             fi
         fi
-        rm -f "$WINEPREFIX/.abort"
-        (
+    fi
+    rm -f "$WINEPREFIX/.abort"
+    local _initText=""
+    if [ $_pfxinitialized -eq 0 ]; then
+        _initText="$(_loc "$TDF_LOCALE_INITPREFIX")"
+    else
+        _initText="$(_loc "$TDF_LOCALE_LAUNCHING")"
+    fi
+    (
+        if [ $_pfxinitialized -eq 1 ]; then
             echo "1"
-            if [ $_skipInitializations -eq 0 ]; then
-                _removeBrokenDosdevices
-                _checkAndRepairCDrive
-                _checkAndRepairZDrive
-                echo "10"
-                _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
-                local _realOverrides="$WINEDLLOVERRIDES"
-                # shellcheck disable=SC2030
-                export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
-                wineboot
-                wait
-                if ! _wineSmokeTest; then
-                    _diagnoseBrokenWine
-                    touch "$WINEPREFIX/.abort"
-                    exit
-                fi
-                echo "30"
-                _applyDLLs
-                echo "40"
-                _applyMSIs
-                echo "55"
-                _applyWineDrivers
-                _applyHideCrashes
-                if ! _applyWinver; then
-                    touch "$WINEPREFIX/.abort"
-                    exit
-                fi
-                echo "60"
-                _applyCorefonts
-                echo "70"
-                _removeIntegrations
-                echo "75"
-                _applyScaling
-                echo "80"
-                _applyVCRedists
-                echo "90"
-                _removeUnwantedDosdevices
-                echo "95"
-                wait
-                export WINEDLLOVERRIDES="$_realOverrides"
-                _outputDetail "$(_loc "$TDF_LOCALE_LAUNCHINGGAME")"
-                wineserver -k -w
-                wait
-                echo "100"
-                echo "$TDF_VERSION" > "$WINEPREFIX/.initialized"
-            fi
-        ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_LAUNCHING")" --width=250 --auto-close --auto-kill
-        wait
-        if [ -f "$WINEPREFIX/.abort" ]; then
-            rm -f "$WINEPREFIX/.abort"
+            _removeBrokenDosdevices
+            _checkAndRepairCDrive
+            _checkAndRepairZDrive
+        fi
+        echo "10"
+        _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
+        # shellcheck disable=SC2031
+        local _realOverrides="$WINEDLLOVERRIDES"
+        # shellcheck disable=SC2031
+        export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
+        if [ $_pfxinitialized -eq 0 ]; then
+            mkdir -p "$WINEPREFIX"
+            echo $_flockid > "$WINEPREFIX/.flockid"
+            wineboot -i
+            wait
+        else
+            wineboot
+            wait
+        fi
+        if ! _wineSmokeTest; then
+            _diagnoseBrokenWine
+            touch "$WINEPREFIX/.abort"
             exit
         fi
-        _applyBlockBrowser
+        echo "30"
+        if [ $_pfxinitialized -eq 0 ]; then
+            while ! test -f "$WINEPREFIX/system.reg"; do
+                sleep 1
+            done
+        fi
+        _applyDLLs
+        echo "40"
+        _applyMSIs
+        echo "55"
+        _applyWineDrivers
+        echo "60"
+        _applyHideCrashes
+        echo "62"
+        if ! _applyWinver; then
+            touch "$WINEPREFIX/.abort"
+            exit
+        fi
+        echo "64"
+        _applyScaling
+        echo "67"
+        _removeIntegrations
+        echo "70"
+        _applyCorefonts
+        echo "75"
+        _applyVCRedists
+        echo "90"
+        _removeUnwantedDosdevices
+        echo "95"
+        wait
+        if [ $_pfxinitialized -eq 0 ]; then
+            _outputDetail "$(_loc "$TDF_LOCALE_STARTING")"
+        else
+            _outputDetail "$(_loc "$TDF_LOCALE_LAUNCHINGGAME")"
+        fi
+        export WINEDLLOVERRIDES="$_realOverrides"
+        wineserver -k -w
+        wait
+        echo "100"
+        echo "$TDF_VERSION" > "$WINEPREFIX/.initialized"
+    ) | zenity --progress --no-cancel --text="$_initText" --width=250 --auto-close --auto-kill
+    if [ -f "$WINEPREFIX/.abort" ]; then
+        rm -f "$WINEPREFIX/.abort"
+        exit
+    fi
+    _applyBlockBrowser
+    if [ $_pfxinitialized -eq 0 ]; then
+        if [ $_manualInit -eq 1 ]; then
+            if [ -n "$2" ]; then
+                _realRunManualCommand "$2"
+            fi
+        else
+            _runCommandPrompt
+        fi
+    else
         if [ $_manualInit -eq 1 ]; then
             if [ -n "$2" ]; then
                 _realRunManualCommand "$2"
@@ -1277,70 +1313,6 @@ function _tdfmain {
             else
                 _runGame
             fi
-        fi
-    else
-        (
-            echo "10"
-            _outputDetail "$(_loc "$TDF_LOCALE_STARTINGWINE")"
-            # shellcheck disable=SC2031
-            local _realOverrides="$WINEDLLOVERRIDES"
-            # shellcheck disable=SC2031
-            export WINEDLLOVERRIDES="mscoree,mshtml=;winemenubuilder.exe=d"
-            mkdir -p "$WINEPREFIX"
-            echo $_flockid > "$WINEPREFIX/.flockid"
-            wineboot -i
-            wait
-            if ! _wineSmokeTest; then
-                _diagnoseBrokenWine
-                touch "$WINEPREFIX/.abort"
-                exit
-            fi
-            echo "30"
-            while ! test -f "$WINEPREFIX/system.reg"; do
-                sleep 1
-            done
-            echo "30"
-            _applyDLLs
-            echo "40"
-            _applyMSIs
-            echo "55"
-            _applyWineDrivers
-            _applyHideCrashes
-            if ! _applyWinver; then
-                touch "$WINEPREFIX/.abort"
-                exit
-            fi
-            echo "60"
-            _applyCorefonts
-            echo "70"
-            _removeIntegrations
-            echo "75"
-            _applyScaling
-            echo "80"
-            _applyVCRedists
-            echo "90"
-            _removeUnwantedDosdevices
-            echo "95"
-            wait
-            export WINEDLLOVERRIDES="$_realOverrides"
-            _outputDetail "$(_loc "$TDF_LOCALE_STARTING")"
-            wineserver -k -w
-            wait
-            echo "100"
-            echo "$TDF_VERSION" > "$WINEPREFIX/.initialized"
-        ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_INITPREFIX")" --width=500 --auto-close --auto-kill
-        wait
-        if [ -f "$WINEPREFIX/.abort" ]; then
-            rm -f "$WINEPREFIX/.abort"
-            exit
-        fi
-        _applyBlockBrowser
-        if [ $_manualInit -eq 1 ]; then
-            if [ -n "$2" ]; then
-                _realRunManualCommand "$2"
-            fi
-        else
-            _runCommandPrompt
         fi
     fi
     if [ "$TDF_WINE_KILL_AFTER" -eq 1 ]; then
