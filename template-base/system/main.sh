@@ -17,7 +17,7 @@ game_workingDir=''
 TDF_VERSION="$(cat system/version)"
 TDF_TITLE="$(_loc "$TDF_LOCALE_DEFAULTTITLE")"
 TDF_DETAILED_PROGRESS=1
-TDF_MULTIPLE_INSTANCES="askcmd" #deny=exit without error messages, error=show an error message and close, askcmd=ask the user if they want to run cmd inside the running prefix, cmd=run command prompt inside the running prefix, allow=allow multiple instances of the game
+TDF_MULTIPLE_INSTANCES="askcmd" #deny=exit without error messages, error=show an error message and close, askcmd=ask the user if they want to run cmd inside the running prefix, cmd=run command prompt inside the running prefix, allow=allow multiple instances of the game, kill=kill previous instance, askkill=ask the user if they want to kill the previous instance
 TDF_IGNORE_EXIST_CHECKS=0
 TDF_HIDE_GAME_RUNNING_DIALOG=0
 TDF_SHOW_PLAY_TIME=0
@@ -1203,6 +1203,16 @@ function _tdfmain {
                     exit
                 elif [ "$TDF_MULTIPLE_INSTANCES" = "allow" ]; then
                     _skipInitializations=1
+                elif [ "$TDF_MULTIPLE_INSTANCES" = "kill" ]; then
+                    wineserver -k -w
+                    wait
+                elif [ "$TDF_MULTIPLE_INSTANCES" = "askkill" ]; then
+                    if zenity --question --width=400 --text="$(_loc "$TDF_LOCALE_ALREADYRUNNING_ASKKILL")"; then
+                        wineserver -k -w
+                        wait
+                    else
+                        exit
+                    fi
                 else
                     exit
                 fi

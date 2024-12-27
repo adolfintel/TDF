@@ -99,6 +99,8 @@ Possible values:
 * `askcmd` (default): don't launch the game but ask the user if they want to launch a command prompt in the running instance
 * `cmd`: same as `askcmd` but without asking first
 * `allow`: allow multiple instances of the game to be running at the same time (generally a bad idea)
+* `kill`: terminate previous instance and start a new one
+* `askkill` : ask the user if they want to terminate the previous instance and start a new one or exit
 
 __`TDF_IGNORE_EXIST_CHECKS`__  
 By default, TDF checks whether the executable specified in `game_exe` actually exists before trying to launch it, but this is not always desirable and can be disabled, which can be useful to run certain commands.
