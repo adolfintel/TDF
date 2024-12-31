@@ -21,6 +21,7 @@ TDF_MULTIPLE_INSTANCES="askcmd" #deny=exit without error messages, error=show an
 TDF_IGNORE_EXIST_CHECKS=0
 TDF_HIDE_GAME_RUNNING_DIALOG=0
 TDF_SHOW_PLAY_TIME=0
+TDF_DND=1 #enable do not disturb mode (on supported DEs) while the game is running
 
 # --- VARIABLES - Wine ---
 TDF_WINE_PREFERRED_VERSION="games" #games=game-optimized build, mainline=regular wine, custom=the build in the wine-custom folder outside the system folder, system=the version of wine that's installed on the system, or mainline if not installed, any other value will use system/wine-yourValue or system wine if not found
@@ -261,6 +262,19 @@ function _applyCPULimits {
         unset WINE_CPU_TOPOLOGY
     fi
 }
+_dndPid=-1
+function _applyDND {
+    if [ $TDF_DND -eq 1 ]; then
+        ./system/tdfutils/dnd &
+        _dndPid=$!
+    fi
+}
+function _clearDND {
+    if [ $_dndPid -ne -1 ]; then
+        kill $_dndPid
+        _dndPid=-1
+    fi
+}
 function _realRunManualCommand {
     eval "$_blockNetworkCommand wine start /WAIT \"$1\""
 }
@@ -318,14 +332,19 @@ function _runGame {
         fi
         if [[ -f "$fpath" || "$TDF_IGNORE_EXIST_CHECKS" -eq 1 ]]; then
             local startedAt=$SECONDS
+            _applyDND
             if [ "$TDF_HIDE_GAME_RUNNING_DIALOG" -eq 1 ]; then
-                _realRunGame
+                (
+                    _realRunGame
+                    wait
+                )
             else
                 (
                     _realRunGame
+                    wait
                 ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_GAMERUNNING")" --width=250 --auto-kill --auto-close
             fi
-            wait
+            _clearDND
             local playedTime=$((SECONDS - startedAt))
             local ss=$((playedTime % 60))
             local mm=$(( ( playedTime / 60 ) % 60 ))

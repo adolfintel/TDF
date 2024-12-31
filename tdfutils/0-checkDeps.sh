@@ -1,5 +1,13 @@
 #!/usr/bin/env bash
 failed=0
+if ! hasCommand cmake; then
+    echo "cmake not installed"
+    failed=1
+fi
+if ! hasCommand make; then
+    echo "make not installed"
+    failed=1
+fi
 if ! hasCommand gcc; then
     echo "GCC not installed"
     failed=1

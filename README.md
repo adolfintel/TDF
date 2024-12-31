@@ -123,6 +123,15 @@ Possible values:
 * `0` (default): don't show it
 * `1`: show it
 
+__`TDF_DND`__  
+Enables Do Not Disturb mode (on supported DEs) while the game is running.
+
+Possible values:  
+* `1` (default): mute notifications while the game is running
+* `0`: don't mute them
+
+Note: some games launch a separate process and terminate immediately. This setting won't work on these games.
+
 __`TDF_UI_LANGUAGE`__  
 The language to use for the TDF user interface. Does not affect Wine or games (see `TDF_WINE_LANGUAGE` for that).
 
