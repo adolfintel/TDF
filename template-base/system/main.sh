@@ -80,6 +80,7 @@ TDF_GAMEMODE=1
 TDF_MANGOHUD=0
 TDF_COREFONTS=1
 TDF_VCREDIST=1
+TDF_I_AM_POOR=0
 
 # Note: there are a few other variables defined elsewhere, see the documentation for a complete list
 
@@ -371,6 +372,10 @@ function _runGame {
 function _applyDLLs {
     _outputDetail "$(_loc "$TDF_LOCALE_COPYINGDLLS")"
     local windows_dir="$WINEPREFIX/drive_c/windows"
+    if [ "$TDF_I_AM_POOR" -eq 1 ]; then
+        TDF_DXVK=0
+        TDF_VKD3D=0
+    fi
     if [ "$TDF_DXVK_ASYNC" -eq 2 ]; then
         ./system/tdfutils/vkgpltest
         if [ $? -eq 2 ]; then
@@ -1054,11 +1059,13 @@ function _tdfmain {
         zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_GLIBC_NO32")"
         exit
     fi
-    ./system/tdfutils/vkgpltest
-    _res=$?
-    if [[ $_res -eq 0 || $_res -gt 2 || $_res -lt 0 ]]; then
-        zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKAN")"
-        exit
+    if [ "$TDF_I_AM_POOR" -ne 1 ]; then
+        ./system/tdfutils/vkgpltest
+        _res=$?
+        if [[ $_res -eq 0 || $_res -gt 2 || $_res -lt 0 ]]; then
+            zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKAN")"
+            exit
+        fi
     fi
     if [ -d "system/xutils" ]; then
         export PATH="$PATH:$PWD/system/xutils"
