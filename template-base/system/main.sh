@@ -1147,16 +1147,6 @@ function _tdfmain {
     if [ "$TDF_BLOCK_NETWORK" -eq 0 ]; then
         _blockNetworkCommand=""
     fi
-    local _gamescopeCommand=""
-    if [ "$TDF_GAMESCOPE" -ge 1 ]; then
-        if command -v gamescope > /dev/null; then
-            if [ -z "$TDF_GAMESCOPE_PARAMETERS" ]; then
-                TDF_GAMESCOPE_PARAMETERS="-f -r 60 -w $XRES -h $YRES"
-            fi
-            _gamescopeCommand="gamescope $TDF_GAMESCOPE_PARAMETERS --"
-            export INTEL_DEBUG="noccs,$INTEL_DEBUG"
-        fi
-    fi
     local _gamemodeCommand="gamemoderun"
     if [ "$TDF_GAMEMODE" -eq 1 ]; then
         if ! command -v gamemoderun > /dev/null; then
@@ -1172,6 +1162,21 @@ function _tdfmain {
         fi
     else
         _mangohudCommand=""
+    fi
+    local _gamescopeCommand=""
+    if [ "$TDF_GAMESCOPE" -ge 1 ]; then
+        if command -v gamescope > /dev/null; then
+            if [ -z "$TDF_GAMESCOPE_PARAMETERS" ]; then
+                TDF_GAMESCOPE_PARAMETERS="-f -r 60 -w $XRES -h $YRES"
+            fi
+            if [ -z "$_mangohudCommand" ]; then
+                _gamescopeCommand="gamescope $TDF_GAMESCOPE_PARAMETERS --"
+            else
+                _gamescopeCommand="gamescope --mangoapp $TDF_GAMESCOPE_PARAMETERS --"
+                _mangohudCommand=""
+            fi
+            export INTEL_DEBUG="noccs,$INTEL_DEBUG"
+        fi
     fi
     if ! wine --version > /dev/null; then
         _diagnoseBrokenWine
