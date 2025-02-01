@@ -4,7 +4,7 @@ echo 1 > state
 echo "Downloading dxvk (stable build)"
 rm -rf build
 touch incomplete
-url=$(curl --silent "https://api.github.com/repos/doitsujin/dxvk/releases/latest" | grep '"browser_download_url"' | grep '.tar.gz"' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+url=$(curl -L --silent "https://api.github.com/repos/doitsujin/dxvk/releases/latest" | grep '"browser_download_url"' | grep '.tar.gz"' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
 wget -O dxvk.tar.gz "$url"
 mkdir build
 tar -xf dxvk.tar.gz --directory build

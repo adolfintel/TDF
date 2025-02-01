@@ -4,7 +4,7 @@ echo 1 > state
 echo "Downloading vkd3d-proton (stable build)"
 rm -rf build
 touch incomplete
-url=$(curl --silent "https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases/latest" | grep '"browser_download_url"' | grep '.tar.zst"' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
+url=$(curl -L --silent "https://api.github.com/repos/HansKristian-Work/vkd3d-proton/releases/latest" | grep '"browser_download_url"' | grep '.tar.zst"' | head -n 1 | sed -E 's/.*"([^"]+)".*/\1/')
 wget -O vkd3d.tar.zst "$url"
 mkdir build
 tar -xf vkd3d.tar.zst --directory build
