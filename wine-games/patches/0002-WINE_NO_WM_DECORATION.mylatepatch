@@ -1,0 +1,27 @@
+From d39679f2ad7c4824d96fc89de740610b7117230f Mon Sep 17 00:00:00 2001
+From: Stelios Tsampas <loathingkernel@gmail.com>
+Date: Sat, 16 Nov 2024 14:45:36 +0200
+Subject: [PATCH] winex11.drv: add env switch to disable wm decorations
+
+WINE_WM_DECORATIONS=0 disables decorations from the window manager
+Works around issues with the mouse clicking through borderless window
+edges.
+---
+ dlls/winex11.drv/window.c | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/dlls/winex11.drv/window.c b/dlls/winex11.drv/window.c
+index b8075aeb5a9..53505162033 100644
+--- a/dlls/winex11.drv/window.c
++++ b/dlls/winex11.drv/window.c
+@@ -405,6 +405,10 @@ static unsigned long get_mwm_decorations( struct x11drv_win_data *data,
+                                           const RECT *client_rect )
+ {
+     unsigned long ret = 0;
++    const char *decorate = NULL;
++
++    decorate = getenv( "WINE_NO_WM_DECORATION" );
++    if (decorate && decorate[0] == '1') decorated_mode = FALSE;
+ 
+     if (!decorated_mode) return 0;
+ 
