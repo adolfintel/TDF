@@ -257,6 +257,8 @@ Possible values:
 * `0`: enable window decorations
 * `1`: disable window decorations
 
+Note: This is only supported by the games-optimized build, other builds will ignore this setting.
+
 __`TDF_WINE_DEBUG_RELAY`__  
 Enables the Wine relay feature, which traces all interaction between the application and the rest of the system to a file. Extremely slow but can be useful to debug weird issues and crashes.
 
