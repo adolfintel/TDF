@@ -220,6 +220,7 @@ The architecture of the Wine installation. Can only be set once, before the init
 Possible values:  
 * `win64` (default): create a 64-bit Windows installation
 * `win32`: create a 32-bit Windows installation (useful for some old games)
+* `wow64`: same as `win64` but forces Wine 10.2 and newer to use the new WoW64 mode (no need for 32 bit libraries to be installed). This is not supported by the game-optimized build and it's not necessary for the mainline build since it's already built with the new WoW64 mode exclusively, but it may be useful if you're using other versions of Wine
 
 __`TDF_WINE_SYNC`__  
 The synchronization method to be used by Wine (game-optimized build only).

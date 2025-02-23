@@ -33,7 +33,7 @@ TDF_WINE_KILL_BEFORE=0
 TDF_WINE_KILL_AFTER=0
 TDF_START_ARGS='' #additional arguments to pass to wine's start command, such as /affinity 1
 TDF_WINE_LANGUAGE=''
-TDF_WINE_ARCH="win64" #win64=emulate 64bit windows, win32=emulate 32bit windows (useful for older games). cannot be changed after wineprefix initialization
+TDF_WINE_ARCH="win64" #win64=emulate 64bit windows, win32=emulate 32bit windows (useful for older games), "wow64" is also supported and forces the new wow64 mode in wine 10.2 and later, but it's not needed for the games or mainline builds (games doesn't support it, mainline is compiled with wow64). cannot be changed after wineprefix initialization
 TDF_WINE_SYNC="fsync" #fsync=use fsync if futex2 is available, otherwise esync, esync=always use esync, default=let wine decide. Only supported by games build, other versions will ignore this parameter
 TDF_WINE_WINVER="" #the windows version to emulate. sensible values: win10, win11, win7, win8, win81, vista, winxp, winxp64. other values: win2003, win2008, win2008r2, winme, win2k, win98, win95, nt40, nt351, win31, win30, win20. If left empty, wine decides what version to emulate (currently the default is win10), and it can be changed by the user with winecfg
 TDF_WINE_THEME="" #the name of the theme to use (all reg files are in system/themes). Leaving this empty lets wine decide (or the user through winecfg)
@@ -1202,6 +1202,8 @@ function _tdfmain {
         export WINEARCH="win64"
     elif [ "$TDF_WINE_ARCH" = "win32" ]; then
         export WINEARCH="win32"
+    elif [ "$TDF_WINE_ARCH" = "wow64" ]; then
+        export WINEARCH="wow64"
     else
         zenity --error --text="$(_loc "$TDF_LOCALE_WINE_INVALIDARCH")"
         exit
