@@ -10,18 +10,18 @@ if [ ! -d build ]; then
 fi
 cd build
 echo "Downloading winemono"
-url=$(curl -L --silent "https://api.github.com/repos/madewokherd/wine-mono/releases/latest" | grep '"browser_download_url"' | grep '.msi"' | sed -E 's/.*"([^"]+)".*/\1/')
+ver=$(curl -L --silent "https://dl.winehq.org/wine/wine-mono/?C=M;O=D" | grep "indexcolicon" | sed 1,2d | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | head -n 1 | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##')
 mustDownload=0
 if [ -f ../winemono_version ]; then
-    if [ "$(cat ../winemono_version)" != "$url" ]; then
+    if [ "$(cat ../winemono_version)" != "$ver" ]; then
         mustDownload=1;
     fi
 else
     mustDownload=1;
 fi
 if [ $mustDownload -eq 1 ]; then
-    wget -O winemono.msi "$url"
-    echo "$url" > ../winemono_version
+    wget -O winemono.msi "https://dl.winehq.org/wine/wine-mono/$ver/wine-mono-$ver-x86.msi"
+    echo "$ver" > ../winemono_version
 fi
 echo "Downloading winegecko"
 ver=$(curl -L --silent "https://dl.winehq.org/wine/wine-gecko/?C=M;O=D" | grep "indexcolicon" | sed 1,2d | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | head -n 1 | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##')

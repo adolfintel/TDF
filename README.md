@@ -1240,7 +1240,7 @@ The following dependencies must be installed on your system:
 * glslc (glslang)
 
 The following components will be downloaded:  
-* Wine Mono: latest version from [Github](https://github.com/madewokherd/wine-mono/releases/)
+* Wine Mono: latest version from the [Wine website](https://dl.winehq.org/wine/wine-mono/)
 * Wine Gecko: latest 32 and 64-bit versions from the [Wine website](https://dl.winehq.org/wine/wine-gecko/)
 * Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
 * Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
