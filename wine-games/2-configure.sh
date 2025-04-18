@@ -3,9 +3,11 @@ set -e
 echo 2 > state
 cd wine-tkg-git
 git -c advice.detachedHead=false checkout --force --no-track -B temp origin/HEAD
-for f in ../patches-pre/*; do
-    patch -p1 --forward < "$f"
-done
+if [ -e ../patches-pre/* ]; then
+    for f in ../patches-pre/*; do
+        patch -p1 --forward < "$f"
+    done
+fi
 cd ..
 rm -rf wine-tkg-git/wine-tkg-git/wine-tkg-userpatches/*
 cp patches/* wine-tkg-git/wine-tkg-git/wine-tkg-userpatches
