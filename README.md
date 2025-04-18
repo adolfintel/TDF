@@ -1304,7 +1304,7 @@ Eventually, my friends started calling it "Template Di Frederico", meaning Frede
 ## License
 All TDF code is distributed under the GNU GPL v3 license, but a built version of TDF will contain components with multiple licenses, including proprietary ones.
 
-Copyright (C) 2021-2024 Federico Dossena
+Copyright (C) 2021-2025 Federico Dossena
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
