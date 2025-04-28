@@ -489,6 +489,13 @@ Possible values:
 * `0` (default): don't use DXVK-nvapi
 * `1`: use DXVK-nvapi on nVidia GPUs
 
+__`TDF_HDR`__  
+Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect is HDR is disabled or unsupported.
+
+Possible values:  
+* `0` (default): don't expose HDR. This is the default because HDR sucks in most games
+* `1`: expose HDR
+
 __`TDF_VKD3D`__  
 Whether to install VKD3D-Proton, which provides DirectX 12 emulation through Vulkan. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version.
 

@@ -57,6 +57,7 @@ TDF_DXVK=1
 TDF_DXVK_NVAPI=0 #set to 1 to enable nvapi (nvidia gpus only)
 TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't0
 export DXVK_ASYNC=1 #enables async features when using the async version of dxvk, ignored by the regular version
+TDF_HDR=0 #0=HDR disabled by default, 1=HDR support exposed to application (must be supported and enabled in OS)
 
 # --- VARIABLES - VKD3D ---
 TDF_VKD3D=1
@@ -1177,6 +1178,10 @@ function _tdfmain {
             fi
             export INTEL_DEBUG="noccs,$INTEL_DEBUG"
         fi
+    fi
+    if [ "$TDF_HDR" -eq 1 ]; then
+        export ENABLE_HDR_WSI=1
+        export DXVK_HDR=1
     fi
     if ! wine --version > /dev/null; then
         _diagnoseBrokenWine
