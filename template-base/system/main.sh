@@ -1169,6 +1169,9 @@ function _tdfmain {
         if command -v gamescope > /dev/null; then
             if [ -z "$TDF_GAMESCOPE_PARAMETERS" ]; then
                 TDF_GAMESCOPE_PARAMETERS="-f -r 60 -w $XRES -h $YRES"
+                if [ "$TDF_HDR" -eq 1 ]; then
+                    TDF_GAMESCOPE_PARAMETERS="$TDF_GAMESCOPE_PARAMETERS --hdr-enabled"
+                fi
             fi
             if [ -z "$_mangohudCommand" ]; then
                 _gamescopeCommand="gamescope $TDF_GAMESCOPE_PARAMETERS --"
