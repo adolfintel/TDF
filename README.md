@@ -25,7 +25,7 @@ This section explains how to use TDF to install, play and optionally package a g
 ### Requirements
 * A relatively recent PC that's fast enough to run modern games. An x86_64 CPU is required, as well as a GPU with support for Vulkan 1.3 or newer
 * Linux kernel 5.16 or newer is strongly recommended, but it will work on older versions. For best compatibility, use the latest kernel.
-* A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, X11, etc. installed, __both 32 and 64-bit versions__. Arch-based distros will work best.
+* A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, Wayland or X11, etc. installed. Arch-based distros will work best.
 * An AMD graphics card with the Mesa 23.1 driver or newer is recommended, but it will also work on nVidia and Intel cards. For best compatibility, use the latest driver.
 * An SSD is strongly recommended, with a file system like ext4 or btrfs. Do not use NTFS, FAT or exFAT
 * You must be able to use a Linux system, do file and folder management, know how to install games manually, know some basic shell scripting, etc.
@@ -221,7 +221,6 @@ The architecture of the Wine installation. Can only be set once, before the init
 Possible values:  
 * `win64` (default): create a 64-bit Windows installation
 * `win32`: create a 32-bit Windows installation (useful for some old games)
-* `wow64`: same as `win64` but forces Wine 10.2 and newer to use the new WoW64 mode (no need for 32 bit libraries to be installed). This is not supported by the game-optimized build and it's not necessary for the mainline build since it's already built with the new WoW64 mode exclusively, but it may be useful if you're using other versions of Wine
 
 __`TDF_WINE_SYNC`__  
 The synchronization method to be used by Wine (game-optimized build only).
@@ -1095,15 +1094,7 @@ This section covers troubleshooting games on Wine in general, with a focus on ho
 If a game doesn't work out of the box, before you even start troubleshooting, check [ProtonDB](https://www.protondb.com/) for known issues/fixes for this game. Solutions that work on Proton can easily be adapted to work in TDF.
 
 #### TDF won't start (Failed to load Wine)
-Wine depends on a lot of libraries, both 32 and 64 bit. The easiest way to obtain these is to simply install Wine on your system and then removing it.
-* Install missing 32-bit libraries
-    * For Arch-based distros see here: [Enabling multilib](https://wiki.archlinux.org/title/Official_repositories#Enabling_multilib) (not required for Manjaro)
-    * For Debian-based distros:  
-        ```
-        sudo dpkg --add-architecture i386
-        sudo apt-get update
-        ```
-* If it still doesn't work, install missing libraries by installing Wine and then removing it
+Wine depends on a lot of libraries, TDF is built exclusively using 64-bit libraries, so multilib is not required. The easiest way to obtain these is to simply install Wine on your system and then removing it.
     * For Arch-based distros:
         ```
         sudo pacman -S wine
