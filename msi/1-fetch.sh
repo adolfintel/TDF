@@ -10,7 +10,7 @@ if [ ! -d build ]; then
 fi
 cd build
 echo "Downloading winemono"
-ver="10.0.0"
+ver=$(curl -L --silent "https://dl.winehq.org/wine/wine-mono/?C=M;O=D" | grep "indexcolicon" | sed 1,2d | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | head -n 1 | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##')
 mustDownload=0
 if [ -f ../winemono_version ]; then
     if [ "$(cat ../winemono_version)" != "$ver" ]; then
@@ -24,7 +24,7 @@ if [ $mustDownload -eq 1 ]; then
     echo "$ver" > ../winemono_version
 fi
 echo "Downloading winegecko"
-ver="2.47.4"
+ver=$(curl -L --silent "https://dl.winehq.org/wine/wine-gecko/?C=M;O=D" | grep "indexcolicon" | sed 1,2d | grep -io '<a href=['"'"'"][^"'"'"']*['"'"'"]' | sed -e 's/^<a href=["'"'"']//i' -e 's/["'"'"']$//i' | head -n 1 | sed -e 's#/$##' -e 's/\.git$//' -e 's#^.*/##')
 mustDownload=0
 if [ -f ../winegecko_version ]; then
     if [ "$(cat ../winegecko_version)" != "$ver" ]; then
