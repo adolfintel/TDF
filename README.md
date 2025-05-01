@@ -176,9 +176,10 @@ __`TDF_WINE_GRAPHICS_DRIVER`__
 Sets the preferred graphics driver for Wine (as in how it outputs, not how it renders 3D graphics). This can be useful if you're messing around with Wayland and X11 and Wine doesn't work properly.
 
 Possible values:
-* `x11`: use X11 (recommended even if you're using Wayland)
-* `wayland`: use Wayland (incomplete and buggy at the moment, not recommended)
-* `default` (default): let Wine decide (defaults to X11 at the moment, even on Wayland)
+* `auto` (default): let TDF decide based on what you're using. If Wayland is available, Wayland will be used, otherwise X11
+* `x11`: use X11, does not support HDR
+* `wayland`: use Wayland
+* `default`: let Wine decide (defaults to X11 at the moment, even on Wayland)
 
 Note: Choosing a driver that doesn't exist in Wine or in your system will result in no graphics being displayed.
 
@@ -493,8 +494,10 @@ __`TDF_HDR`__
 Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect is HDR is disabled or unsupported.
 
 Possible values:  
-* `0` (default): don't expose HDR. This is the default because HDR sucks in most games
-* `1`: expose HDR
+* `1` (default): expose HDR if available
+* `0` :don't expose HDR
+
+Note: HDR is not supported by X11, you must be using Wayland for this to work.
 
 __`TDF_VKD3D`__  
 Whether to install VKD3D-Proton, which provides DirectX 12 emulation through Vulkan. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version.
