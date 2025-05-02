@@ -27,7 +27,7 @@ TDF_DND=1 #enable do not disturb mode (on supported DEs) while the game is runni
 TDF_WINE_PREFERRED_VERSION="games" #games=game-optimized build, mainline=regular wine, custom=the build in the wine-custom folder outside the system folder, system=the version of wine that's installed on the system, or mainline if not installed, any other value will use system/wine-yourValue or system wine if not found
 TDF_WINE_HIDE_CRASHES=1
 TDF_WINE_AUDIO_DRIVER="default" #pulse,alsa,jack,default (let wine decide)
-TDF_WINE_GRAPHICS_DRIVER="auto" #x11,wayland,default (let wine decide), auto (use whatever your system is using)
+TDF_WINE_GRAPHICS_DRIVER="default" #x11,wayland,default (let wine decide), auto (use whatever your system is using). this setting is forced to wayland when TDF_HDR=1
 TDF_WINE_DPI=-1 #-1=use system dpi, 0=let wine decide, number=use specified dpi
 TDF_WINE_KILL_BEFORE=0
 TDF_WINE_KILL_AFTER=0
@@ -57,7 +57,7 @@ TDF_DXVK=1
 TDF_DXVK_NVAPI=0 #set to 1 to enable nvapi (nvidia gpus only)
 TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't0
 export DXVK_ASYNC=1 #enables async features when using the async version of dxvk, ignored by the regular version
-TDF_HDR=1 #0=HDR disabled by default, 1=HDR support exposed to application (must be supported and enabled in OS)
+TDF_HDR=0 #0=HDR disabled by default, 1=HDR support exposed to application (must be supported and enabled in OS)
 
 # --- VARIABLES - VKD3D ---
 TDF_VKD3D=1
@@ -766,15 +766,20 @@ function _applyWineDrivers {
     else
         wine reg delete 'HKEY_CURRENT_USER\Software\Wine\Drivers' /v 'Audio' /f
     fi
-    if [ "$TDF_WINE_GRAPHICS_DRIVER" == "auto" ]; then
-        if [ -n "$WAYLAND_DISPLAY" ]; then
+    if [ "$TDF_HDR" -eq 1 ]; then
             TDF_WINE_GRAPHICS_DRIVER="wayland"
-        elif [ -n "$DISPLAY" ]; then
-            TDF_WINE_GRAPHICS_DRIVER="x11"
-        else
-            TDF_WINE_GRAPHICS_DRIVER="default"
+    else
+        if [ "$TDF_WINE_GRAPHICS_DRIVER" == "auto" ]; then
+            if [ -n "$WAYLAND_DISPLAY" ]; then
+                TDF_WINE_GRAPHICS_DRIVER="wayland"
+            elif [ -n "$DISPLAY" ]; then
+                TDF_WINE_GRAPHICS_DRIVER="x11"
+            else
+                TDF_WINE_GRAPHICS_DRIVER="default"
+            fi
         fi
     fi
+
     if [ "$TDF_WINE_GRAPHICS_DRIVER" != "default" ]; then
         wine reg add 'HKEY_CURRENT_USER\Software\Wine\Drivers' /v 'Graphics' /t REG_SZ /d "$TDF_WINE_GRAPHICS_DRIVER" /f
     else

@@ -176,12 +176,14 @@ __`TDF_WINE_GRAPHICS_DRIVER`__
 Sets the preferred graphics driver for Wine (as in how it outputs, not how it renders 3D graphics). This can be useful if you're messing around with Wayland and X11 and Wine doesn't work properly.
 
 Possible values:
-* `auto` (default): let TDF decide based on what you're using. If Wayland is available, Wayland will be used, otherwise X11
+* `default` (default): let Wine decide (defaults to X11 at the moment, even on Wayland)
 * `x11`: use X11, does not support HDR
-* `wayland`: use Wayland
-* `default`: let Wine decide (defaults to X11 at the moment, even on Wayland)
+* `wayland`: use Wayland, supports HDR. Not feature complete yet
+* `auto`: let TDF decide based on what you're using. If Wayland is available, Wayland will be used, otherwise X11
 
 Note: Choosing a driver that doesn't exist in Wine or in your system will result in no graphics being displayed.
+
+Note: This setting is automatically forced to `wayland` when `TDF_HDR` is set to `1`.
 
 __`TDF_WINE_DPI`__  
 DPI value for display scaling of Wine applications.
@@ -493,8 +495,8 @@ __`TDF_HDR`__
 Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect is HDR is disabled or unsupported.
 
 Possible values:  
-* `1` (default): expose HDR if available
-* `0` :don't expose HDR
+* `0` (default): don't expose HDR (this is the default because HDR kinda sucks in most games)
+* `1` : expose HDR if available
 
 Note: HDR is not supported by X11, you must be using Wayland for this to work.
 
