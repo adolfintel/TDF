@@ -50,7 +50,6 @@ export WINE_LARGE_ADDRESS_AWARE=1
 export WINEPREFIX="$PWD/zzprefix"
 export WINEDEBUG=-all
 export USER="wine"
-export QT_SCALE_FACTOR_ROUNDING_POLICY=passthrough #some games don't take input correctly on high DPI displays without this
 
 # --- VARIABLES - DXVK ---
 TDF_DXVK=1
