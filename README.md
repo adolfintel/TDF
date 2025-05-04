@@ -189,8 +189,8 @@ __`TDF_WINE_DPI`__
 DPI value for display scaling of Wine applications.
 
 Possible values:  
-* `-1` (default): use DPI from the main display
-* `0`: let Wine handle scaling
+* `0` (default): let Wine handle scaling
+* `-1`: use DPI from the main display
 * number: use this DPI value (96=100% scaling, 120=125% scaling, 144=150% scaling, etc.). 96 DPI will fix some older games
 
 __`TDF_WINE_KILL_BEFORE`__  
@@ -1210,7 +1210,7 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 #### Videos don't play or game crashes when a video is supposed to play
 * Try adding `TDF_WINE_DEBUG_GSTREAMER=1`, it may provide details about what's happening
 
-#### Window positioning issues (stuck in window mode, partially off screen, etc.)
+#### Window positioning issues (stuck in window mode, partially off screen, flickering, etc.)
 * If this is an older game, it may not support display scaling, try adding `TDF_WINE_DPI=96`
 * See the section on Builtin functions for how to lock on to a window and manipulate it, or watch my video about A Plague Tale Requiem
 

@@ -28,7 +28,7 @@ TDF_WINE_PREFERRED_VERSION="games" #games=game-optimized build, mainline=regular
 TDF_WINE_HIDE_CRASHES=1
 TDF_WINE_AUDIO_DRIVER="default" #pulse,alsa,jack,default (let wine decide)
 TDF_WINE_GRAPHICS_DRIVER="default" #x11,wayland,default (let wine decide), auto (use whatever your system is using). this setting is forced to wayland when TDF_HDR=1
-TDF_WINE_DPI=-1 #-1=use system dpi, 0=let wine decide, number=use specified dpi
+TDF_WINE_DPI=0 #-1=use system dpi, 0=let wine decide, number=use specified dpi
 TDF_WINE_KILL_BEFORE=0
 TDF_WINE_KILL_AFTER=0
 TDF_START_ARGS='' #additional arguments to pass to wine's start command, such as /affinity 1
