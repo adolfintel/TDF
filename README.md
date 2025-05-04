@@ -252,16 +252,6 @@ Possible values:
 
 Note: It's possible to install msstyles themes, in this case, leave this empty and install them through `winecfg`.
 
-__`export WINE_NO_WM_DECORATION`__  
-Whether to display window decorations or not. Disabling them can be useful for games that have issues with borderless fullscreen (wrong position, visible borders, etc.) and games that minimize themselves if you click near the edges of the screen
-
-Possible values:  
-* `""` (empty string) (default): let Wine decide
-* `0`: enable window decorations
-* `1`: disable window decorations
-
-Note: This is only supported by the games-optimized build, other builds will ignore this setting.
-
 __`TDF_WINE_DEBUG_RELAY`__  
 Enables the Wine relay feature, which traces all interaction between the application and the rest of the system to a file. Extremely slow but can be useful to debug weird issues and crashes.
 
