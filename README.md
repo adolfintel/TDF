@@ -7,6 +7,7 @@ __TDF is based on the following awesome projects:__
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
 * [Zenity](https://gitlab.gnome.org/GNOME/zenity), a tool to display simple graphical interfaces such as loading bars, error messages, etc.
+* [libstrangle](https://gitlab.com/Infernio/libstrangle), used to limit FPS in games that don't support it and don't use DXVK/VKD3D
 * ...and a handful of other useful things
 
 __TDF's main goals are are:__  
@@ -572,6 +573,14 @@ Possible values:
 
 Note that Gamescope currently only works properly on AMD GPUs and getting it to work properly on Intel and nVidia cards requires additional configuration.
 
+#### libstrangle variables
+__`TDF_GL_MAXFPS`__
+Enables an FPS limiter for OpenGL applications, based on libstrangle.
+
+Possible values:
+* `0` (default): disabled, and don't load libstrangle
+* number: limit FPS to this number
+
 __`TDF_GAMESCOPE_PARAMETERS`__  
 The command line arguments used to start Gamescope. You can see a complete list [here](https://github.com/ValveSoftware/gamescope#options).
 
@@ -1037,6 +1046,7 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `dxvk-nvapi`
 * `localization`
 * `msi`
+* `strangle`
 * `tdfutils`
 * `vcredist`
 * `vkd3d`
@@ -1065,6 +1075,7 @@ The following folders can be deleted from the `system` folder of a TDF instance 
 * `dxvk-nvapi`
 * `msi/winemono.msi`
 * `msi/winegecko32.msi` and `msi/winegecko64.msi`
+* `strangle` (Note: if this is removed, FPS limiting for OpenGL will not be available)
 * `tdfutils`
 * `themes` (Note: if this is removed, leave `TDF_WINE_THEME` empty)
 * `vcredist`

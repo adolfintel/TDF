@@ -76,6 +76,9 @@ TDF_PROTECT_DOSDEVICES=0
 TDF_GAMESCOPE=0
 TDF_GAMESCOPE_PARAMETERS='' #if not changed in config, this will become -f -r 60 -w $XRES -h $YRES -- where $XRES and $YRES are the resolution of the main display
 
+# --- VARIABLES - libstrangle ---
+TDF_GL_MAXFPS=0 #0=unlimited, disables libstrangle, any other number enables libstrangle and sets the FPS limit for opengl apps
+
 # --- VARIABLES - Miscellaneous ---
 TDF_GAMEMODE=1
 TDF_MANGOHUD=0
@@ -302,6 +305,12 @@ function _realRunGame {
         ) &
     fi
     _applyCPULimits
+    if [ -d "./system/strangle" ]; then
+        if [ "$TDF_GL_MAXFPS" -ne 0 ]; then
+            export STRANGLE_FPS="$TDF_GL_MAXFPS"
+            export LD_PRELOAD="${LD_PRELOAD}:$PWD/system/strangle/libstrangle64.so:$PWD/system/strangle/libstrangle32.so"
+        fi
+    fi
     local command="$_gamemodeCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
     if [ "$TDF_WINE_DEBUG_RELAY" -eq 1 ]; then
         local relayPath=$(zenity --file-selection --save --title="$(_loc "$TDF_LOCALE_WINE_RELAYPATH")" --filename="relay.txt")
