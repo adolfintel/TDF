@@ -12,7 +12,7 @@ if [ -d libstrangle ]; then
     git reset --hard origin/HEAD > /dev/null
     cd ..
 else
-    git clone git@gitlab.com:Infernio/libstrangle.git
+    git clone https://gitlab.com/Infernio/libstrangle
 fi
 rm -f incomplete
 echo 2 > state
