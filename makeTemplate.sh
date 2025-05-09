@@ -44,21 +44,19 @@ if [ -z "$TDF_BUILD_STARTED" ]; then
     fi
 fi
 startT=$SECONDS
-failedDepsCheck=0
+failedDeps=""
 for module in "${modules[@]}"; do
     cd "$module"
     for f in ./0-*.sh; do
-        if ! "$f"; then
-            failedDepsCheck=1
-        fi
+        failedDeps="$failedDeps$($f)"
     done
     cd ..
 done
 if ! command -v zstd > /dev/null; then
-    echo "zstd not installed"
-    failedDepsCheck=1
+    failedDeps="$failedDeps\nzstd not installed\n"
 fi
-if [ $failedDepsCheck -eq 1 ]; then
+if [ -n "$failedDeps" ]; then
+    echo "$failedDeps" | sort | uniq
     fail "missing dependencies"
 fi
 failedModules=()
@@ -153,6 +151,9 @@ if [ ${#failedModules[@]} -ne 0 ]; then
 fi
 echo "v$version" > "$dir/system/version"
 echo "Packaging template, this will take a few minutes"
+if [ -f "$dir."* ]; then
+    rm "$dir."*
+fi
 cd "$dir"
 chmod -R 777 .
 ./run.sh archive
