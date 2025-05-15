@@ -744,11 +744,13 @@ function _applyScaling {
         fi
         if [ "$TDF_WINE_DPI" != "$currentDpi" ]; then
             wine reg add 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts' /v 'LogPixels' /t REG_DWORD /d "$TDF_WINE_DPI" /f
+            wine reg add 'HKEY_CURRENT_USER\Control Panel\Desktop' /v 'LogPixels' /t REG_DWORD /d "$TDF_WINE_DPI" /f
             echo "$TDF_WINE_DPI" > "$WINEPREFIX/.dpi"
         fi
     else
         if [ -e "$WINEPREFIX/.dpi" ]; then
             wine reg delete 'HKEY_LOCAL_MACHINE\System\CurrentControlSet\Hardware Profiles\Current\Software\Fonts' /v 'LogPixels' /f
+            wine reg delete 'HKEY_CURRENT_USER\Control Panel\Desktop' /v 'LogPixels' /f
             rm -f "$WINEPREFIX/.dpi"
         fi
     fi
