@@ -3,7 +3,7 @@ set -e
 echo 2 > state
 cd wine-tkg-git
 git -c advice.detachedHead=false checkout --force --no-track -B temp origin/HEAD
-if [ -e ../patches-pre/* ]; then
+if [ "$(ls ../patches-pre)" ]; then
     for f in ../patches-pre/*; do
         patch -p1 --forward < "$f"
     done
