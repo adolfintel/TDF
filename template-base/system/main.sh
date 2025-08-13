@@ -282,17 +282,42 @@ function _clearDND {
     fi
 }
 function _realRunManualCommand {
+    _applyLocale
     eval "$_reaperCommand $_blockNetworkCommand wine start /WAIT \"$1\""
+    _restoreLocale
 }
 function _realRunCommandPrompt {
+    _applyLocale
     eval "$_reaperCommand $_blockNetworkCommand wine start /D \"C:\Windows\System32\" /WAIT \"cmd.exe\""
+    _restoreLocale
 }
 function _runCommandPrompt {
-    zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")" &
-    _applyLocale
-    _realRunCommandPrompt
-    _restoreLocale
-    zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_AFTERCMD")"
+    if [ "$1" != "noinstr" ]; then
+        zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")"
+    fi
+    (
+        _realRunCommandPrompt
+        wait
+    ) &
+    local subshellPid=$!
+    zenity --info --text="$(_loc "$TDF_LOCALE_TERMINALRUNNING")" --ok-label="$(_loc "$TDF_LOCALE_STOPTERMINAL")" --width=250 --icon=./system/zenity/running.png &
+    local zenityPid=$!
+    while true; do
+        if ! kill -0 $subshellPid 2>/dev/null; then
+            if kill -0 $zenityPid 2>/dev/null; then
+                kill $zenityPid
+            fi
+            break
+        fi
+        if ! kill -0 $zenityPid 2>/dev/null; then
+            wineserver -k -w
+            break
+        fi
+        sleep 0.5
+    done
+    if [ "$1" != "noinstr" ]; then
+        zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_AFTERCMD")"
+    fi
 }
 function _realRunGame {
     _applyLocale
@@ -1266,11 +1291,11 @@ function _tdfmain {
                     exit
                 elif [ "$TDF_MULTIPLE_INSTANCES" = "askcmd" ]; then
                     if zenity --question --width=400 --text="$(_loc "$TDF_LOCALE_ALREADYRUNNING_ASKCMD")"; then
-                        _realRunCommandPrompt
+                        _runCommandPrompt noinstr
                     fi
                     exit
                 elif [ "$TDF_MULTIPLE_INSTANCES" = "cmd" ]; then
-                    _realRunCommandPrompt
+                    _runCommandPrompt noinstr
                     exit
                 elif [ "$TDF_MULTIPLE_INSTANCES" = "allow" ]; then
                     _skipInitializations=1
