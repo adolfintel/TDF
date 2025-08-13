@@ -295,26 +295,33 @@ function _runCommandPrompt {
     if [ "$1" != "noinstr" ]; then
         zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")"
     fi
-    (
+    if [ "$TDF_HIDE_GAME_RUNNING_DIALOG" -eq 1 ]; then
+        (
+            _realRunCommandPrompt
+            wait
+        ) &
+    else
+        (
         _realRunCommandPrompt
-        wait
-    ) &
-    local subshellPid=$!
-    zenity --info --text="$(_loc "$TDF_LOCALE_TERMINALRUNNING")" --ok-label="$(_loc "$TDF_LOCALE_STOPTERMINAL")" --width=250 --icon=./system/zenity/running.png &
-    local zenityPid=$!
-    while true; do
-        if ! kill -0 $subshellPid 2>/dev/null; then
-            if kill -0 $zenityPid 2>/dev/null; then
-                kill $zenityPid
+            wait
+        ) &
+        local subshellPid=$!
+        zenity --info --text="$(_loc "$TDF_LOCALE_TERMINALRUNNING")" --ok-label="$(_loc "$TDF_LOCALE_STOPTERMINAL")" --width=250 --icon=./system/zenity/running.png &
+        local zenityPid=$!
+        while true; do
+            if ! kill -0 $subshellPid 2>/dev/null; then
+                if kill -0 $zenityPid 2>/dev/null; then
+                    kill $zenityPid
+                fi
+                break
             fi
-            break
-        fi
-        if ! kill -0 $zenityPid 2>/dev/null; then
-            wineserver -k -w
-            break
-        fi
-        sleep 0.5
-    done
+            if ! kill -0 $zenityPid 2>/dev/null; then
+                wineserver -k -w
+                break
+            fi
+            sleep 0.5
+        done
+    fi
     if [ "$1" != "noinstr" ]; then
         zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_AFTERCMD")"
     fi
