@@ -84,6 +84,7 @@ TDF_GAMEMODE=1
 TDF_MANGOHUD=0
 TDF_COREFONTS=1
 TDF_VCREDIST=1
+TDF_REAPER=1 #launch wine using reaper, to improve how TDF detects whether the game is running or not
 TDF_I_AM_POOR=0
 
 # Note: there are a few other variables defined elsewhere, see the documentation for a complete list
@@ -281,10 +282,10 @@ function _clearDND {
     fi
 }
 function _realRunManualCommand {
-    eval "$_blockNetworkCommand wine start /WAIT \"$1\""
+    eval "$_reaperCommand $_blockNetworkCommand wine start /WAIT \"$1\""
 }
 function _realRunCommandPrompt {
-    eval "$_blockNetworkCommand wine start /D \"C:\Windows\System32\" /WAIT \"cmd.exe\""
+    eval "$_reaperCommand $_blockNetworkCommand wine start /D \"C:\Windows\System32\" /WAIT \"cmd.exe\""
 }
 function _runCommandPrompt {
     zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")" &
@@ -311,7 +312,7 @@ function _realRunGame {
             export LD_PRELOAD="${LD_PRELOAD}:$PWD/system/strangle/libstrangle64.so:$PWD/system/strangle/libstrangle32.so"
         fi
     fi
-    local command="$_gamemodeCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
+    local command="$_gamemodeCommand $_reaperCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
     if [ "$TDF_WINE_DEBUG_RELAY" -eq 1 ]; then
         local relayPath=$(zenity --file-selection --save --title="$(_loc "$TDF_LOCALE_WINE_RELAYPATH")" --filename="relay.txt")
         if [ -n "$relayPath" ]; then
@@ -1188,6 +1189,13 @@ function _tdfmain {
                 _mangohudCommand=""
             fi
             export INTEL_DEBUG="noccs,$INTEL_DEBUG"
+        fi
+    fi
+    local _reaperCommand=""
+    if [ -d "system/reaper" ]; then
+        if [ "$TDF_REAPER" -eq 1 ]; then
+            export PATH="$PWD/system/reaper:$PATH"
+            _reaperCommand="reaper --"
         fi
     fi
     if [ "$TDF_HDR" -eq 1 ]; then

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2164,SC2103,SC2317
 
-modules=("vkd3d" "dxvk" "dxvk-async" "dxvk-nvapi" "wine-games" "wine-mainline" "tdfutils" "xutils" "strangle" "zenity" "msi" "vcredist" "corefonts")
+modules=("vkd3d" "dxvk" "dxvk-async" "dxvk-nvapi" "wine-games" "wine-mainline" "tdfutils" "xutils" "strangle" "reaper" "zenity" "msi" "vcredist" "corefonts")
 fail(){
     echo "Build failed: $1"
     exit 1

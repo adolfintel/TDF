@@ -8,6 +8,7 @@ __TDF is based on the following awesome projects:__
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
 * [Zenity](https://gitlab.gnome.org/GNOME/zenity), a tool to display simple graphical interfaces such as loading bars, error messages, etc.
 * [libstrangle](https://gitlab.com/Infernio/libstrangle), used to limit FPS in games that don't support it and don't use DXVK/VKD3D
+* [Reaper](https://github.com/Plagman/reaper), used to detect "stray" processes
 * ...and a handful of other useful things
 
 __TDF's main goals are are:__  
@@ -615,6 +616,13 @@ Possible values:
 * `1` (default): install VCRedist 2015+
 * `0`: don't install VCRedist 2015+
 
+__`TDF_REAPER`__  
+Whether to launch Wine using reaper or not. This will improve detection of when a game is running or not, even if the main exe just launches a separate process and terminates immediately.
+
+Possible values:  
+* `1` (default): use reaper
+* `0`: don't use reaper
+
 __`export DRI_PRIME`__  
 Sometimes on systems with multiple GPUs, a game might start using the wrong GPU, such as the integrated graphics on your laptop instead of the dedicated card.
 
@@ -1046,6 +1054,7 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `dxvk-nvapi`
 * `localization`
 * `msi`
+* `reaper`
 * `strangle`
 * `tdfutils`
 * `vcredist`
@@ -1075,6 +1084,7 @@ The following folders can be deleted from the `system` folder of a TDF instance 
 * `dxvk-nvapi`
 * `msi/winemono.msi`
 * `msi/winegecko32.msi` and `msi/winegecko64.msi`
+* `reaper`
 * `strangle` (Note: if this is removed, FPS limiting for OpenGL will not be available)
 * `tdfutils`
 * `themes` (Note: if this is removed, leave `TDF_WINE_THEME` empty)
