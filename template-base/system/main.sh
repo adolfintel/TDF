@@ -354,7 +354,23 @@ function _runGame {
                 (
                     _realRunGame
                     wait
-                ) | zenity --progress --no-cancel --text="$(_loc "$TDF_LOCALE_GAMERUNNING")" --width=250 --auto-kill --auto-close
+                ) &
+                local subshellPid=$!
+                zenity --info --text="$(_loc "$TDF_LOCALE_GAMERUNNING")" --ok-label="$(_loc "$TDF_LOCALE_STOPGAME")" --width=250 --icon=./system/zenity/running.png &
+                local zenityPid=$!
+                while true; do
+                    if ! kill -0 $subshellPid 2>/dev/null; then
+                        if kill -0 $zenityPid 2>/dev/null; then
+                            kill $zenityPid
+                        fi
+                        break
+                    fi
+                    if ! kill -0 $zenityPid 2>/dev/null; then
+                        wineserver -k -w
+                        break
+                    fi
+                    sleep 0.5
+                done
             fi
             _clearDND
             local playedTime=$((SECONDS - startedAt))

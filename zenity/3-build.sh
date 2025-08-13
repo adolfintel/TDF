@@ -15,5 +15,6 @@ cp -R zenity/data build2/
 cp zenity/src/zenity.ui build2/data/
 rm -rf build
 mv build2 build
+cp running.png build
 echo 4 > state
 exit 0
