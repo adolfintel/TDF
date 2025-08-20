@@ -10,7 +10,7 @@ if [ ! -d build ]; then
 fi
 cd build
 echo "Downloading winemono"
-ver='10.1.0'
+ver='10.2.0'
 mustDownload=0
 if [ -f ../winemono_version ]; then
     if [ "$(cat ../winemono_version)" != "$ver" ]; then
