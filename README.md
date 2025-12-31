@@ -470,7 +470,7 @@ Possible values:
 * `0`: use WineD3D
 
 __`TDF_D7VK`__  
-Whether to install D7VK or not, which provides DirextX 6-7 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which may be better for some older games, as it provides support for DX1-7 as well as DDraw.
+Whether to install D7VK or not, which provides DirextX 6-7 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which may be better for some older games, as it provides support for DX1-7 as well as DDraw. Requires `TDF_DXVK` to be set to `1`.
 
 Settings for D7VK can be changed by editing the `dxvk.conf` file that will be created inside `zzprefix`, see the [d7vk documentation](https://github.com/WinterSnowfall/d7vk/blob/devel/dxvk.conf) for D7VK specific config options.
 
@@ -495,7 +495,7 @@ Possible values:
 Note: HDR is not supported by X11, you must be using Wayland for this to work.
 
 __`TDF_VKD3D`__  
-Whether to install VKD3D-Proton, which provides DirectX 12 emulation through Vulkan. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version.
+Whether to install VKD3D-Proton, which provides DirectX 12 emulation through Vulkan. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version. Requires `TDF_DXVK` to be set to `1`.
 
 Possible values:  
 * `1` (default): use VKD3D-Proton

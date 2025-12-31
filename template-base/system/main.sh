@@ -435,7 +435,16 @@ function _applyDLLs {
         TDF_D7VK=0
         TDF_VKD3D=0
     fi
-    if [[ "$TDF_D7VK" -eq 1 || "$TDF_VKD3D" -eq 1 ]]; then
+    if [[ "$TDF_DXVK_NVAPI" -eq 1 && "$TDF_DXVK" -eq 0 ]]; then
+        zenity --warning --width=500 --text="$(_loc "$TDF_LOCALE_NVAPI_NEEDS_DXVK")"
+        TDF_DXVK=1
+    fi
+    if [[ "$TDF_VKD3D" -eq 1 && "$TDF_DXVK" -eq 0 ]]; then
+        zenity --warning --width=500 --text="$(_loc "$TDF_LOCALE_VKD3D_NEEDS_DXVK")"
+        TDF_DXVK=1
+    fi
+    if [[ "$TDF_D7VK" -eq 1 && "$TDF_DXVK" -eq 0 ]]; then
+        zenity --warning --width=500 --text="$(_loc "$TDF_LOCALE_D7VK_NEEDS_DXVK")"
         TDF_DXVK=1
     fi
     local dxvk_dir="system/dxvk"
