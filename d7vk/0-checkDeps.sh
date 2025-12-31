@@ -36,4 +36,8 @@ if ! hasCommand sed; then
     echo "GNU sed not installed"
     failed=1
 fi
+if ! hasCommand unzip; then
+    echo "unzip not installed"
+    failed=1
+fi
 exit $failed
