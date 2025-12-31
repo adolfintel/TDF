@@ -1263,6 +1263,7 @@ The following components will be built from source:
 * Wine: latest master using the [wine-tkg build system](https://github.com/Frogging-Family/wine-tkg-git) with some custom config
 * DXVK: latest master from [Github](https://github.com/doitsujin/dxvk)
 * DXVK-nvapi: latest master from [Github](https://github.com/jp7677/dxvk-nvapi)
+* D7VK: latest master from [Github](https://github.com/WinterSnowfall/d7vk)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
 * zenity: version 3.44 from [Gnome's GitLab](https://gitlab.gnome.org/GNOME/zenity)
