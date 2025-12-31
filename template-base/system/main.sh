@@ -957,45 +957,23 @@ function _applyBlockBrowser {
     fi
 }
 function _applyCorefonts {
-    # shellcheck disable=SC2089,SC2090
     local windows_dir="$WINEPREFIX/drive_c/windows"
     local corefonts_dir="system/corefonts"
-    local corefonts_info=("AndaleMo.TTF:Andale Mono" "Arial.TTF:Arial" "Arialbd.TTF:Arial Bold" "Arialbi.TTF:Arial Bold Italic" "Ariali.TTF:Arial Italic" "AriBlk.TTF:Arial Black" "Comic.TTF:Comic Sans MS" "Comicbd.TTF:Comic Sans MS Bold" "cour.ttf:Courier New" "courbd.ttf:Courier New Bold" "courbi.ttf:Courier New Bold Italic" "couri.ttf:Courier New Italic" "Georgia.TTF:Georgia" "Georgiab.TTF:Georgia Bold" "Georgiai.TTF:Georgia Italic" "Georgiaz.TTF:Georgia Bold Italic" "Impact.TTF:Impact" "Times.TTF:Times New Roman" "Timesbd.TTF:Times New Roman Bold" "Timesbi.TTF:Times New Roman Bold Italic" "Timesi.TTF:Times New Roman Italic" "trebuc.ttf:Trebuchet MS" "Trebucbd.ttf:Trebuchet MS Bold" "trebucbi.ttf:Trebuchet MS Bold Italic" "trebucit.ttf:Trebuchet MS Italic" "Verdana.TTF:Verdana" "Verdanab.TTF:Verdana Bold" "Verdanai.TTF:Verdana Italic" "Verdanaz.TTF:Verdana Bold Italic" "Webdings.TTF:Webdings")
     if [ -d "$corefonts_dir" ]; then
         if [ "$TDF_COREFONTS" -eq 1 ]; then
             _outputDetail "$(_loc "$TDF_LOCALE_COREFONTS_INSTALL")"
             if [ ! -f "$WINEPREFIX/.corefonts-installed" ]; then
-                local commands=""
-                function copyAndRegister {
-                    cp -f "$corefonts_dir/$1" "$windows_dir/Fonts"
-                    # shellcheck disable=SC2089
-                    commands="$commands /v '$2' /t REG_SZ /d '$1' "
-                }
-                for f in "${corefonts_info[@]}"; do
-                    copyAndRegister "$(echo $f | cut -d ':' -f 1)" "$(echo $f | cut -d ':' -f 2)"
+                for f in "$corefonts_dir"/*; do
+                    cp -f "$f" "$windows_dir/Fonts"
                 done
-                # shellcheck disable=SC2090
-                wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' $commands /f
-                # shellcheck disable=SC2090,SC2016
-                wine reg add 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' /v '$2' /t REG_SZ /d '$1' $commands /f
                 touch "$WINEPREFIX/.corefonts-installed"
             fi
         else
             _outputDetail "$(_loc "$TDF_LOCALE_COREFONTS_REMOVE")"
             if [ -f "$WINEPREFIX/.corefonts-installed" ]; then
-                local commands=""
-                function deleteAndUnregister {
-                    rm -f "$windows_dir/Fonts/$1"
-                    # shellcheck disable=SC2089
-                    commands="$commands /v '$2'"
-                }
-                for f in "${corefonts_info[@]}"; do
-                    deleteAndUnregister "$(echo $f | cut -d ':' -f 1)" "$(echo $f | cut -d ':' -f 2)"
+                for f in "$corefonts_dir/"*; do
+                    rm -f "$windows_dir/Fonts/${f##*/}"
                 done
-                # shellcheck disable=SC2090
-                wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows NT\CurrentVersion\Fonts' $commands /f
-                # shellcheck disable=SC2090
-                wine reg del 'HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\CurrentVersion\Fonts' $commands /f
                 rm -f "$WINEPREFIX/.corefonts-installed"
             fi
         fi
