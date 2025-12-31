@@ -445,6 +445,9 @@ function _applyDLLs {
             TDF_DXVK_ASYNC=1
         fi
     fi
+    if [[ "$TDF_D7VK" -eq 1 || "$TDF_VKD3D" -eq 1 ]]; then
+        TDF_DXVK=1
+    fi
     local dxvk_dir="system/dxvk"
     if [ "$TDF_DXVK_ASYNC" -eq 1 ]; then
         dxvk_dir="$dxvk_dir-async"
