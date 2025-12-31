@@ -5,6 +5,7 @@ __TDF is based on the following awesome projects:__
 * [Wine](https://winehq.org), for Windows emulation, more specifically it includes two custom builds made with [tkg](https://github.com/Frogging-Family/wine-tkg-git), one best suited for modern games, and one more suited for applications and older games
 * [DXVK](https://github.com/doitsujin/dxvk), for DirectX 8/9/10/11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
+* [D7VK](https://github.com/WinterSnowfall/d7vk), for DirectX 6-7 emulation, as an optional alternative to WineD3D
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
 * [Zenity](https://gitlab.gnome.org/GNOME/zenity), a tool to display simple graphical interfaces such as loading bars, error messages, etc.
 * [libstrangle](https://gitlab.com/Infernio/libstrangle), used to limit FPS in games that don't support it and don't use DXVK/VKD3D
@@ -460,7 +461,7 @@ Note: if `WINE_CPU_TOPOLOGY` is set, the settings above will have no effect.
 
 #### DXVK and VKD3D variables
 __`TDF_DXVK`__  
-Whether to install DXVK or not, which provides DirextX 9-11 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which is better for some older games.
+Whether to install DXVK or not, which provides DirextX 8-11 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which may be better for some older games.
 
 Settings for DXVK can be changed by editing the `dxvk.conf` file that will be created inside `zzprefix`.
 
@@ -475,6 +476,15 @@ Possible values:
 * `2` (default): let TDF decide automatically, uses regular DXVK if GPL is supported, gplasync otherwise
 * `0`: always use the regular version of DXVK. If the system doesn't support GPL, the game will suffer from heavy shader compilation stuttering
 * `1`: always use the gplasync version of DXVK. Not recommended, can introduce minor graphical issues or stability issues
+
+__`TDF_D7VK`__  
+Whether to install D7VK or not, which provides DirextX 6-7 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which may be better for some older games, as it provides support for DX1-7 as well as DDraw.
+
+Settings for D7VK can be changed by editing the `dxvk.conf` file that will be created inside `zzprefix`, see the [d7vk documentation](https://github.com/WinterSnowfall/d7vk/blob/devel/dxvk.conf) for D7VK specific config options.
+
+Possible values:  
+* `0` (default): use WineD3D
+* `1` : use D7VK
 
 __`TDF_DXVK_NVAPI`__  
 Whether to install DXVK-nvapi or not, which provides nvapi support for nVidia GPUs. Requires `TDF_DXVK` to be set to `1`.
@@ -1049,6 +1059,7 @@ It is also possible to downgrade to an older version of TDF in the same way, in 
 
 ### Using custom versions of Wine, DXVK, etc.
 TDF will automatically detect and apply changes to the files in the following folders inside the `system` of a TDF instance:
+* `d7vk`
 * `dxvk`
 * `dxvk-async`
 * `dxvk-nvapi`
@@ -1079,6 +1090,7 @@ TDF is built to be partially modular, meaning that if your game doesn't need cer
 __Do not do this unless you know what you're doing.__
 
 The following folders can be deleted from the `system` folder of a TDF instance if they are not needed:
+* `d7vk`
 * `dxvk`
 * `dxvk-async` (Note: if this is removed, it is recommended to set `TDF_DXVK_ASYNC=0`, that way it won't try to use it on GPUs that don't support the GPL extension)
 * `dxvk-nvapi`
@@ -1318,7 +1330,7 @@ Eventually, my friends started calling it "Template Di Frederico", meaning Frede
 ## License
 All TDF code is distributed under the GNU GPL v3 license, but a built version of TDF will contain components with multiple licenses, including proprietary ones.
 
-Copyright (C) 2021-2025 Federico Dossena
+Copyright (C) 2021-2026 Federico Dossena
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by

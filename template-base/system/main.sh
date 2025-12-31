@@ -57,6 +57,7 @@ TDF_DXVK=1
 TDF_DXVK_NVAPI=0 #set to 1 to enable nvapi (nvidia gpus only)
 TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't0
 export DXVK_ASYNC=1 #enables async features when using the async version of dxvk, ignored by the regular version
+TDF_D7VK=0 #set to 1 to enable d7vk (requires dxvk)
 TDF_HDR=0 #0=HDR disabled by default, 1=HDR support exposed to application (must be supported and enabled in OS)
 
 # --- VARIABLES - VKD3D ---
@@ -433,6 +434,7 @@ function _applyDLLs {
     local windows_dir="$WINEPREFIX/drive_c/windows"
     if [ "$TDF_I_AM_POOR" -eq 1 ]; then
         TDF_DXVK=0
+        TDF_D7VK=0
         TDF_VKD3D=0
     fi
     if [ "$TDF_DXVK_ASYNC" -eq 2 ]; then
@@ -452,6 +454,8 @@ function _applyDLLs {
     local dxvknvapi_dlls=("nvapi" "nvapi64")
     local vkd3d_dir="system/vkd3d"
     local vkd3d_dlls=("d3d12" "d3d12core")
+    local d7vk_dir="system/d7vk"
+    local d7vk_dlls=("ddraw")
     local toOverride=()
     local toUnoverride=()
     function overrideDll {
@@ -534,6 +538,38 @@ function _applyDLLs {
                 fi
                 wineboot -u
                 wait
+            fi
+        fi
+    fi
+    if [ -d "$d7vk_dir" ]; then
+        if [ "$TDF_D7VK" -eq 1 ]; then
+            _outputDetail "$(_loc "$TDF_LOCALE_D7VK_INSTALL")"
+            if [ "$WINEARCH" = "win32" ]; then
+                for d in "${d7vk_dlls[@]}"; do
+                    copyIfDifferent "$d7vk_dir/x32/$d.dll" "$windows_dir/system32/$d.dll"
+                done
+            else
+                for d in "${d7vk_dlls[@]}"; do
+                    copyIfDifferent "$d7vk_dir/x32/$d.dll" "$windows_dir/syswow64/$d.dll"
+                done
+            fi
+            if [ ! -f "$WINEPREFIX/.d7vk-installed" ]; then
+                for d in "${d7vk_dlls[@]}"; do
+                    toOverride+=("$d")
+                done
+                touch "$WINEPREFIX/.d7vk-installed"
+            fi
+        else
+            _outputDetail "$(_loc "$TDF_LOCALE_D7VK_REMOVE")"
+            if [ -f "$WINEPREFIX/.d7vk-installed" ]; then
+                for d in "${d7vk_dlls[@]}"; do
+                    rm -f "$windows_dir/system32/$d.dll"
+                    rm -f "$windows_dir/syswow64/$d.dll"
+                    toUnoverride+=("$d")
+                done
+                wineboot -u
+                wait
+                rm -f "$WINEPREFIX/.d7vk-installed"
             fi
         fi
     fi
