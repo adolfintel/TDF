@@ -55,8 +55,6 @@ export QT_SCALE_FACTOR_ROUNDING_POLICY=passthrough #some games don't take input 
 # --- VARIABLES - DXVK ---
 TDF_DXVK=1
 TDF_DXVK_NVAPI=0 #set to 1 to enable nvapi (nvidia gpus only)
-TDF_DXVK_ASYNC=2 #0=always use regular dxvk, 1=always use async version, 2=use regular dxvk if the gpu supports gpl, async if it doesn't0
-export DXVK_ASYNC=1 #enables async features when using the async version of dxvk, ignored by the regular version
 TDF_D7VK=0 #set to 1 to enable d7vk (requires dxvk)
 TDF_HDR=0 #0=HDR disabled by default, 1=HDR support exposed to application (must be supported and enabled in OS)
 
@@ -437,21 +435,10 @@ function _applyDLLs {
         TDF_D7VK=0
         TDF_VKD3D=0
     fi
-    if [ "$TDF_DXVK_ASYNC" -eq 2 ]; then
-        ./system/tdfutils/vkgpltest
-        if [ $? -eq 2 ]; then
-            TDF_DXVK_ASYNC=0
-        else
-            TDF_DXVK_ASYNC=1
-        fi
-    fi
     if [[ "$TDF_D7VK" -eq 1 || "$TDF_VKD3D" -eq 1 ]]; then
         TDF_DXVK=1
     fi
     local dxvk_dir="system/dxvk"
-    if [ "$TDF_DXVK_ASYNC" -eq 1 ]; then
-        dxvk_dir="$dxvk_dir-async"
-    fi
     local dxvk_dlls=("d3d8" "d3d9" "d3d10" "d3d10_1" "d3d10core" "d3d11" "dxgi" "dxvk_config") #note: some files here may not exist, they are here so that overrides are added, which are useful for mods and older versions of dxvk
     local dxvknvapi_dir="system/dxvk-nvapi"
     local dxvknvapi_dlls=("nvapi" "nvapi64")
@@ -1162,6 +1149,9 @@ function _tdfmain {
         if [[ $_res -eq 0 || $_res -gt 2 || $_res -lt 0 ]]; then
             zenity --error --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKAN")"
             exit
+        fi
+        if [[ $_res -ne 2 ]]; then
+            zenity --warning --width=500 --text="$(_loc "$TDF_LOCALE_NOVULKANGPL")"
         fi
     fi
     if [ -d "system/xutils" ]; then

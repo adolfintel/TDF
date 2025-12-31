@@ -3,7 +3,7 @@ TDF is a small project aiming to make it easy to install, package and safely run
 
 __TDF is based on the following awesome projects:__  
 * [Wine](https://winehq.org), for Windows emulation, more specifically it includes two custom builds made with [tkg](https://github.com/Frogging-Family/wine-tkg-git), one best suited for modern games, and one more suited for applications and older games
-* [DXVK](https://github.com/doitsujin/dxvk), for DirectX 8/9/10/11 emulation, more specifically it includes both the regular version of DXVK built from source, as well as the [gplasync version](https://gitlab.com/Ph42oN/dxvk-gplasync) for cards that don't support the Vulkan GPL extension and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
+* [DXVK](https://github.com/doitsujin/dxvk), for DirectX 8/9/10/11 emulation, and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
 * [D7VK](https://github.com/WinterSnowfall/d7vk), for DirectX 6-7 emulation, as an optional alternative to WineD3D
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
@@ -468,14 +468,6 @@ Settings for DXVK can be changed by editing the `dxvk.conf` file that will be cr
 Possible values:  
 * `1` (default): use DXVK
 * `0`: use WineD3D
-
-__`TDF_DXVK_ASYNC`__  
-If enabled, TDF will use the gplasync version of DXVK instead of the regular version. This is only useful for systems that don't support the Vulkan `VK_EXT_graphics_pipeline_library` (GPL) extension because either the GPU or the driver is too old.
-
-Possible values:  
-* `2` (default): let TDF decide automatically, uses regular DXVK if GPL is supported, gplasync otherwise
-* `0`: always use the regular version of DXVK. If the system doesn't support GPL, the game will suffer from heavy shader compilation stuttering
-* `1`: always use the gplasync version of DXVK. Not recommended, can introduce minor graphical issues or stability issues
 
 __`TDF_D7VK`__  
 Whether to install D7VK or not, which provides DirextX 6-7 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which may be better for some older games, as it provides support for DX1-7 as well as DDraw.
@@ -1061,7 +1053,6 @@ It is also possible to downgrade to an older version of TDF in the same way, in 
 TDF will automatically detect and apply changes to the files in the following folders inside the `system` of a TDF instance:
 * `d7vk`
 * `dxvk`
-* `dxvk-async`
 * `dxvk-nvapi`
 * `localization`
 * `msi`
@@ -1077,8 +1068,6 @@ TDF will automatically detect and apply changes to the files in the following fo
 
 So for instance, if you need to test a custom version of DXVK, simply replace the DLLs in `system/dxvk` with your build (making sure to keep the same folder structure), when you launch `run.sh`, TDF will detect that these DLLs don't match the ones in the wineprefix and reinstall DXVK. The same goes for Wine and other components in the list above.
 
-Note: your custom files will only be used if that component is actually being used. For instance, if your GPU supports the `VK_EXT_graphics_pipeline_library`, then DXVK-gplasync will never be used unless you explicitly set `TDF_DXVK_ASYNC=1` or switch to an older driver.
-
 The following folders are not monitored for changes as they are very rarely needed:
 * `corefonts`
 
@@ -1092,7 +1081,6 @@ __Do not do this unless you know what you're doing.__
 The following folders can be deleted from the `system` folder of a TDF instance if they are not needed:
 * `d7vk`
 * `dxvk`
-* `dxvk-async` (Note: if this is removed, it is recommended to set `TDF_DXVK_ASYNC=0`, that way it won't try to use it on GPUs that don't support the GPL extension)
 * `dxvk-nvapi`
 * `msi/winemono.msi`
 * `msi/winegecko32.msi` and `msi/winegecko64.msi`
@@ -1274,7 +1262,6 @@ The following components will be downloaded:
 The following components will be built from source:  
 * Wine: latest master using the [wine-tkg build system](https://github.com/Frogging-Family/wine-tkg-git) with some custom config
 * DXVK: latest master from [Github](https://github.com/doitsujin/dxvk)
-* DXVK-gplasync: latest patch from [Gitlab](https://gitlab.com/Ph42oN/dxvk-gplasync) applied to the latest master of DXVK
 * DXVK-nvapi: latest master from [Github](https://github.com/jp7677/dxvk-nvapi)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
