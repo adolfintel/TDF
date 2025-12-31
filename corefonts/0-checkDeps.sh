@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 failed=0
-if ! hasCommand wget; then
-    echo "wget not installed"
+if ! hasCommand git; then
+    echo "Git not installed"
     failed=1
 fi
-if ! hasCommand cabextract; then
-    echo "cabextract not installed"
+if ! hasCommand unzip; then
+    echo "unzip not installed"
     failed=1
 fi
 exit $failed

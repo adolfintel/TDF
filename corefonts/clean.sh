@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
 set -e
 rm -f state
-rm -rf build temp
+rm -rf WindowsFontsArchive build
 exit 0

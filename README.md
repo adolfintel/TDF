@@ -605,11 +605,13 @@ Possible values:
 * `1`: use Mangohud
 
 __`TDF_COREFONTS`__  
-Whether to install the Microsoft Corefonts or not. These are fonts like Arial, Comic Sans, etc. that are required by some games such as PC Building Simulator. This is generally harmless, but if some application has font rendering issues, try disabling it.
+Whether to install the Microsoft Windows 11 fonts or not. These are fonts like Arial, Comic Sans, etc. that are required by some games such as PC Building Simulator. This is generally harmless, but if some application has font rendering issues, try disabling it.
 
 Possible values:  
-* `1` (default): install the Corefonts
-* `0`: don't install the Corefonts
+* `1` (default): install the Windows 11 fonts
+* `0`: don't install the Windows 11 fonts
+
+Note: this option is called `TDF_COREFONTS` because it used to install the Microsoft Corefonts from the late 90s. Current versions of TDF use fonts from Windows 11 instead and the name is kept for compatibility.
 
 __`TDF_VCREDIST`__  
 Whether to install the Microsoft Visual C++ Redistributable (2015+) or not. This is useful for modern games but unnecessary for older ones.
@@ -1256,7 +1258,7 @@ The following dependencies must be installed on your system:
 The following components will be downloaded:  
 * Wine Mono: latest version from the [Wine website](https://dl.winehq.org/wine/wine-mono/)
 * Wine Gecko: latest 32 and 64-bit versions from the [Wine website](https://dl.winehq.org/wine/wine-gecko/)
-* Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
+* Microsoft Windows 11 Fonts: from [Github](https://github.com/adasThePro/WindowsFontsArchive)
 * Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
 
 The following components will be built from source:  
@@ -1277,7 +1279,7 @@ If you don't want to use this caching and resuming system, you can run a clean b
 
 If you're going to build TDF regularly, you can enable automatic updates for the TDF repo using `TDF_BUILD_AUTOUPDATE=1 ./makeTemplate.sh` (git only).
 
-At the end of the build process, the package will be compressed using a slow but efficient zstd compression and the finished archive will be ~310MB.
+At the end of the build process, the package will be compressed using a slow but efficient zstd compression and the finished archive will be ~470MB.
 
 ## Important security notice
 While TDF provides some additional security compared to a standard installation of Wine or Proton, it is important to understand that Wine is simply not designed for security, quite the opposite, it's designed to seamlessly integrate Windows stuff into Linux.
