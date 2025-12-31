@@ -3,11 +3,11 @@ set -e
 echo 1 > state
 echo "Downloading d7vk (master)"
 if [ -f incomplete ]; then
-    rm -rf dxvk build
+    rm -rf d7vk build
 fi
 touch incomplete
-if [ -d dxvk ]; then
-    cd dxvk
+if [ -d d7vk ]; then
+    cd d7vk
     git fetch --all -p
     git reset --hard origin/master > /dev/null
     git submodule update
