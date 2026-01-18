@@ -1266,7 +1266,7 @@ The following components will be built from source:
 * D7VK: latest master from [Github](https://github.com/WinterSnowfall/d7vk)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
-* zenity: version 3.44 from [Gnome's GitLab](https://gitlab.gnome.org/GNOME/zenity)
+* zenity: version 4.2 from [Gnome's GitLab](https://gitlab.gnome.org/GNOME/zenity)
 * Some C programs included with the TDF source code used
 
 The first build will take a good 30-60 minutes to download and compile everything, but subsequent builds will be quicker as the download phase will only download updates for the components and the TDF repo itself.
