@@ -301,7 +301,7 @@ function _runCommandPrompt {
         )
     else
         (
-        _realRunCommandPrompt
+            _realRunCommandPrompt
             wait
         ) &
         local subshellPid=$!
