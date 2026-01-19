@@ -298,7 +298,7 @@ function _runCommandPrompt {
         (
             _realRunCommandPrompt
             wait
-        ) &
+        )
     else
         (
         _realRunCommandPrompt
