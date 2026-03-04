@@ -9,7 +9,7 @@ touch incomplete
 if [ -d xdotool ]; then
     cd xdotool
     git fetch --all -p
-    git reset --hard origin/master > /dev/null
+    git reset --hard origin/main > /dev/null
     git submodule update
     cd ..
 else
