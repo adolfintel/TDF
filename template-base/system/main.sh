@@ -63,6 +63,7 @@ TDF_VKD3D=1
 #since november 2023, vkd3d enabled dxr11 by default on GPUs that support ray tracing, so there's no need to enable it here anymore
 
 # --- VARIABLES - Sandboxing ---
+TDF_BWRAP=1 #1=use bubblewrap for better sandboxing (malicious apps can't write outside prefix or use devices), 0=disable bubblewrap
 TDF_BLOCK_NETWORK=1 #0=allow network access, 1=block with unshare -nc, 2=block with firejail if available, unshare -nc if it's not
 TDF_BLOCK_BROWSER=1
 TDF_BLOCK_ZDRIVE=1
@@ -287,7 +288,7 @@ function _realRunManualCommand {
 }
 function _realRunCommandPrompt {
     _applyLocale
-    eval "$_reaperCommand $_blockNetworkCommand wine start /D \"C:\Windows\System32\" /WAIT \"cmd.exe\""
+    eval "$_reaperCommand $_blockNetworkCommand $_bwrapCommand wine start /D \"C:\Windows\System32\" /WAIT \"cmd.exe\""
     _restoreLocale
 }
 function _runCommandPrompt {
@@ -343,7 +344,7 @@ function _realRunGame {
             export LD_PRELOAD="${LD_PRELOAD}:$PWD/system/strangle/libstrangle64.so:$PWD/system/strangle/libstrangle32.so"
         fi
     fi
-    local command="$_gamemodeCommand $_reaperCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
+    local command="$_gamemodeCommand $_reaperCommand $_gamescopeCommand $_mangohudCommand $_blockNetworkCommand $_bwrapCommand wine start /D \"$game_workingDir\" /WAIT $TDF_START_ARGS \"$game_exe\" $game_args"
     if [ "$TDF_WINE_DEBUG_RELAY" -eq 1 ]; then
         local relayPath=$(zenity --file-selection --save --title="$(_loc "$TDF_LOCALE_WINE_RELAYPATH")" --filename="relay.txt")
         if [ -n "$relayPath" ]; then
@@ -1212,6 +1213,16 @@ function _tdfmain {
         export WINEDLLOVERRIDES="$WINEDLLOVERRIDES;winedevice.exe=d"
     fi
     _applyFakeHomeDir
+    if [ -d "./system/bwrap" ]; then
+        export PATH="$PATH:$PWD/system/bwrap"
+    fi
+    local _bwrapCommand='bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --bind "$WINEPREFIX" "$WINEPREFIX" --bind "$XDG_RUNTIME_DIR" "$XDG_RUNTIME_DIR" --dev-bind /dev/dri /dev/dri --dev-bind /dev/snd /dev/snd --ro-bind /tmp/.X11-unix /tmp/.X11-unix --ro-bind "$XAUTHORITY" "$XAUTHORITY" --chdir "$PWD" --setenv DISPLAY "$DISPLAY" --setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY" --setenv XDG_RUNTIME_DIR "$XDG_RUNTIME_DIR" --setenv WINEPREFIX "$WINEPREFIX" --setenv PULSE_SERVER "$XDG_RUNTIME_DIR/pulse/native"'
+    if [ "$TDF_BWRAP" -eq 0 ]; then
+        _bwrapCommand=""
+    fi
+    if ! command -v bwrap > /dev/null; then
+        _bwrapCommand=""
+    fi
     local _blockNetworkCommand="unshare -nc"
     if [ "$TDF_BLOCK_NETWORK" -eq 2 ]; then
         if command -v firejail > /dev/null; then
