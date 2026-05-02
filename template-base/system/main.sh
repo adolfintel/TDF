@@ -1219,7 +1219,7 @@ function _tdfmain {
     local _bwrapCommand=""
     if [ "$TDF_BWRAP" -eq 1 ]; then
         if command -v bwrap > /dev/null; then
-            _bwrapCommand='bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs "$XDG_RUNTIME_DIR" --bind "$WINEPREFIX" "$WINEPREFIX" --dev-bind /dev/dri /dev/dri --dev-bind /dev/snd /dev/snd --chdir "$PWD" --setenv XDG_RUNTIME_DIR "$XDG_RUNTIME_DIR" --setenv WINEPREFIX "$WINEPREFIX"'
+            _bwrapCommand='bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs "$XDG_RUNTIME_DIR" --bind "$WINEPREFIX" "$WINEPREFIX" --dev-bind /dev/dri /dev/dri --dev-bind /dev/snd /dev/snd --dev-bind /dev/null /dev/null --dev-bind /dev/zero /dev/zero --dev-bind /dev/urandom /dev/urandom --dev-bind /dev/input /dev/input --chdir "$PWD" --setenv XDG_RUNTIME_DIR "$XDG_RUNTIME_DIR" --setenv WINEPREFIX "$WINEPREFIX"'
             if [ -n "$WAYLAND_DISPLAY" ]; then
                 local x='--bind "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" --setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY"'
                 _bwrapCommand="$_bwrapCommand $x"
