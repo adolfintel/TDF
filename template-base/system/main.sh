@@ -1216,12 +1216,28 @@ function _tdfmain {
     if [ -d "./system/bwrap" ]; then
         export PATH="$PATH:$PWD/system/bwrap"
     fi
-    local _bwrapCommand='bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --bind "$WINEPREFIX" "$WINEPREFIX" --bind "$XDG_RUNTIME_DIR" "$XDG_RUNTIME_DIR" --dev-bind /dev/dri /dev/dri --dev-bind /dev/snd /dev/snd --ro-bind /tmp/.X11-unix /tmp/.X11-unix --ro-bind "$XAUTHORITY" "$XAUTHORITY" --chdir "$PWD" --setenv DISPLAY "$DISPLAY" --setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY" --setenv XDG_RUNTIME_DIR "$XDG_RUNTIME_DIR" --setenv WINEPREFIX "$WINEPREFIX" --setenv PULSE_SERVER "$XDG_RUNTIME_DIR/pulse/native"'
-    if [ "$TDF_BWRAP" -eq 0 ]; then
-        _bwrapCommand=""
-    fi
-    if ! command -v bwrap > /dev/null; then
-        _bwrapCommand=""
+    local _bwrapCommand=""
+    if [ "$TDF_BWRAP" -eq 1 ]; then
+        if command -v bwrap > /dev/null; then
+            _bwrapCommand='bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs "$XDG_RUNTIME_DIR" --bind "$WINEPREFIX" "$WINEPREFIX" --dev-bind /dev/dri /dev/dri --dev-bind /dev/snd /dev/snd --chdir "$PWD" --setenv XDG_RUNTIME_DIR "$XDG_RUNTIME_DIR" --setenv WINEPREFIX "$WINEPREFIX"'
+            if [ -n "$WAYLAND_DISPLAY" ]; then
+                local x='--bind "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" --setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY"'
+                _bwrapCommand="$_bwrapCommand $x"
+            fi
+            if [ -n "$DISPLAY" ]; then
+                local x='--ro-bind /tmp/.X11-unix /tmp/.X11-unix --ro-bind "$XAUTHORITY" "$XAUTHORITY" --setenv DISPLAY "$DISPLAY"'
+                _bwrapCommand="$_bwrapCommand $x"
+
+            fi
+            if [ -e "$XDG_RUNTIME_DIR/pulse/native" ]; then
+                local x='--bind "$XDG_RUNTIME_DIR/pulse" "$XDG_RUNTIME_DIR/pulse" --setenv PULSE_SERVER "$XDG_RUNTIME_DIR/pulse/native"'
+                _bwrapCommand="$_bwrapCommand $x"
+            fi
+            if [ -e "$XDG_RUNTIME_DIR/pipewire-0" ]; then
+                local x='--bind "$XDG_RUNTIME_DIR/pipewire-0" "$XDG_RUNTIME_DIR/pipewire-0"'
+                _bwrapCommand="$_bwrapCommand $x"
+            fi
+        fi
     fi
     local _blockNetworkCommand="unshare -nc"
     if [ "$TDF_BLOCK_NETWORK" -eq 2 ]; then
