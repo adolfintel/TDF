@@ -283,7 +283,7 @@ function _clearDND {
 }
 function _realRunManualCommand {
     _applyLocale
-    eval "$_reaperCommand $_blockNetworkCommand wine start /WAIT \"$1\""
+    eval "$_reaperCommand $_blockNetworkCommand $_bwrapCommand wine start /WAIT \"$1\""
     _restoreLocale
 }
 function _realRunCommandPrompt {
@@ -295,6 +295,7 @@ function _runCommandPrompt {
     if [ "$1" != "noinstr" ]; then
         zenity --info --width=500 --text="$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")"
     fi
+    _prepareBubbleWrapCommand
     if [ "$TDF_HIDE_GAME_RUNNING_DIALOG" -eq 1 ]; then
         (
             _realRunCommandPrompt
@@ -377,6 +378,7 @@ function _runGame {
         if [[ -f "$fpath" || "$TDF_IGNORE_EXIST_CHECKS" -eq 1 ]]; then
             local startedAt=$SECONDS
             _applyDND
+            _prepareBubbleWrapCommand
             if [ "$TDF_HIDE_GAME_RUNNING_DIALOG" -eq 1 ]; then
                 (
                     _realRunGame
@@ -619,12 +621,12 @@ function _applyMSIs {
     if [ -d "$msi_dir" ]; then
         function installMonoMSI {
             \cp "$msi_dir/winemono.msi" "$WINEPREFIX/drive_c/winemono.msi"
-            wine msiexec /i "C:\\winemono.msi"
+            $_bwrapCommand wine msiexec /i "C:\\winemono.msi"
             wait
             echo "$TDF_VERSION" > "$WINEPREFIX/.winemono-installed"
         }
         function uninstallMonoMSI {
-            wine msiexec /uninstall "C:\\winemono.msi"
+            $_bwrapCommand wine msiexec /uninstall "C:\\winemono.msi"
             wait
             rm -f "$WINEPREFIX/.winemono-installed"
             rm -f "$WINEPREFIX/drive_c/winemono.msi"
@@ -650,19 +652,19 @@ function _applyMSIs {
         function installGeckoMSI {
             if [ "$WINEARCH" = "win32" ]; then
                 \cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
-                wine msiexec /i "C:\\winegecko32.msi"
+                $_bwrapCommand wine msiexec /i "C:\\winegecko32.msi"
             else
                 \cp "$msi_dir/winegecko32.msi" "$WINEPREFIX/drive_c/winegecko32.msi"
-                wine msiexec /i "C:\\winegecko32.msi"
+                $_bwrapCommand wine msiexec /i "C:\\winegecko32.msi"
                 \cp "$msi_dir/winegecko64.msi" "$WINEPREFIX/drive_c/winegecko64.msi"
-                wine msiexec /i "C:\\winegecko64.msi"
+                $_bwrapCommand wine msiexec /i "C:\\winegecko64.msi"
             fi
             wait
             echo "$TDF_VERSION" > "$WINEPREFIX/.winegecko-installed"
         }
         function uninstallGeckoMSI {
-            wine msiexec /uninstall "C:\\winegecko32.msi"
-            wine msiexec /uninstall "C:\\winegecko64.msi"
+            $_bwrapCommand wine msiexec /uninstall "C:\\winegecko32.msi"
+            $_bwrapCommand wine msiexec /uninstall "C:\\winegecko64.msi"
             wait
             rm -f "$WINEPREFIX/.winegecko-installed"
             rm -f "$WINEPREFIX/drive_c/winegecko32.msi"
@@ -709,12 +711,12 @@ function _applyVCRedists {
             fi
             if [ "$WINEARCH" = "win32" ]; then
                 \cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
-                unshare -nc wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
+                unshare -nc $_bwrapCommand wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
             else
                 \cp "$vc_dir/vc_redist.x86.exe" "$WINEPREFIX/drive_c/vc_redist.x86.exe"
                 \cp "$vc_dir/vc_redist.x64.exe" "$WINEPREFIX/drive_c/vc_redist.x64.exe"
-                unshare -nc wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
-                unshare -nc wine "C:\\vc_redist.x64.exe" /install /quiet /norestart
+                unshare -nc $_bwrapCommand wine "C:\\vc_redist.x86.exe" /install /quiet /norestart
+                unshare -nc $_bwrapCommand wine "C:\\vc_redist.x64.exe" /install /quiet /norestart
             fi
             wait
             wineserver -k -w
@@ -734,8 +736,8 @@ function _applyVCRedists {
                 mv "$WINEPREFIX/dosdevices/z:" "$WINEPREFIX/.templink"
                 _dosdevices_protect "always"
             fi
-            unshare -nc wine "C:\\vc_redist.x86.exe" /uninstall /quiet /norestart
-            unshare -nc wine "C:\\vc_redist.x64.exe" /uninstall /quiet /norestart
+            unshare -nc $_bwrapCommand wine "C:\\vc_redist.x86.exe" /uninstall /quiet /norestart
+            unshare -nc $_bwrapCommand wine "C:\\vc_redist.x64.exe" /uninstall /quiet /norestart
             wait
             wineserver -k -w
             wait
@@ -1023,6 +1025,29 @@ function _applyWineTheme {
         fi
     fi
 }
+function _prepareBubbleWrapCommand {
+    if [ "$TDF_BWRAP" -eq 1 ]; then
+        if command -v bwrap > /dev/null; then
+            _bwrapCommand='bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs "$XDG_RUNTIME_DIR" --bind "$WINEPREFIX" "$WINEPREFIX" --dev-bind /dev/dri /dev/dri --dev-bind /dev/snd /dev/snd --dev-bind /dev/null /dev/null --dev-bind /dev/zero /dev/zero --dev-bind /dev/urandom /dev/urandom --dev-bind /dev/input /dev/input --chdir "$PWD" --setenv XDG_RUNTIME_DIR "$XDG_RUNTIME_DIR" --setenv WINEPREFIX "$WINEPREFIX"'
+            if [ -n "$WAYLAND_DISPLAY" ]; then
+                local x='--bind "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" --setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY"'
+                _bwrapCommand="$_bwrapCommand $x"
+            fi
+            if [ -n "$DISPLAY" ]; then
+                local x='--ro-bind /tmp/.X11-unix /tmp/.X11-unix --ro-bind "$XAUTHORITY" "$XAUTHORITY" --setenv DISPLAY "$DISPLAY"'
+                _bwrapCommand="$_bwrapCommand $x"
+            fi
+            if [ -e "$XDG_RUNTIME_DIR/pulse/native" ]; then
+                local x='--bind "$XDG_RUNTIME_DIR/pulse" "$XDG_RUNTIME_DIR/pulse" --setenv PULSE_SERVER "$XDG_RUNTIME_DIR/pulse/native"'
+                _bwrapCommand="$_bwrapCommand $x"
+            fi
+            if [ -e "$XDG_RUNTIME_DIR/pipewire-0" ]; then
+                local x='--bind "$XDG_RUNTIME_DIR/pipewire-0" "$XDG_RUNTIME_DIR/pipewire-0"'
+                _bwrapCommand="$_bwrapCommand $x"
+            fi
+        fi
+    fi
+}
 function _wineSmokeTest {
     if [[ "$TDF_WINE_SMOKETEST" -eq 0 ]]; then
         return 0
@@ -1217,28 +1242,7 @@ function _tdfmain {
         export PATH="$PATH:$PWD/system/bwrap"
     fi
     local _bwrapCommand=""
-    if [ "$TDF_BWRAP" -eq 1 ]; then
-        if command -v bwrap > /dev/null; then
-            _bwrapCommand='bwrap --ro-bind / / --dev /dev --proc /proc --tmpfs /tmp --tmpfs "$XDG_RUNTIME_DIR" --bind "$WINEPREFIX" "$WINEPREFIX" --dev-bind /dev/dri /dev/dri --dev-bind /dev/snd /dev/snd --dev-bind /dev/null /dev/null --dev-bind /dev/zero /dev/zero --dev-bind /dev/urandom /dev/urandom --dev-bind /dev/input /dev/input --chdir "$PWD" --setenv XDG_RUNTIME_DIR "$XDG_RUNTIME_DIR" --setenv WINEPREFIX "$WINEPREFIX"'
-            if [ -n "$WAYLAND_DISPLAY" ]; then
-                local x='--bind "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" "$XDG_RUNTIME_DIR/$WAYLAND_DISPLAY" --setenv WAYLAND_DISPLAY "$WAYLAND_DISPLAY"'
-                _bwrapCommand="$_bwrapCommand $x"
-            fi
-            if [ -n "$DISPLAY" ]; then
-                local x='--ro-bind /tmp/.X11-unix /tmp/.X11-unix --ro-bind "$XAUTHORITY" "$XAUTHORITY" --setenv DISPLAY "$DISPLAY"'
-                _bwrapCommand="$_bwrapCommand $x"
-
-            fi
-            if [ -e "$XDG_RUNTIME_DIR/pulse/native" ]; then
-                local x='--bind "$XDG_RUNTIME_DIR/pulse" "$XDG_RUNTIME_DIR/pulse" --setenv PULSE_SERVER "$XDG_RUNTIME_DIR/pulse/native"'
-                _bwrapCommand="$_bwrapCommand $x"
-            fi
-            if [ -e "$XDG_RUNTIME_DIR/pipewire-0" ]; then
-                local x='--bind "$XDG_RUNTIME_DIR/pipewire-0" "$XDG_RUNTIME_DIR/pipewire-0"'
-                _bwrapCommand="$_bwrapCommand $x"
-            fi
-        fi
-    fi
+    _prepareBubbleWrapCommand
     local _blockNetworkCommand="unshare -nc"
     if [ "$TDF_BLOCK_NETWORK" -eq 2 ]; then
         if command -v firejail > /dev/null; then
