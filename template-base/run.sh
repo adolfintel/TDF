@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2164,SC1091
-export LC_ALL=C
+
+export LC_ALL=C.UTF-8
 
 #cd to run.sh location
 SOURCE=${BASH_SOURCE[0]}
@@ -21,21 +22,13 @@ if [ "$1" == "archive" ]; then
             exit 1
         fi
     fi
-    ./system/archive.sh "$@"
+    "system/archive.sh" "$@"
     res=$?
     if [ "$(type -t onArchiveEnd)" = "function" ]; then
         onArchiveEnd $res
     fi
     exit 0
-fi
-if [ ! -x "./system/main.sh" ]; then
-    chmod -R 777 .
-fi
-command="./system/main.sh"
-if [ -n "$1" ]; then
-    command="$command \"$*\""
 else
-    command="$command normal"
+    "system/main.sh" "run"
+    exit 0
 fi
-eval "$command"
-exit 0

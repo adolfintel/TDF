@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC2164,SC2103,SC2317
 
-modules=("vkd3d" "dxvk" "dxvk-nvapi" "d7vk" "wine-games" "wine-mainline" "tdfutils" "xutils" "strangle" "reaper" "bwrap" "zenity" "msi" "vcredist" "corefonts")
+modules=("vkd3d" "dxvk" "dxvk-nvapi" "d7vk" "wine-games" "wine-mainline" "tdfutils" "xutils" "strangle" "bwrap" "reaper" "zenity" "msi" "vcredist" "fsr4" "corefonts")
 fail(){
     echo "Build failed: $1"
     exit 1
@@ -48,7 +48,10 @@ failedDeps=""
 for module in "${modules[@]}"; do
     cd "$module"
     for f in ./0-*.sh; do
-        failedDeps="$failedDeps$($f)"
+        err="$($f)"
+        if [ -n "$err" ]; then
+            failedDeps="$failedDeps\n$err"
+        fi
     done
     cd ..
 done
@@ -149,7 +152,7 @@ if [ ${#failedModules[@]} -ne 0 ]; then
         echo "* $module"
     done
 fi
-echo "v$version" > "$dir/system/version"
+echo "v2_$version" > "$dir/system/version"
 echo "Packaging template, this will take a few minutes"
 if [ -f "$dir."* ]; then
     rm "$dir."*

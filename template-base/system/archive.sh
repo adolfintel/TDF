@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # shellcheck disable=SC1091,SC2034,SC2181
+export LC_ALL=C.UTF-8
+
 source "system/localization/load.sh"
+
 folderName=$(basename "$PWD")
 here=$(realpath "$PWD")
 cd ..

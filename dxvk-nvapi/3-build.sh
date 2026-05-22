@@ -4,7 +4,7 @@ echo 3 > state
 echo "Building dxvk-nvapi (master)"
 rm -rf build
 cd dxvk-nvapi
-sh package-release.sh master ../build --no-package
+bash package-release.sh master ../build --no-package
 cd ../build
 mv dxvk-nvapi-master/x* .
 rm -rf dxvk-nvapi-master
