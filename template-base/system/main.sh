@@ -23,7 +23,7 @@ game_exe=''
 game_args=()
 game_workingDir=''
 
-TDF_ALLOW_HOST_FILESYSTEM=1
+TDF_ALLOW_HOST_FILESYSTEM=2
 TDF_CUSTOM_MOUNTS=()
 TDF_BLOCK_NETWORK=1
 TDF_BLOCK_BROWSER=1
@@ -934,6 +934,10 @@ function _prepareCustomMounts {
     if [ "$TDF_ALLOW_HOST_FILESYSTEM" -eq 1 ]; then
         TDF_CUSTOM_MOUNTS=("${TDF_CUSTOM_MOUNTS[@]}" "h:ro:/")
     elif [ "$TDF_ALLOW_HOST_FILESYSTEM" -eq 2 ]; then
+        if [ -z "$game_exe" ]; then
+            TDF_CUSTOM_MOUNTS=("${TDF_CUSTOM_MOUNTS[@]}" "h:ro:/")
+        fi
+    elif [ "$TDF_ALLOW_HOST_FILESYSTEM" -eq 3 ]; then
         TDF_CUSTOM_MOUNTS=("${TDF_CUSTOM_MOUNTS[@]}" "h:rw:/")
     elif [ "$TDF_ALLOW_HOST_FILESYSTEM" -ne 0 ]; then
         fail "$(_loc "$TDF_LOCALE_INVALID_ALLOW_HOST_FILESYSTEM")"
@@ -1223,7 +1227,11 @@ function _stopWinebrowserBridge {
 function _runCommandPrompt {
     _zenityInfo "$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")"
     _startWinebrowserBridge
-    wineCommand=("$_wineDir/wine" "start" "/D" "C:\\" "/WAIT" "cmd.exe")
+    local startDir="C:\\"
+    if [ "$TDF_ALLOW_HOST_FILESYSTEM" -ne 0 ]; then
+        startDir="H:\\$HOME"
+    fi
+    wineCommand=("$_wineDir/wine" "start" "/D" "$startDir" "/WAIT" "cmd.exe")
     local subshellPid=-1
     if [ -z "$_relayPath" ]; then
         runSandboxed "${wineCommand[@]}" &

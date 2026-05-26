@@ -16,7 +16,7 @@ __TDF is based on the following awesome projects:__
 
 __TDF's main goals are:__  
 * Being able to easily install and run games that you can't or don't want to play through Steam: things like GOG installers, ISOs, repacks, etc.
-* Strong sandboxing: give games only what they absolutely need to work and nothing more. By default, TDF doesn't let games write files to your computer and blocks all network traffic
+* Strong sandboxing: give games only what they absolutely need to work and nothing more. By default, TDF doesn't let games access files on your computer and blocks all network traffic
 * Being as lightweight and portable as possible: virtually any modern GNU/Linux distro with a GUI can run a game packaged with TDF out of the box
 * Being able to easily update TDF instances as well as testing different versions of the main components, making it possible to help their respective developers
 * Being able to easily package and transfer a TDF instance to another computer or redistribute it (legally)
@@ -125,8 +125,9 @@ Controls which host filesystem paths are exposed inside the sandbox.
 
 Possible values:  
 * `0`: Do not expose the real filesystem at all (most secure)
-* `1` (default): Expose the real filesystem as a read-only `H:` drive
-* `2`: Expose the real filesystem as a read-write `H:` drive
+* `1`: Expose the real filesystem as a read-only `H:` drive
+* `2`: Expose the real filesystem as a read-only `H:` drive only when running command prompt (`game_exe` is empty). This makes it easy to install games, but gives games no access to the files on your computer when you actually run them
+* `3`: Expose the real filesystem as a read-write `H:` drive
 
 __`TDF_CUSTOM_MOUNTS`__  
 Additional custom mounts in the format `"letter:access:hostPath"` or `"letter"`.
@@ -1260,7 +1261,7 @@ Wine is an HLE (High Level Emulator) which means that it doesn't emulate an enti
 TDF was designed to sandbox Wine itself rather than games running inside it. It provides very strong security compared to a regular installation of Wine, Proton, Lutris, Bottles, and other similar tools, and does it by running Wine inside a sandbox created using [bubblewrap](https://github.com/containers/bubblewrap), the same technology used to sandbox apps distributed through Flatpak, but configured differently. In other words, TDF assumes that your games are malware and treats them as such, by design.
 
 Out of the box, a game running inside TDF has:
-* No network access (games are launched in a separate network namespace where they can only see a loopback interface that is limited to the sandbox). You can enable it if the game has online functionality with `TDF_BLOCK_NETWORK=0`, but remember to set `TDF_ALLOW_HOST_FILESYSTEM=0`
+* No network access (games are launched in a separate network namespace where they can only see a loopback interface that is limited to the sandbox). You can enable it if the game has online functionality with `TDF_BLOCK_NETWORK=0`
 * No access to processes outside of the sandbox: no way to see them or communicate with them
 * No access to dbus
 * No shared memory between processes (except between parent and children, which is required for some mods to work, and only inside the sandbox)
@@ -1269,7 +1270,7 @@ Out of the box, a game running inside TDF has:
 * A completely fake file system:
     * Inside of Wine:
         * The C drive points to `data/wineprefix/drive_c`, read-write
-        * The H drive lets you access files on your computer, read-only. __This is only for ease of installation and should be disabled after the game is installed__
+        * The H drive lets you access files on your computer, read-only, and only while running the command prompt to install the game
     * Outside of Wine:
         * The root file system is completely fake, it resides in RAM and is destroyed immediately when TDF is closed
         * Some files and folders on your system are mounted read-only to allow access to basic commands, drivers, etc., specifically the following (and only if they exist): `"/usr" "/bin" "/lib" "/lib32" "/lib64" "/sys" "/etc/hosts" "/etc/hostname" "/etc/resolv.conf" "/etc/fonts" "/etc/machine-id"`
