@@ -1,35 +1,36 @@
 # TDF - Manual
-TDF is a small project aiming to make it easy to install, package and safely run Windows games on GNU/Linux. You can think of it as a portable (as in requiring no installation) version of Proton, based on most of the same technology.
+
+TDF is a small project aiming to make it easy to install, package and safely run Windows games on GNU/Linux. You can think of it as a portable (as in requiring no installation) version of Proton, based on most of the same technology, with better sandboxing.
 
 __TDF is based on the following awesome projects:__  
-* [Wine](https://winehq.org), for Windows emulation, more specifically it includes two custom builds made with [tkg](https://github.com/Frogging-Family/wine-tkg-git), one best suited for modern games, and one more suited for applications and older games
+* [Wine](https://winehq.org), for Windows emulation, more specifically it includes two custom builds made with [wine-tkg](https://github.com/Frogging-Family/wine-tkg-git), one best suited for modern games, and one more suited for applications and older games
 * [DXVK](https://github.com/doitsujin/dxvk), for DirectX 8/9/10/11 emulation, and [dxvk-nvapi](https://github.com/jp7677/dxvk-nvapi) for nvapi support on nVidia GPUs
 * [VKD3D-Proton](https://github.com/HansKristian-Work/vkd3d-proton), for DirectX 12 emulation, built from source
-* [D7VK](https://github.com/WinterSnowfall/d7vk), for DirectX 6-7 emulation, as an optional alternative to WineD3D
+* [D7VK](https://github.com/WinterSnowfall/d7vk), for DirectX 3-7 emulation, as an alternative to WineD3D
 * [xdotool](https://github.com/jordansissel/xdotool), a useful tool to handle games with problematic window/fullscreen behaviors
 * [Zenity](https://gitlab.gnome.org/GNOME/zenity), a tool to display simple graphical interfaces such as loading bars, error messages, etc.
 * [libstrangle](https://gitlab.com/Infernio/libstrangle), used to limit FPS in games that don't support it and don't use DXVK/VKD3D
 * [Reaper](https://github.com/Plagman/reaper), used to detect "stray" processes
+* [bubblewrap](https://github.com/containers/bubblewrap), used to create a secure sandbox using Linux namespaces
 * ...and a handful of other useful things
 
-__TDF's main goals are are:__  
+__TDF's main goals are:__  
 * Being able to easily install and run games that you can't or don't want to play through Steam: things like GOG installers, ISOs, repacks, etc.
-* Sandboxing: by default, network and file system access are blocked to games running inside a TDF instance (note that this will not protect against malware that specifically targets Wine or the Linux kernel)
-* Being as lightweight and portable as possible: virtually any modern GNU/Linux distro with a GUI can run TDF instances out of the box
-* Being able to easly update TDF instances as well as testing different versions of the main components, making it possible to help their respective developers
+* Strong sandboxing: give games only what they absolutely need to work and nothing more. By default, TDF doesn't let games write files to your computer and blocks all network traffic
+* Being as lightweight and portable as possible: virtually any modern GNU/Linux distro with a GUI can run a game packaged with TDF out of the box
+* Being able to easily update TDF instances as well as testing different versions of the main components, making it possible to help their respective developers
 * Being able to easily package and transfer a TDF instance to another computer or redistribute it (legally)
 * Focus on modern games, but a lot of older titles will work as well with some tinkering
-
-If you're happy with Lutris, you probably don't need TDF.
+* Targeted at advanced users who want something safer than Lutris or Bottles
 
 ## Usage
 This section explains how to use TDF to install, play and optionally package a game.
 
 ### Requirements
 * A relatively recent PC that's fast enough to run modern games. An x86_64 CPU is required, as well as a GPU with support for Vulkan 1.3 or newer
-* Linux kernel 5.16 or newer is strongly recommended, but it will work on older versions. For best compatibility, use the latest kernel.
-* A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, Wayland or X11, etc. installed. Arch-based distros will work best.
-* An AMD graphics card with the Mesa 23.1 driver or newer is recommended, but it will also work on nVidia and Intel cards. For best compatibility, use the latest driver.
+* An AMD graphics card with the latest Mesa driver or newer is recommended, but it will also work on nVidia and Intel cards
+* Linux kernel 6.14 or newer is strongly recommended, but it will work on older versions. For best compatibility, use the latest kernel.
+* A modern-ish distro with basic stuff like the GNU coreutils, glibc, systemd, Wayland or X11, etc. installed. Arch-based distros will work best
 * An SSD is strongly recommended, with a file system like ext4 or btrfs. Do not use NTFS, FAT or exFAT
 * You must be able to use a Linux system, do file and folder management, know how to install games manually, know some basic shell scripting, etc.
 
@@ -37,22 +38,22 @@ This section explains how to use TDF to install, play and optionally package a g
 * [Download the latest build of TDF](https://downloads.fdossena.com/geth.php?r=tdf-bin) (or build it yourself)
 * Extract the archive somewhere, optionally renaming the folder from `template-YYYYMMDD` to something more descriptive. We'll call this folder a TDF instance, you can have as many instances as you want
     * Inside this folder, you'll see 4 things:
-        * `run.sh`: the script that starts all the TDF magic, we'll use this in a moment
-        * `vars.conf`: TDF's main configuration file for this instance, you'll use this to tell TDF where to find the game and to change emulation settings
+        * `run.sh`: the script that starts all the TDF magic
+        * `vars.conf`: the main configuration file for this instance, you use this to tell TDF where to find the game and to change emulation settings
         * `system`: a folder containing all the TDF files and scripts, leave it alone for now
-        * `confs`: we'll talk about folder this later
+        * `confs`: a folder for additional configuration files, so you can install multiple games in the same instance (we'll talk about it later)
 * Launch `run.sh`, it will automatically initialize everything for you and open a Windows command prompt
-    * Once everything is ready, the TDF instance folder will contain a new folder called zzprefix, this is your "fake Windows", inside it you'll find, among other things, a folder called drive_C, this is the fake C drive, you can enter it to copy game files, mods, etc. at any time
-    * Depending on the system and the configuration, other folders may also be created, like zzhome and fontcache
-    * If you're not familiar with the Windows command prompt, just type explorer and press enter to have a more familiar file manager interface, but don't close the command prompt until you're finished
-* Use the command prompt to install the game like you would on Windows but without launching it
+    * Once everything is ready, the TDF instance folder will contain a new folder called `data`, inside it you'll find a folder called `wineprefix`, this is your "fake Windows". Inside `wineprefix`, you'll find among other things a folder called `drive_c`, this is the fake C drive, you can enter it to copy game files, mods, etc. at any time
+    * Depending on the system and the configuration, other folders may also be created inside `data`, like `home`
+    * If you're not familiar with the Windows command prompt, just type `explorer` and press enter to have a more familiar file manager interface. For convenience during installation, TDF will show you a read-only H drive that contains the files on your computer (this can be turned off later)
+* Use the command prompt or explorer to install the game like you would on Windows but don't launch it yet
     * During the installation, you won't need to install things like DirectX, the Visual C++ Redistributables, etc. because TDF has already done it during the initialization
     * If you need to copy or modify some files inside the fake C drive, do it through the Linux file manager, it's easier
     * Once you're done, close the command prompt
-* Edit `vars.conf` and place the location of the game's exe file in the game_exe variable
-* Launch run.sh again and hopefully the game will start
+* Edit `vars.conf` and place the location of the game's exe file in the `game_exe` variable. The path must be Windows-style, like `C:\Doom\doom.exe`
+* Launch `run.sh` again and hopefully the game will start
     * From now on, you can just launch `run.sh` (or create links to it) to launch this game.
-    * About 85% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in `vars.conf`, which we'll discuss later
+    * About 90% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in `vars.conf`, which we'll discuss later
     * Online games that require anticheat software will usually not work (and that's probably for the best)
 
 Here's a video showing how to install a game from GOG that requires no additional configuration: [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)
@@ -64,14 +65,16 @@ The following lists contain all the variables that can be added in `vars.conf` t
 
 ### Essential variables
 __`game_exe`__  
-Specifies the Windows-style path to the game's exe file. If no value is set, the command prompt will be launched instead.
+Specifies the Windows-style path to the game's exe file. If empty, the command prompt will be launched instead.
 
 Example: `game_exe='C:\GTAV\PlayGTAV.exe'`
 
 __`game_args`__  
 Arguments to be passed to the game.
 
-Example: `game_args='-iwad doom2.wad -file mymod.wad'`
+Accepts a string or a bash array.
+
+Examples: `('-iwad' 'doom2.wad')`  or  `'-iwad doom2.wad'`
 
 __`game_workingDir`__  
 The working directory of the game. By default this is set to the same folder where the `game_exe` resides. All paths must be Windows-style.
@@ -82,28 +85,21 @@ game_exe='bin\indy.exe'
 game_workingDir='C:\Indy'
 ```
 
+__`SteamGameId`__  
+Optional numeric Steam App ID for the game. Identifies a specific game on Steam, enabling game-specific workarounds in the wine-games build (e.g., known configuration tweaks, known fixes). This does NOT require Steam to be installed; it's purely a lookup key for internal game-specific optimizations.
+
+Example: `export SteamGameId="1174180"`
+
 ### TDF variables
 __`TDF_TITLE`__  
 The title to show on the title bar of the TDF windows. By default it's set to `"Launcher"`.
 
-__`TDF_DETAILED_PROGRESS`__  
-Whether to show the details of what's happening above the progress bar in the TDF window.
+__`TDF_HIDE_GAME_RUNNING_DIALOG`__  
+Whether to hide the TDF window that says "Game running". By default, TDF shows it so you can stop the game at any time.
 
 Possible values:  
-* `1` (default): show details like "Starting wine", "Registering DLLs", etc.
-* `0`: show a generic message like "Launching..." or "Creating a new wineprefix, this will take a while..."
-
-__`TDF_MULTIPLE_INSTANCES`__  
-What to do if the user tries to launch `run.sh` while it's already running.
-
-Possible values:  
-* `deny`: do nothing, just exit without an error message
-* `error`: show an error message and exit
-* `askcmd` (default): don't launch the game but ask the user if they want to launch a command prompt in the running instance
-* `cmd`: same as `askcmd` but without asking first
-* `allow`: allow multiple instances of the game to be running at the same time (generally a bad idea)
-* `kill`: terminate previous instance and start a new one
-* `askkill` : ask the user if they want to terminate the previous instance and start a new one or exit
+* `0` (default): show the window
+* `1`: hide it
 
 __`TDF_IGNORE_EXIST_CHECKS`__  
 By default, TDF checks whether the executable specified in `game_exe` actually exists before trying to launch it, but this is not always desirable and can be disabled, which can be useful to run certain commands.
@@ -111,29 +107,6 @@ By default, TDF checks whether the executable specified in `game_exe` actually e
 Possible values:  
 * `0` (default): check that the executable actually exists and show an error if it doesn't
 * `1`: don't check and don't show an error if it doesn't exist
-
-__`TDF_HIDE_GAME_RUNNING_DIALOG`__  
-Whether to hide the TDF window that says "Game running". By default, TDF shows it so you can know if the process has stalled.
-
-Possible values:  
-* `0` (default): show the window
-* `1`: hide it
-
-__`TDF_SHOW_PLAY_TIME`__  
-Whether to show a message when you close the game that tells you how long you've been playing.
-
-Possible values:  
-* `0` (default): don't show it
-* `1`: show it
-
-__`TDF_DND`__  
-Enables Do Not Disturb mode (on supported DEs) while the game is running.
-
-Possible values:  
-* `1` (default): mute notifications while the game is running
-* `0`: don't mute them
-
-Note: some games launch a separate process and terminate immediately. This setting won't work on these games.
 
 __`TDF_UI_LANGUAGE`__  
 The language to use for the TDF user interface. Does not affect Wine or games (see `TDF_WINE_LANGUAGE` for that).
@@ -144,19 +117,72 @@ Currently implemented languages:
 * `en`: English
 * `it`: Italian
 
+### Sandbox / Isolation variables
+TDF uses [bubblewrap](https://github.com/containers/bubblewrap) to create a secure sandbox using Linux namespaces. This provides very strong isolation giving games only the bare minimum that they need to work: access to the display, sound, input devices, and the GPU; a potential malware running inside the sandbox won't be able to touch your files, interact with other processes on your computer (or even see them), use the network, use dbus, etc. unless you explicitly allow it.
+
+__`TDF_ALLOW_HOST_FILESYSTEM`__  
+Controls which host filesystem paths are exposed inside the sandbox.
+
+Possible values:  
+* `0`: Do not expose the real filesystem at all (most secure)
+* `1` (default): Expose the real filesystem as a read-only `H:` drive
+* `2`: Expose the real filesystem as a read-write `H:` drive
+
+__`TDF_CUSTOM_MOUNTS`__  
+Additional custom mounts in the format `"letter:access:hostPath"` or `"letter"`.
+- `letter`: single letter A-Z (except for `C`, which is reserved)
+- `access`: `"ro"` for read-only, `"rw"` for read-write
+- `hostPath`: absolute path on the host filesystem (`~` is not allowed)
+- If `access` and `hostPath` are omitted, a directory named `data/<letter>` is created inside the TDF data folder and mounted read-write. This is useful for things like arcade games that save on a USB drive.
+
+Example: `TDF_CUSTOM_MOUNTS=("D:ro:$HOME/Desktop" "E:rw:/media/games" "F")`
+
+__`TDF_BLOCK_NETWORK`__  
+Network access blocking method.
+
+Possible values:  
+* `0`: Don't block network
+* `1` (default): Block with bwrap `--unshare-net`
+* `2`: Block with `unshare -nc` (old method)
+
+__`TDF_BLOCK_BROWSER`__  
+Block Wine from launching the system's native web browser.
+
+Possible values:  
+* `1` (default): applications running in Wine won't be able to launch a browser
+* `0`: Allow Wine to launch browsers (RUNS OUTSIDE THE SANDBOX!)
+
+__`TDF_BLOCK_SHM`__  
+Block access to `/dev/shm` (shared memory).
+
+Possible values:  
+* `1` (default): Block `/dev/shm` access (recommended, stronger sandboxing)
+* `0`: Don't block (weaker sandboxing, but some apps may need it)
+
+Note: Setting `TDF_WINE_SYNC="fsync"` requires `TDF_BLOCK_SHM=0`. Keep in mind that fsync is an obsolete Wine feature and not blocking shared memory is a security concern.
+
+__`TDF_BLOCK_NATIVE_INPUT`__  
+Block direct access to native input devices (`/dev/input`) for better security.
+
+Possible values:  
+* `0` (default): Allow access (default)
+* `1`: Block direct access to keyboard, mouse, gamepad, etc. (can break gamepad support)
+
+Note: regardless of this setting, unless udev is misconfigured on your system, this won't allow games to log keypresses to other applications.
+
 ### Wine variables
 __`TDF_WINE_PREFERRED_VERSION`__  
 TDF comes with 2 different versions of Wine and can also use the one on your system (if installed). This variable lets you choose which one you prefer.
 
 Possible values:  
-* `games` (default): use the game-optimized build. This version is based on Valve's version of Wine, with the GE and tkg patches and is very similar to [Wine-GE-Proton](https://github.com/GloriousEggroll/wine-ge-custom). Some functionalities have been disabled: anticheat bridges (you can't convince me they're not malware), dbus (automounting of external drives), ISDN, printing, digital camera importing, LDAP and related things, pcap support (network traffic sniffing), smart cart readers support, scanners, low level access to USB devices (does not affect input, that goes over HID), webcam support, Win16 support, winemenubuilder, vkd3d-lib (Wine's own VKD3D implementation, not needed since TDF uses VKD3D-Proton)
-* `mainline`: use a mostly regular version of Wine, useful for applications and old games that don't work with the game-optimized build. This version only contains a couple of hotfixes from tkg and the only disabled features are dbus and winemenubuilder for better isolation
+* `games` (default): use the game-optimized build. This version is based on Valve's version of Wine (bleeding-edge branch), with additional patches applied
+* `mainline`: use a mostly regular version of Wine, useful for applications and old games that don't work with the game-optimized build
 * `system`: use the version of Wine that's installed in the system, if it's not installed `mainline` will be used instead
-* `custom`: use the version of Wine that you can put in a folder called `wine-custom` outside the system folder (next to `run.sh`). This is useful to keep TDF updates easy for the occasional game that requires custom builds of Wine
-* any other value: use the version of Wine in `system/wine-yourValue`. If not found, system Wine will be used instead
+* `custom`: use the version of Wine that you can put in a folder called `wine-custom` outside the system folder (next to `run.sh`). This is useful to keep TDF updates easy for the occasional game that requires a custom build of Wine
+* any other value: tries to use `./wine-<value>` folder (where `<value>` is the value you set), falls back to system Wine if not found
 
 __`TDF_WINE_HIDE_CRASHES`__  
-When a Wine application crashes, it normally shows a window similar to the "Stopped working" dialog on Windows, but depending on the game and configuration, it may be impossible to interact with that window, leaving you stuck. By default, TDF disables this crash window, but it can be enabled for debugging and troubleshooting purposes.
+When a Wine application crashes, it normally shows a dialog similar to the "Stopped working" thing on Windows, but depending on the game and configuration, it may be impossible to interact with that window, leaving you stuck. By default, TDF disables this crash window, but it can be enabled for debugging and troubleshooting purposes.
 
 Possible values:  
 * `1` (default): hide the crash window
@@ -166,12 +192,12 @@ __`TDF_WINE_AUDIO_DRIVER`__
 Sets the preferred audio driver for Wine. This can be useful if you have crackling audio or if one of the drivers has a lower latency than the others. Default is usually fine.
 
 Possible values:
-* `pulse`: use PulseAudio (you may also want to add `export PULSE_LATENCY_MSEC=20` for lower latency in music games or `export PULSE_LATENCY_MSEC=120` if you have crackling/dropouts)
+* `pulse`: use PulseAudio (you may also want to add `export PULSE_LATENCY_MSEC=20` for lower latency in rhythm games or `export PULSE_LATENCY_MSEC=120` if you have crackling/dropouts)
 * `alsa`: use ALSA
 * `jack`: use Jack
 * `default` (default): let Wine decide
 
-Note: Choosing a driver that doesn't exist in Wine or in your system will result in no sound being played.
+Note: Choosing a driver that doesn't exist in Wine or is not installed in your system will result in no sound being played.
 
 Note: Wine doesn't natively support PipeWire yet, it uses PulseAudio by default for compatibility if you're using PipeWire.
 
@@ -179,10 +205,10 @@ __`TDF_WINE_GRAPHICS_DRIVER`__
 Sets the preferred graphics driver for Wine (as in how it outputs, not how it renders 3D graphics). This can be useful if you're messing around with Wayland and X11 and Wine doesn't work properly.
 
 Possible values:
-* `default` (default): let Wine decide (defaults to X11 at the moment, even on Wayland)
+* `default` (default): let Wine decide
 * `x11`: use X11, does not support HDR
-* `wayland`: use Wayland, supports HDR. Not feature complete yet
-* `auto`: let TDF decide based on what you're using. If Wayland is available, Wayland will be used, otherwise X11
+* `wayland`: use Wayland, supports HDR. Beware, it sucks.
+* `auto`: let TDF decide based on what you're using. If `WAYLAND_DISPLAY` is set, `wayland` will be used, otherwise if `DISPLAY` is set `x11` will be used, otherwise default (let Wine decide)
 
 Note: Choosing a driver that doesn't exist in Wine or in your system will result in no graphics being displayed.
 
@@ -193,27 +219,8 @@ DPI value for display scaling of Wine applications.
 
 Possible values:  
 * `0` (default): let Wine handle scaling
-* `-1`: use DPI from the main display
+* `-1`: use DPI from the main display (auto-detected via xrdb)
 * number: use this DPI value (96=100% scaling, 120=125% scaling, 144=150% scaling, etc.). 96 DPI will fix some older games
-
-__`TDF_WINE_KILL_BEFORE`__  
-Whether to kill wine before launching the game. Not recommended.
-
-Possible values:  
-* `0` (default): don't kill wine before launching the game
-* `1`: kill all wine instances before launching the game
-
-__`TDF_WINE_KILL_AFTER`__  
-Whether to kill wine after the game ends. Not recommended.
-
-Possible values:  
-* `0` (default): don't kill wine after the game ends
-* `1`: kill all wine instances after the game ends
-
-__`TDF_START_ARGS`__  
-Optional arguments to pass to Wine's start command. [More info](https://ss64.com/nt/start.html). Mostly useful to set CPU affinity for old games (in this regard, see also `TDF_WINE_MAXLOGICALCPUS`).
-
-Example: `TDF_START_ARGS='/AFFINITY 1'`
 
 __`TDF_WINE_LANGUAGE`__  
 By default, TDF will pass the system language to Wine, which may be undesirable for some games and applications that just use the system language instead of showing a language selector. Here's a complete [list of locales](https://docs.oracle.com/cd/E23824_01/html/E26033/glset.html), obviously not all games will support them.
@@ -221,19 +228,35 @@ By default, TDF will pass the system language to Wine, which may be undesirable 
 Example: `TDF_WINE_LANGUAGE='it_IT.utf-8'`
 
 __`TDF_WINE_ARCH`__  
-The architecture of the Wine installation. Can only be set once, before the initialization is performed, and can't be changed afterwards without deleting the wineprefix.
+The architecture of the Wine installation. Can only be set before the initialization is performed, and can't be changed afterwards without deleting the wineprefix.
 
 Possible values:  
 * `win64` (default): create a 64-bit Windows installation
-* `win32`: create a 32-bit Windows installation (useful for some old games)
+* `wow64` (or `win32`): create a 32-on-64 prefix (useful for some old games)
 
 __`TDF_WINE_SYNC`__  
 The synchronization method to be used by Wine (game-optimized build only).
 
 Possible values:  
-* `fsync` (default): use fsync if supported by the kernel (5.16+), otherwise use esync. This provides the best performance and compatibility
-* `esync`: use the older esync method
-* `default`: let Wine decide
+* `""` (empty string) (default): let Wine decide (ntsync if available, falls back to fsync/esync)
+* `fsync`: force futex-based fsync (not recommended)
+* `esync`: force Wine esync (not recommended)
+
+Note: Using `fsync` requires `TDF_BLOCK_SHM=0`, which reduces sandbox security.
+
+__`TDF_WINE_LAA`__
+Enable Large Address Aware (LAA) support for 32-bit applications. Allows 32-bit games to address more than 2GB of memory.
+
+Possible values:  
+* `1` (default): Enable LAA
+* `0`: Disable
+
+__`TDF_WINE_HEAP_DELAY_FREE`__
+Enable heap delay-free optimization. Delays freeing heap memory for better compatibility with games with use-after-free bugs and reduces overhead from system calls.
+
+Possible values:  
+* `1` (default): Enable
+* `0`: Disable
 
 __`TDF_WINE_WINVER`__  
 Sets the Windows version to emulate.
@@ -263,14 +286,14 @@ Possible values:
 * `1`: when the game is launched, TDF will ask where you want to save the trace, then launch the game with relay enabled
 
 __`TDF_WINE_DEBUG_GSTREAMER`__  
-Enables gstreamer debug output. This can be used to debug issues like games not playing videos or crashing when a video is supposed to play.
+Enables gstreamer debug output (to the terminal). This can be used to debug issues like games not playing videos or crashing when a video is supposed to play.
 
 Possible values:  
 * `0` (default): disabled
 * `1`: enable gstreamer debug output
 
 __`TDF_WINE_SMOKETEST`__  
-Whether or not to perform a "smoke test" to make sure that Wine actually works before trying to run the game, that way we can tell if a crash is a Wine problem or a game problem. TDF does this by default but you can disable it if it takes too long at the "Starting Wine" screen.
+Whether or not to perform a "smoke test" to make sure that Wine actually works before trying to run the game, that way you can tell if a crash is a Wine problem or a game problem. TDF does this by default but you can disable it if it takes too long at the "Starting Wine" screen.
 
 Possible values:  
 * `1` (default): do the "smoke test"
@@ -289,6 +312,13 @@ Whether to install Wine Gecko in the prefix or not. This provides the equivalent
 Possible values:  
 * `0` (default): don't install Wine Gecko
 * `1`: install Wine Gecko
+
+__`TDF_VCREDIST`__  
+Whether to install the official Microsoft Visual C++ Redistributables (2015+) or not. This is useful for modern games but unnecessary for older ones.
+
+Possible values:  
+* `1` (default): install the official MSVC redistributables
+* `0`: use Wine's built-in implementations
 
 __`export WINEDLLOVERRIDES`__  
 Some game fixes and mods come in the form of DLLs that override one of Windows' DLL, usually `winmm`, `dinput8`, `version`, `d3d9`, etc.  
@@ -315,7 +345,7 @@ Multiple overrides can be separated by a semicolon `;`.
 __`export WINEDEBUG`__  
 Enables/disables some [Wine debug channels](https://wiki.winehq.org/Debug_Channels).
 
-By default, TDF sets this to `-all` to improve performance, but you might want to enable one or more of these for troubleshooting, or restore the default Wine settings using `unset WINEDEBUG`.
+By default, TDF sets this to `-all` to improve performance, but you might want to enable one or more of these for troubleshooting.
 
 Don't add `+relay` to this variable, as it's controlled by the `TDF_WINE_DEBUG_RELAY` variable.
 
@@ -331,7 +361,7 @@ As CPUs get more and more cores and threads, problems such as crashes, inconsist
 __Note: these settings apply to the game-optimized build only__
 
 Before we get into the settings, some terminology:
-* Logical CPU: A "core" as you see it in task manager, also known as physical thread. For CPUs with HyperThreading/SMT, 2+ logical CPUs are present for each physical core. Some games work well with SMT, others hate it
+* Logical CPU: A "core" as you see in task manager, also known as physical thread. For CPUs with HyperThreading/SMT, 2+ logical CPUs are present for each physical core. Some games work well with SMT, others hate it
 * Core: A physical core inside your CPU
 * Sockets (multi-CPU systems): refers to the number of CPU chips physically inside your system. For gaming PCs, this is usually 1, but if you're gaming on a harvested multi-CPU server, this is going to be 2+, and not all games react well to that
 
@@ -423,24 +453,24 @@ Whether to hide the additional logical CPUs on CPUs that support HyperThreading/
 
 Possible values:  
 * `0` (default): use SMT
-* `1` : do not use SMT. If this is set, only the first logical CPU of each core will be used, the others will be ignored. This can improve the performance of some older games.
+* `1`: do not use SMT. If this is set, only the first logical CPU of each core will be used, the others will be ignored. This can improve the performance of some older games.
 
 __`TDF_WINE_NOECORES`__  
 Whether to hide E-cores on CPUs like Intel Alder Lake.
 
 Possible values:  
 * `0` (default): use E-cores
-* `1` : do not use E-cores
+* `1`: do not use E-cores
 
-Note: for compatibility reasons, these CPUs have no easy way to tell which cores are P-cores and each ones are E-cores, so TDF "guesses" that the E-cores are the ones with a maximum clock that's <75% of that of any other core. This may be improved in the future.
+Note: for compatibility reasons, these CPUs have no easy way to tell which cores are P-cores and which ones are E-cores, so TDF "guesses" that the E-cores are the ones with a maximum clock that's <75% of that of any other core. This may be improved in the future.
 
 __`TDF_WINE_PREFER_SAMESOCKET`__  
-For systems with multiple CPUs only, how to use them.
+How to use multiple CPUs.
 
 Possible values:  
-* `1` (default): assign logical CPUs based on speed, but prioritize cores on the same physical CPU (first assign all the logical CPUs in the first socket, then the second, etc.). This is generally the best for games.
-* `0` : logical CPUs are assigned based exclusively on speed, regardless of which CPU they are physically on. This is generally not recommended for games.
-* `2` : restrict to the first CPU
+* `0` (default): let Wine decide
+* `1`: assign logical CPUs based on speed, but prioritize cores on the same physical CPU (first assign all the logical CPUs in the first socket, then the second, etc.). This is generally the best for games.
+* `2`: only show the first CPU/NUMA socket to the application. Useful for multi-CPU servers.
 
 __`export WINE_CPU_TOPOLOGY`__  
 This is not a TDF variable, but it allows you to set Wine to use specific CPU cores, similar to the `/AFFINITY` option of the `start` command in Windows, but more fine grained. This should be used as a last resort or if you want to do dumb things like restrict a game to only use E-cores.
@@ -461,120 +491,67 @@ Note: if `WINE_CPU_TOPOLOGY` is set, the settings above will have no effect.
 
 #### DXVK and VKD3D variables
 __`TDF_DXVK`__  
-Whether to install DXVK or not, which provides DirextX 8-11 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which may be better for some older games.
+Whether to install DXVK or not, which provides Direct3D 8/9/10/11 to Vulkan translation and DXGI implementation. If this is disabled, WineD3D will be used instead, which may be better for some older games. If VKD3D or D7VK is enabled, DXVK is auto-enabled as a dependency.
 
-Settings for DXVK can be changed by editing the `dxvk.conf` file that will be created inside `zzprefix`.
+Settings for DXVK can be changed by downloading the [default configuration file](https://github.com/doitsujin/dxvk/blob/master/dxvk.conf), placing it into the game's folder and editing it.
 
 Possible values:  
 * `1` (default): use DXVK
 * `0`: use WineD3D
 
 __`TDF_D7VK`__  
-Whether to install D7VK or not, which provides DirextX 6-7 emulation through Vulkan. If this is disabled, WineD3D will be used instead, which may be better for some older games, as it provides support for DX1-7 as well as DDraw. Requires `TDF_DXVK` to be set to `1`.
+Whether to install D7VK or not, which provides DirectX 3-7 to Vulkan translation. If this is disabled, WineD3D will be used instead. Requires DXVK.
 
-Settings for D7VK can be changed by editing the `dxvk.conf` file that will be created inside `zzprefix`, see the [d7vk documentation](https://github.com/WinterSnowfall/d7vk/blob/devel/dxvk.conf) for D7VK specific config options.
+Settings for D7VK can be changed by downloading the [default configuration file](https://github.com/WinterSnowfall/d7vk/blob/devel/dxvk.conf), placing it into the game's folder and editing it.
 
 Possible values:  
-* `0` (default): use WineD3D
-* `1` : use D7VK
+* `1` (default): use D7VK
+* `0`: use WineD3D
 
 __`TDF_DXVK_NVAPI`__  
-Whether to install DXVK-nvapi or not, which provides nvapi support for nVidia GPUs. Requires `TDF_DXVK` to be set to `1`.
+Enable dxvk-nvapi (Nvidia API layer for DXVK). Provides NVAPI support and some performance optimizations on NVIDIA cards. Requires DXVK.
 
 Possible values:  
-* `0` (default): don't use DXVK-nvapi
-* `1`: use DXVK-nvapi on nVidia GPUs
+* `1` (default): use dxvk-nvapi
+* `0`: don't use dxvk-nvapi
 
 __`TDF_HDR`__  
-Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect is HDR is disabled or unsupported.
+Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect if HDR is disabled or unsupported.
 
 Possible values:  
 * `0` (default): don't expose HDR (this is the default because HDR kinda sucks in most games)
-* `1` : expose HDR if available
+* `1`: expose HDR if available
 
-Note: HDR is not supported by X11, you must be using Wayland for this to work.
+Note: HDR only works on Wayland, enabling this setting will force Wine to use Wayland, which may break some games.
 
 __`TDF_VKD3D`__  
-Whether to install VKD3D-Proton, which provides DirectX 12 emulation through Vulkan. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version. Requires `TDF_DXVK` to be set to `1`.
+Whether to install VKD3D-Proton, which provides Direct3D 12 to Vulkan translation. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version. Requires DXVK.
 
 Possible values:  
 * `1` (default): use VKD3D-Proton
 * `0`: use Wine's VKD3D implementation
 
-VKD3D's config can be changed by using its [environment variables](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables). By default, doesn't set this variable, meaning that VKD3D will automatically enable ray tracing on supported cards. Older versions of TDF (before November 2023) set this to `dxr11` to enable ray tracing.
+VKD3D's config can be changed by using its [environment variables](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables).
 
-#### Sandboxing variables
-__`TDF_BLOCK_NETWORK`__  
-Whether to block network access to Wine. By default, TDF blocks network access entirely to prevent undesirable data collection, but it can be unblocked if you trust the game you're running or it needs to go online.
-
-Possible values:  
-* `1` (default): block network access using `unshare -nc` (creates a namespace without the network stack)
-* `0`: allow network access
-* `2`: block network access using Firejail if it's installed in the system, otherwise `unshare -nc` will be used. This can fix some games that take a long time to load when there is no network stack, such as Death Stranding
-
-__`TDF_BLOCK_BROWSER`__  
-Whether to block Wine from opening the system's native web browser or not. By default, TDF will block these requests to prevent undesirable data collection, but it can be unblocked if you trust the game you're running or it needs to open some web pages.
+__`FSR4_UPGRADE`__  
+Enable AMD FSR4 on supported GPUs and automatically upgrade games that use FSR3 to FSR4. This installs a proprietary AMD DLL into the sandbox.
 
 Possible values:  
-* `1` (default): block access to the system's native web browser
-* `0`: allow Wine to launch the native web browser
-
-Note that allowing access to the native web browser can be abused to bypass `TDF_BLOCK_NETWORK`, this behavior has been noticed in several game repack installers.
-
-__`TDF_BLOCK_ZDRIVE`__  
-Wine normally exposes a Z drive to applications, with full access to the Linux file system, which can be abused by games to collect data or by malware to modify files outside the TDF instance, but it can also be useful when installing games, since you can access mounted drives, your Downloads folder, etc. or if you're running applications.
-
-Possible values:  
-* `1` (default): allow access to the Z drive when in "install mode" (i.e. `game_exe` is not set yet), making it easier to install the game, block afterwards
-* `2`: always block access to the Z drive
-* `0`: allow access to the Z drive
-
-Note that while this can help protect against Windows malware, malware designed to attack Wine or Linux can very easily bypass this restriction. Never run untrusted software inside TDF, use a VM instead.
-
-__`TDF_BLOCK_EXTERNAL_DRIVES`__  
-Wine normally exposes external drives to applications, giving a letter to each drive. This can be undesirable for the same reasons as exposing the Z drive and TDF blocks this by default.
-
-Possible values:  
-* `1` (default): remove all mappings to external drives when TDF is started but don't disable the `winedevice` service. If you're not using TDF's own Wine builds, drives connected while Wine is running will be mapped automatically
-* `2`: remove all mappings to external drives when TDF is started and also disable the `winedevice` service so that drives can never be mapped automatically even on other Wine builds (can break some games and especially installers but improves security)
-* `0`: allow access to external drives
-
-__`TDF_PROTECT_DOSDEVICES`__  
-Prevents Wine from automatically handling all drive mappings for better security. Can cause the `winedevice` service to hang when external drives are connected.
-
-Possible values:  
-* `0` (default): let Wine handle drive mappings
-* `1`: TDF handles drive mappings and denies Wine write access to the `zzprefix/dosdevices` directory
-
-Note: this option is effectively useless when using TDF's own Wine builds, since dbus is disabled and no mappings will be automatically created.
-
-__`TDF_BLOCK_SYMLINKS_IN_CDRIVE`__  
-When this option is enabled, TDF will scan the C drive on startup and remove all symlinks. This can be useful in case Wine creats some symlinks outside the TDF instance during an update, or if you created a symlink during the installation and forgot to remove it, which can be dangerous.
-
-Possible values:  
-* `1` (default): scan and remove all symlinks in the C drive on startup
-* `0`: allow symlinks in the C drive
-
-Note that Wine's symlinks to your home directory, My Documents, Desktop, etc. as well as the creation of shortcuts (.desktop files) on your desktop and start menu will always be blocked regardless of settings; TDF is not designed to let applications "integrate" with the system, quite the opposite.
-
-__`TDF_FAKE_HOMEDIR`__  
-When this option is enabled, Wine will not see your home directory, but a `zzhome` folder will be created in the TDF instance. This can be used to improve security, but it's mostly useful for games that require special settings in `~/.driconf`, such as KOTOR.
-
-Possible values:  
-* `0` (default): use the real home directory
-* `1`: use a fake home directory inside the TDF instance
-
-Note that the `zzhome` folder and all data inside it will be automatically deleted when this option is disabled.
+* `0` (default): don't enable FSR4
+* `1`: enable FSR4
 
 #### Gamescope variables
 __`TDF_GAMESCOPE`__  
-Whether to enable Gamescope when running the game or not. This is generally not recommended when using the `games` version of Wine, since it integrates the fshack patches which makes it mostly useless, but it can be useful when using the `mainline` version for games that change the screen resolution often, require low resolutions, integers scaling, etc. such as KOTOR or WinQuake. If Gamescope is not installed in the system, it has no effect.
+Whether to enable Gamescope when running the game or not. This is generally not recommended when using the game-optimized version of Wine, since it integrates the fshack patches which make it mostly useless, but it can be useful when using the mainline version for games that change the screen resolution often, require low resolutions, integers scaling, etc. such as KOTOR or WinQuake. If Gamescope is not installed in the system, it has no effect.
 
 Possible values:  
 * `0` (default): don't use Gamescope
 * `1`: use Gamescope when running games if available
 
-Note that Gamescope currently only works properly on AMD GPUs and getting it to work properly on Intel and nVidia cards requires additional configuration.
+__`TDF_GAMESCOPE_PARAMETERS`__  
+The command line arguments used to start Gamescope. You can see a complete list [here](https://github.com/ValveSoftware/gamescope#options). Can be a string or a bash array.
+
+By default, TDF sets this variable to `-f -r 60 -w $XRES -h $YRES`, where `XRES` and `YRES` are two read-only variables provided by TDF for convenience that contain the horizontal and vertical resolution of the main display. This default value emulates a virtual screen with the same resolution as the real display, with a refresh rate of 60hz and sets Gamescope to run in fullscreen without any special scaling.
 
 #### libstrangle variables
 __`TDF_GL_MAXFPS`__
@@ -584,25 +561,15 @@ Possible values:
 * `0` (default): disabled, and don't load libstrangle
 * number: limit FPS to this number
 
-__`TDF_GAMESCOPE_PARAMETERS`__  
-The command line arguments used to start Gamescope. You can see a complete list [here](https://github.com/ValveSoftware/gamescope#options).
-
-By default, TDF sets this variable to `-f -r 60 -w $XRES -h $YRES`, where `XRES` and `YRES` are two read only variables provided by TDF for conveninece that contain the horizontal and vertical resolution of the main display. This default value emulates a virutal screen with the same resolution as the real display, with a refresh rate of 60hz and sets Gamescope to run in fullscreen without any special scaling.
-
-#### Miscellaneous variables
-__`TDF_GAMEMODE`__  
-Whether to launch the game using Feral Gamemode or not, which can improve performance especially on weaker or mobile systems. If Gamemode is not installed in the system, it has no effect.
-
-Possible values:  
-* `1` (default): use Gamemode if available
-* `0`: don't use Gamemode
-
+### Miscellaneous variables
 __`TDF_MANGOHUD`__  
 Whether to launch the game with the MangoHud performance overlay or not. If MangoHud is not installed in the system, it has no effect. Note that some games will crash when launched with MangoHud.
 
 Possible values:  
 * `0` (default): don't use MangoHud
-* `1`: use Mangohud
+* `1`: use MangoHud
+
+Note: If MangoHud is enabled alongside Gamescope, MangoHud is automatically disabled and Gamescope's built-in mangoapp is used instead.
 
 __`TDF_COREFONTS`__  
 Whether to install the Microsoft Corefonts or not. These are fonts like Arial, Comic Sans, etc. that are required by some games such as PC Building Simulator. This is generally harmless, but if some application has font rendering issues, try disabling it.
@@ -610,20 +577,6 @@ Whether to install the Microsoft Corefonts or not. These are fonts like Arial, C
 Possible values:  
 * `1` (default): install the Corefonts
 * `0`: don't install the Corefonts
-
-__`TDF_VCREDIST`__  
-Whether to install the Microsoft Visual C++ Redistributable (2015+) or not. This is useful for modern games but unnecessary for older ones.
-
-Possible values:  
-* `1` (default): install VCRedist 2015+
-* `0`: don't install VCRedist 2015+
-
-__`TDF_REAPER`__  
-Whether to launch Wine using reaper or not. This will improve detection of when a game is running or not, even if the main exe just launches a separate process and terminates immediately.
-
-Possible values:  
-* `1` (default): use reaper
-* `0`: don't use reaper
 
 __`export DRI_PRIME`__  
 Sometimes on systems with multiple GPUs, a game might start using the wrong GPU, such as the integrated graphics on your laptop instead of the dedicated card.
@@ -638,23 +591,30 @@ export DRI_PRIME=1
 
 This is not a TDF variable and you can find more about it [here](https://wiki.archlinux.org/title/PRIME).
 
-__`export SteamGameId`__  
-The games-optimized build contains some game fixes from Proton that are activated by setting this variable with the game's Steam appid.
+### Desktop integration
+__`TDF_DND`__  
+Enables Do Not Disturb mode (on supported DEs) while the game is running.
 
-Example:  
-```
-#fix black screen in GOW:Ragnarok
-export SteamGameId=2322010
-```
+Possible values:  
+* `1` (default): mute notifications while the game is running
+* `0`: don't mute them
 
-You can find the appid for a specific game by searching for it on Steam and copying it from the URL, for instance: `https://store.steampowered.com/app/2322010/God_of_War_Ragnark/`, the appid is `2322010`.
+__`TDF_NOSLEEP`__  
+Inhibit system sleep while the game is running. Works on supported desktop environments (GNOME, KDE, etc.).
 
-Always copy the appid for the main game, not for a DLC.
+Possible values:  
+* `1` (default): inhibit sleep
+* `0`: don't inhibit sleep
 
 ### Callbacks
 You can optionally define the following functions inside `vars.conf` and they will be called at specific moments during operation. This can be useful to fix games that have issues with window positioning, focusing, etc. or that have some special requirements. The language is just bash.
 
 If you need to define some variables, do it inside the callback functions, as the configuration is loaded more than once during the initialization process.
+
+Note: callbacks run inside a subshell outside the sandbox; therefore they cannot:
+* Run wine commands (they would launch system wine outside the sandbox)
+* Change any of the settings in this file
+* They have full access to the host system, including file system and network (the sandbox is in `$PWD/data`)
 
 __`customChecks`__  
 This function will be called immediately after the configuration is loaded. It's useful to run some custom checks specific to the game or to change some settings depending on hardware/software configuration. The function returns 0 if the checks succeed, 1 to indicate that they failed and stop TDF. If the function has no return, it will be treated as a success.
@@ -679,7 +639,8 @@ This function will be called right before the game is launched.
 Example:  
 ```
 onGameStart(){
-    setGamma 1.2
+    echo "Pre-launch: copying mods..."
+    cp -r mods/* "data/wineprefix/drive_c/Game/"
 }
 ```
 
@@ -691,43 +652,38 @@ This function will be called when the game's main process finishes running.
 Example:  
 ```
 onGameEnd(){
-    restoreGamma
+    echo "Post-game: cleaning up temp files..."
+    rm -rf "data/home/wine/.cache"
 }
 ```
 
-Notes:
-* This function is blocking and TDF won't continue until it has finished running
-* The wineserver is still running when this funcion is called
-* Some games (especially ones with launchers) will spawn a subprocess and the main process will close, causing this callback to be triggered while the game is still running. In this case, you can check the running processes with `isProcessRunning` (mentioned later) to know whether the game has actually finished running or not
+Note that this function is blocking and TDF won't close until it has finished running.
 
 __`whileGameRunning`__  
-This function will be called right before the game is running, and will continue running in parallel to the game in a subshell.
+This function will be called while the game is actively running. It runs in a background subshell and is automatically killed when the game exits. It can run indefinitely or perform periodic tasks.
 
 Example:  
 ```
 whileGameRunning(){
-    #workaround for the little black bar at the top of the screen
-    waitForWindow "APlagueTaleRequiem_x64.exe"
-    sleep 3
-    focusWindow $WINDOW
-    pressKey alt+enter 2
+    while true; do
+        echo "Game is running..."
+        sleep 30
+    done
 }
 ```
 
-Notes:
-* This function does not automatically stop running when the game's process ends, so if you're running a loop, make sure to check the game's process using `isProcessRunning`
-* The game process may not have been created yet when this function is called, since Wine takes a bit to launch
+Note that the game process may not have been created yet when this function is called, make sure to check the game's process using `isProcessRunning`
 
 __`onArchiveStart`__  
-This function will be called right before the packaging process begins when using `./run.sh archive` (mentioned later). It can be used to remove or move some unnecessary files like DXVK/VKD3D caches, saved games, etc.. The function receives the same arguments passed to `run.sh` and can return 1 to prevent the packaging process from starting if something's wrong.
+This function will be called right before the packaging process begins when using `./run.sh archive` (mentioned later). It can be used to remove or move some unnecessary files like DXVK/VKD3D caches, saved games, etc. The function receives the same arguments passed to `run.sh` and can return 1 to prevent the packaging process from starting if something's wrong.
 
 Example:  
 ```
 onArchiveStart(){
     TEMPDIR="/tmp/requiem$RANDOM"
     mkdir "$TEMPDIR"
-    mv zzprefix/drive_c/APTRequiem/vkd3d-proton.cache "$TEMPDIR"
-    mv zzprefix/drive_c/users/wine/AppData/Local/GOG.com "$TEMPDIR"
+    mv "data/wineprefix/drive_c/APTRequiem/vkd3d-proton.cache" "$TEMPDIR"
+    mv "data/wineprefix/drive_c/users/wine/AppData/Local/GOG.com" "$TEMPDIR"
 }
 ```
 
@@ -738,13 +694,13 @@ This function will be called at the end of the packaging process when using `./r
 Example:  
 ```
 onArchiveEnd(){
-    mv "$TEMPDIR/vkd3d-proton.cache" zzprefix/drive_c/APTRequiem/
-    mv "$TEMPDIR/tmp/requiem/GOG.com" zzprefix/drive_c/users/wine/AppData/Local/
+    mv "$TEMPDIR/vkd3d-proton.cache" "data/wineprefix/drive_c/APTRequiem/"
+    mv "$TEMPDIR/GOG.com" "data/wineprefix/drive_c/users/wine/AppData/Local/"
     rm -rf "$TEMPDIR"
 }
 ```
 
-Note that this function is blocking and TDF won't quit until it has finished running.
+Note that this function is blocking and TDF won't close until it has finished running.
 
 #### Builtin functions
 For convenience, TDF comes with some functions that can be used inside the callback functions mentioned before, in addition to everything provided by bash such as sleep, grep, etc..
@@ -915,7 +871,7 @@ Returns 0 if the operation succeeded, 1 if an error occurred.
 Note: this function only works on X11.
 
 __`resetResolution`__  
-Resets the main display to its default screen resolution an gamma. This is useful for when you're not using the game-optimized wine build and an old game crashes without restoring the screen resolution.
+Resets the main display to its default screen resolution and gamma. This is useful for when you're not using the game-optimized wine build and an old game crashes without restoring the screen resolution.
 
 Returns 0 if the operation succeeded, 1 if an error occurred.
 
@@ -936,17 +892,17 @@ Returns 1 if a process was found, 0 otherwise.
 
 Example:  
 ```
-if isProcessRunning "explorer.exe"; then
-    wineserver -k -w
-fi
+while ! isProcessRunning "APlagueTaleRequiem_x64.exe"; do
+    sleep 0.5
+done
 ```
 
 ### Game collections (multiple games in one TDF instance)
-Ideally, you want to have one TDF instance for each game, which keeps them nicely isolated, but some game series like Mass Effect need to import the previous game's data or the game itself has expansions/mods that need to be started with different commands, and therefore need to be installed in the same TDF instance. This is where that `confs` folder comes in.
+Ideally, you want to have one TDF instance for each game, which keeps them nicely isolated, but some game series like Mass Effect need to import the previous game's data or the game itself has expansions/mods that need to be started with different commands, and therefore need to be installed in the same TDF instance. This is where the `confs` folder comes in.
 
-Inside the `conf` folder, you can make as many `.conf` files as you need, one for each game/mod installed in the TDF instance. These files follow the same syntax as the `vars.conf` file and each one contains the configuration necessary to launch one game.
+Inside the `confs` folder, you can make as many `.conf` files as you need, one for each game/mod installed in the TDF instance. These files follow the same syntax as the `vars.conf` file and each one contains the configuration necessary to launch one game.
 
-TDF will automatically detect the presence of files in the `conf` folder and show a menu with the list of games in alphabetical order.
+TDF will automatically detect the presence of files in the `confs` folder and show a menu with the list of games in alphabetical order.
 
 When using this mode, the `vars.conf` file will always be loaded first and its settings will apply to all games, then once the user has chosen one of the games, the specific `.conf` file will be loaded. If a variable or a callback function is defined both in `vars.conf` and in one of the `.conf` file, the latter wins because it's more specific.
 
@@ -1000,7 +956,7 @@ Windows Explorer (for modding)
 ### Packaging and redistributing a TDF instance
 You installed your game(s) in a TDF instance and made sure it works perfectly? Did you test it on different hardware? Different distros? All good? Great! You're ready to package it.
 
-To start the packaging process, open a terminal inside the TDF instance and type `./run.sh archive`. This will create an archive containing the whole TDF instance that you can easily redistribute (assuming you have the rights to do it). Users will be able to simply extract these archives and launch `run.sh` to start the game.
+To start the packaging process, open a terminal inside the TDF instance and type `./run.sh archive`. This will create an archive containing the whole TDF instance that you can easily redistribute. Users will be able to simply extract these archives and launch `run.sh` to start the game.
 
 By default, TDF creates a highly compressed `.tar.zst` archive, which takes a long time to create but can be extracted very quickly.
 
@@ -1043,17 +999,20 @@ If you want to transfer a TDF instance from one PC to another using an external 
 ### Updating a TDF instance
 TDF is designed to be easy to update. To update a TDF instance from an older version:
 * Download (or build) a new version of TDF
-* Delete the `system` folder and `run.sh`
+* Delete the `system` folder and `run.sh` from the old TDF instance
 * Copy `system` and `run.sh` from the newer version to the TDF instance, where the old ones used to be
-* Launch run.sh and it will update everything automatically
+* Launch `run.sh` and it will update everything automatically
 
-It is also possible to downgrade to an older version of TDF in the same way, in case the newer version introduces some problems.
+It is also possible to downgrade to an older version of TDF in the same way, in case the newer version doesn't work properly.
+
+__Note: Loading a wineprefix created with TDF 1.x is not supported.__ The easiest way to upgrade it is to rename the `zzprefix` folder from the old instance to `wineprefix`, make a new instance and launch it at least once, then replace `data/wineprefix` in the new instance with the renamed folder. Keep in mind that several TDF settings have changed with TDF 2.0, and you will have to redo the `vars.conf` file as well as any additional config file in the `confs` directory from scratch.
 
 ### Using custom versions of Wine, DXVK, etc.
-TDF will automatically detect and apply changes to the files in the following folders inside the `system` of a TDF instance:
+TDF will automatically detect and apply changes to the files in the following folders inside the `system` folder of a TDF instance:
 * `d7vk`
 * `dxvk`
 * `dxvk-nvapi`
+* `fsr4`
 * `localization`
 * `msi`
 * `reaper`
@@ -1065,8 +1024,9 @@ TDF will automatically detect and apply changes to the files in the following fo
 * `wine-mainline`
 * `xutils`
 * `zenity`
+* `bwrap`
 
-So for instance, if you need to test a custom version of DXVK, simply replace the DLLs in `system/dxvk` with your build (making sure to keep the same folder structure), when you launch `run.sh`, TDF will detect that these DLLs don't match the ones in the wineprefix and reinstall DXVK. The same goes for Wine and other components in the list above.
+So for instance, if you need to test a custom version of DXVK, simply replace the DLLs in `system/dxvk` with your build (making sure to keep the same folder structure); when you launch `run.sh`, TDF will detect that these DLLs don't match the ones in the wineprefix and reinstall DXVK. The same goes for Wine and the other components in the list above.
 
 The following folders are not monitored for changes as they are very rarely needed:
 * `corefonts`
@@ -1078,26 +1038,25 @@ TDF is built to be partially modular, meaning that if your game doesn't need cer
 
 __Do not do this unless you know what you're doing.__
 
-The following folders can be deleted from the `system` folder of a TDF instance if they are not needed:
+The following folders can be deleted from the `system` folder of a TDF instance if they are not needed and disabled in the configuration:
 * `d7vk`
 * `dxvk`
 * `dxvk-nvapi`
 * `msi/winemono.msi`
 * `msi/winegecko32.msi` and `msi/winegecko64.msi`
-* `reaper`
-* `strangle` (Note: if this is removed, FPS limiting for OpenGL will not be available)
-* `tdfutils`
+* `strangle`
 * `themes` (Note: if this is removed, leave `TDF_WINE_THEME` empty)
 * `vcredist`
 * `vkd3d`
 * `wine-games` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="mainline"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-mainline` as a last resort. If neither are available, TDF will fail to start)
 * `wine-mainline` (Note: if this is removed, it is recommended to set either `TDF_WINE_PREFERRED_VERSION="games"` or `TDF_WINE_PREFERRED_VERSION="system"`, otherwise TDF will try to use the version of Wine provided by the system or `wine-games` as a last resort. If neither are available, TDF will fail to start)
-* `zenity` (Note: if this is removed and Zenity is not installed in the system, TDF will still work but it will not have a GUI)
+* `zenity` (Note: if this is removed and Zenity is not installed in the system, TDF will not work)
+* `fsr4`
+* `bwrap` (Note: if this is removed, TDF will try to use the system's bubblewrap binary instead. If bubblewrap is not installed, TDF will refuse to start for security reasons)
 
 Folders and files not mentioned in this list should not be removed to avoid breaking TDF.
 
-If a component has been removed, TDF will not try to use or install it even if explicitly requested in the config. If a component is removed after it has been installed in the wineprefix, it will not be removed even if explicitly requested in the config.  
-For these reasons, it's better to remove components before the first time initialization of the wineprefix.
+If a component has been removed, TDF will not try to use it, install it or remove it, even if explicitly requested in the config, therefore it is better to remove and disable unnecessary components before the first time initialization of the wineprefix.
 
 __Never remove a component that is currently installed in the wineprefix__, as this will leave it in an inconsistent state, especially during Wine updates. If that happens, simply restore the removed components and TDF should take care of the problem.
 
@@ -1107,7 +1066,7 @@ This section covers troubleshooting games on Wine in general, with a focus on ho
 If a game doesn't work out of the box, before you even start troubleshooting, check [ProtonDB](https://www.protondb.com/) for known issues/fixes for this game. Solutions that work on Proton can easily be adapted to work in TDF.
 
 #### TDF won't start (Failed to load Wine)
-Wine depends on a lot of libraries, TDF is built exclusively using 64-bit libraries, so multilib is not required. The easiest way to obtain these is to simply install Wine on your system and then removing it.
+Wine depends on a lot of libraries, and some may be missing. TDF is built exclusively using 64-bit libraries, so multilib is not required. The easiest way to obtain the required libraries is to install Wine on your system and then remove it.
     * For Arch-based distros:
         ```
         sudo pacman -S wine
@@ -1119,12 +1078,11 @@ Wine depends on a lot of libraries, TDF is built exclusively using 64-bit librar
         sudo apt-get remove wine
         ```
 * If it still doesn't work, your distro may have a version of glibc that's older than the one that was used to build the prebuilt version of TDF that you have downloaded. You can verify this by opening the terminal and typing `./run.sh`, and looking at the errors that appear while TDF tries to load. If this is your case, at the moment the only solution is either building TDF yourself or using a more modern distro
+* If you moved/copied the TDF instance from another drive, it may have made a mess with permissions. Open a terminal and try `sudo chmod -R 777 . && sudo chown -R $(id -u):$(id -g) .` to fix permissions and ownership
 
 #### Game won't install, the installer doesn't start, doesn't work, it freezes or gives an error during the installation
 * Try using `TDF_WINE_PREFERRED_VERSION='mainline'` during the installation, using a normal version of Wine instead of the game-optimized one can get it to work
-* Try using `export WINE_HEAP_DELAY_FREE=1` during the installation, this can workaround memory management bugs in the installer (very useful for repacks)
-* Find another version of the game with a different installer, like a Steam rip, an ISO, or a repack from another group
-* As a last resort, try installing the game in a Windows VM and copy the files over to `zzprefix/drive_c`
+* Some crappy installers (especially repacks) don't work in Wine; if that happens you can try to find a version of the game with a different installer (ideally a Steam rip), or you can just install it in a Windows VM and copy the files over to `data/wineprefix/drive_c`, most modern games are ok with that
 
 #### During the installation, I see error messages about .net or being unable to ShellExecute something
 * These are not a problem in Wine, ignore them
@@ -1132,11 +1090,14 @@ Wine depends on a lot of libraries, TDF is built exclusively using 64-bit librar
 #### Game won't launch (DRM issues like disc not found or requiring a login)
 * Use a cracked version of the game
 * If this is a cracked game, the crack may not have been loaded correctly due to a missing DLL override (see `WINEDLLOVERRIDES`) or it could be missing some DLL (see next section)
+* Try a different crack, some don't work in Wine
 
 #### Game won't launch ("Game running" dialog disappears immediately)
-* Often caused by missing DLLs
+* If this is an older game, it may not support high core count CPUs, try setting `TDF_WINE_MAXLOGICALCPUS=4` to simulate a quad-core
+* If you're using mods, they may require `TDF_WINEMONO=1` or specific overrides (see `WINEDLLOVERRIDES`) to load DLLs like winmm, dinput8, and similar
+* This issue can be caused by missing DLLs
     * If there's a folder called `_CommonRedist` or `_Redists` in the game's folder, that will most likely contain some installers for libraries required by the game. They're usually not necessary with Wine but some older redists like PhysX will need to be installed.
-        * Remove `game_exe` and launch `run.sh`
+        * Remove `game_exe` and launch `run.sh` to open a command prompt
         * Navigate to that folder and install the redists
         * Put back `game_exe` and try launching the game again
     * If it still doesn't work, investigate missing DLLs
@@ -1150,7 +1111,7 @@ Wine depends on a lot of libraries, TDF is built exclusively using 64-bit librar
             * Missing any file that's not part of Windows or some Microsoft redistributable indicates that there's a problem with the game installation (incomplete/corrupt setup)
         * Once you've downloaded what you need
             * If it's a single DLL just copy it to the game's folder
-            * If it's an installer, remove `game_exe` from the configuration and launch `run.sh` to enter "install mode", install what you downloaded, then put back `game_exe` and try launching the game again
+            * If it's an installer, remove `game_exe` from the configuration and launch `run.sh` to open a command prompt, install what you downloaded, then put back `game_exe` and try launching the game again
 * If you don't see complaints about missing DLLs, it could be that the game is crashing immediately
     * Add `unset WINEDEBUG` and `TDF_WINE_HIDE_CRASHES=0` to enable Wine's default debugging messages and "stopped working" screen
     * Open a terminal and run `./run.sh`
@@ -1158,7 +1119,6 @@ Wine depends on a lot of libraries, TDF is built exclusively using 64-bit librar
         * A useful tool to investigate is Wine's relay feature, which logs all interaction between the application and the system to a file. To enable relay, add `TDF_WINE_DEBUG_RELAY=1` and launch the game, it will ask you where you want to save the trace and then try to launch the game. Keep in mind that Wine runs extremely slow while this is enabled and the generated trace could be several GB in size
         * After the game has crashed, open the trace with a text editor and start looking for clues (especially around the end of the file)
 * If your game is a UWP app (like an extracted appx package), this is not supported by Wine at the moment, you'll need a regular Win32 version of the game. This is easily identifiable by the presence of an .appx version of VCRuntime
-* If this is an older game, it may not support high core count CPUs, try setting `TDF_WINE_MAXLOGICALCPUS=4` to simulate a quad-core
     
 #### Game launcher doesn't work (closes immediately or has garbled graphics)
 * Find some way online to bypass the launcher, usually it involves setting `game_exe` to another file or adding some arguments with `game_args`
@@ -1173,7 +1133,7 @@ Wine depends on a lot of libraries, TDF is built exclusively using 64-bit librar
 
 #### Game starts with the wrong language with no way to change it
 * See the `TDF_WINE_LANGUAGE` variable
-* If the game is using a Steam/EGS/whatever emulator, there's usually an file nearby like `steam_api.ini` that will contain some configuration, including the language
+* If the game is using a Steam/EGS/whatever emulator, there's usually a file nearby like `steam_api.ini` that will contain some configuration, including the language
 * Some games require a command line option to change the language (`game_args` variable)
 * Some older games store the language in the registry, remove `game_exe` from the configuration to get into "install mode", run regedit and find the key
 
@@ -1182,22 +1142,18 @@ Wine depends on a lot of libraries, TDF is built exclusively using 64-bit librar
 
 #### Game crashes/freezes during gameplay, graphical or performance issues
 * Make sure TDF is updated to the latest version
-* Make sure you're running the latest Linux kernel and the latest version of Mesa (AMD/Intel) or the nVidia drvier. Ideally, if you're on an Arch-based distro, use the mesa-git package from the AUR
+* Make sure you're running the latest Linux kernel and the latest version of Mesa (AMD/Intel) or the NVIDIA driver. Ideally, if you're on an Arch-based distro and using AMD/Intel, use the mesa-git package from the AUR
 * If you experience severe stuttering or performance drops, these are some likely causes:
-    * For DX9-11 games (DXVK), make sure your system supports the `VK_EXT_graphics_pipeline_library` extension by running this command: `vulkaninfo | grep VK_EXT_graphics_pipeline_library`, if you don't see anything, your GPU/driver doesn't support it and your experience will be miserable
     * You may be running out of VRAM. Linux doesn't handle this very well, games will stutter heavily or have a sudden drop in performance when that happens. Try installing MangoHud and add `TDF_MANGOHUD=1`, this provides a nice overlay for various things, including VRAM usage. When it's above 90%, you'll start running into problems
     * If this is a modern game, your CPU may not be fast enough to handle the game and the emulation overhead
     * If this is an older game, it may not support high core count CPUs, try setting `TDF_WINE_MAXLOGICALCPUS=4` to simulate a quad-core 
-    * The game may have issues with fsync (Uncharted 4 is the only one I've encountered so far), try adding `TDF_WINE_SYNC="esync"`
-    * If this is an old UE2-based game like UT2004, this is a known issue and as of August 2023 a solution is in the works
-* If this is an older game, it may not support high core count CPUs, try setting `TDF_WINE_MAXLOGICALCPUS=4` to simulate a quad-core
+    * The game may have issues with ntsync, try adding `TDF_WINE_SYNC="esync"`
 * If this is an older game, it may also be a good idea to run it using regular Wine, add `TDF_WINE_PREFERRED_VERSION=mainline`
-* If this is a DX8-11 game, try running it with WineD3D instead of DXVK by adding `TDF_DXVK=0`
-* If this is a DX8-10 game and you see striped shadows, your graphics driver probably doesn't support the `VK_EXT_depth_bias_control` extension yet (added in Mesa 23.3 for AMD/Intel)
-* Look for known issues and fixes for this game in the [DXVK issues page](https://github.com/doitsujin/dxvk/issues) (DX9-11), the [VKD3D-Proton issues page](https://github.com/HansKristian-Work/vkd3d-proton/issues) (DX12), and if you're on an AMD/Intel GPU check the [Mesa issues page](https://gitlab.freedesktop.org/mesa/mesa/-/issues) as well
-* If this is a DX9-11 game, create a file called `dxvk.conf` in the game's folder and tinker with [DXVK's settings](https://github.com/doitsujin/dxvk/wiki/Configuration)
+* If this is an older game that used DX8-11, try running it with WineD3D instead of DXVK by adding `TDF_DXVK=0`
+* If this is an older game that used DX3-7, try running it with D7VK instead of WineD3D by adding `TDF_D7VK=1`
+* Look for known issues and fixes for this game in the [DXVK issues page](https://github.com/doitsujin/dxvk/issues) (DX8-11), the [VKD3D-Proton issues page](https://github.com/HansKristian-Work/vkd3d-proton/issues) (DX12), and if you're on an AMD/Intel GPU check the [Mesa issues page](https://gitlab.freedesktop.org/mesa/mesa/-/issues) as well
+* If this is a DX8-11 game, create a file called `dxvk.conf` in the game's folder and tinker with [DXVK's settings](https://github.com/doitsujin/dxvk/wiki/Configuration)
 * If this is a DX12 game, try tinkering with [VKD3D-Proton's settings](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables)
-* If the game supports DXR, try adding `unset VKD3D_CONFIG` to disable ray tracing support that's normally enabled by default by TDF
 * If you're on AMD/Intel, try tinkering with [Mesa's settings](https://docs.mesa3d.org/envvars.html). These are some typical settings to try first for issues on AMD (try them one by one!):
     * `export RADV_DEBUG=nodcc`
     * `export RADV_DEBUG=llvm`
@@ -1212,7 +1168,11 @@ Wine depends on a lot of libraries, TDF is built exclusively using 64-bit librar
 
 If you find a solution to a problem, always make sure to report it somewhere. If you can't find a solution, report the problem to one of the projects involved, at worst they'll tell you it's not their fault and where to report it. People are generally very friendly in the Linux gaming community.
 
+#### Ray tracing is not available
+Some games only enable ray tracing if they detect and NVIDIA GPU. You can fake it by adding this to the config to pretend that you have a 4090: `export DXVK_CONFIG='dxgi.customVendorId = 10de; dxgi.hideAmdGpu = True; dxgi.customDeviceId = 2684; dxgi.customDeviceDesc = "NVIDIA GeForce RTX 4090"'`
+
 #### Sound crackling, cutting in and out, etc.
+* Try using the alsa sound backend by adding `TDF_WINE_AUDIO_DRIVER="alsa"`
 * Increase sound buffer size by adding `export PULSE_LATENCY_MSEC=120`
 * If this is an older game, try using an EAX emulator like [DSOAL](https://github.com/kcat/dsoal), you can find prebuilt DLLs online if you don't want to mess with Visual Studio, all you have to do is put them in the game's folder and add `export WINEDLLOVERRIDES="dsound=n,b"`
 * The game may not support surround sound or your sample rate, set your system to 44.1KHz stereo
@@ -1223,41 +1183,53 @@ If you find a solution to a problem, always make sure to report it somewhere. If
 
 #### Window positioning issues (stuck in window mode, partially off screen, flickering, etc.)
 * If this is an older game, it may not support display scaling, try adding `TDF_WINE_DPI=96`
-* See the section on Builtin functions for how to lock on to a window and manipulate it, or watch my video about A Plague Tale Requiem
-
-#### TDF says the wineprefix is already running but the game is not
-* The game probably left a background process running. Open your favorite task manager and kill any process's a Windows exe
-* If this happens frequently, try adding `TDF_WINE_KILL_AFTER=1`, this will terminate all Wine processes when the game's main process terminates
+* See the section on Builtin functions for how to lock on to a window and manipulate it
 
 #### Game controller not detected/not working
-* Wine has built-in support for Xbox and Dualshock controllers, but you may have to add some udev rules to allow your user permissions to use them. If you're on an Arch-based distro, the `game-devices-udev` package on the AUR will take care of most models, otherwise, [this article will help](https://wiki.archlinux.org/title/Gamepad) users of all distros
+* Make sure you have `TDF_BLOCK_NATIVE_INPUT=0` in your config
+* You may have to add some udev rules to allow your user permissions to use controllers. If you're on an Arch-based distro, the `game-devices-udev` package on the AUR will take care of most models, otherwise, [this article will help](https://wiki.archlinux.org/title/Gamepad) users of all distros. Reboot after applying the udev rules
 
 #### TDF no longer starts after being copied/moved to an external drive or syncing through cloud to another computer
 * To transfer a TDF instance, you should use the archive feature instead, it's faster and more reliable
 * If you're using syncthing to keep a TDF instance synced between PCs, you need to set that folder to sync and send extended attributes on all your machines. This is a bad idea though, a much better thing to do would be to only sync the saved games folder inside that TDF instance
-* If you moved a TDF instance to an NTFS, exFAT or god forbid a FAT32 drive, or any other file system that doesn't support UNIX permissions and symlinks, you're out of luck and I told you so in the beginning of this document. Recover your saved games from `zzprefix` and start over with a new TDF instance
+* If you moved a TDF instance to an NTFS, exFAT or god forbid a FAT32 drive, or any other file system that doesn't support UNIX permissions and symlinks, you're out of luck and I told you so in the beginning of this document. Recover your saved games from `data/wineprefix` and start over with a new TDF instance
+* If you see the error "This sandbox was created by another user", the `data` folder's ownership has changed. Use this command to fix it: `sudo chown -R $(id -u):$(id -g) data`
 
 ## Building TDF
-The TDF build scripts are designed to download the latest version of each component in TDF, build what needs to be compiled from source and create a `template-YYYYMMDD.tar.zst` ready to extract and use.
+The TDF build scripts are designed to download the latest version of each component in TDF, build what needs to be compiled from source, and create a `template-YYYYMMDD.tar.zst` ready to extract and use.
 
-__It is strongly recommended to use an Arch-based distro to build TDF.__
+### Building with Distrobox and Podman
+TDF depends on a lot of dependencies when building and , or who want a reproducible build environment, you can use Distrobox with Podman:
 
-To build TDF:  
+1. Make sure you have distrobox and podman installed and working properly
+2. Download and extract the [preconfigured image](https://downloads.fdossena.com/geth.php?r=tdf-buildimg) based on Debian 13
+3. Load the `tdfbuild` image: `podman load -i tdfbuild.tar`
+4. Create the `tdfbuild` container: `distrobox create --image tdfbuild --name tdfbuild`
+5. Launch the container: `distrobox enter tdfbuild`
+6. Clone the TDF repo and enter it: `git clone https://github.com/adolfintel/tdf && cd tdf`
+7. Build it: `TDF_BUILD_AUTOUPDATE=1 ./makeTemplate.sh`
+8. Stop the container: `distrobox stop tdfbuild`
+
+The finished `template-YYYYMMDD.tar.zst` will be inside the folder where you cloned the TDF repo.
+
+For future builds, just `distrobox enter tdfbuild`, go to your cloned TDF repo, and run the build script again.
+
+### Building natively
+If you don't trust my image (understandable) or you just want to experience the pain of building it yourself, TDF can be built on both Arch and Debian, and will help you download dependencies along the way
+
+To build TDF natively:  
 * Download the latest version of this repo: `git clone https://github.com/adolfintel/tdf`
 * Enter the downloaded folder: `cd tdf`
 * Launch the automatic build script: `./makeTemplate.sh`
 
-The following dependencies must be installed on your system:  
-* Basic tools like coreutils, gcc, g++, wget, curl, git, make, meson, sed, tar, zstd, etc. (on Arch-based distros, the `base-devel` package should provide everything you need)
-* Wine and its dependencies. (on Arch-based distros, the easiest way to get all of these is to install the wine-git package from the AUR)
-* Mingw-w64
-* glslc (glslang)
+Every time it encounters a missing dependency, it will stop and you'll have to download it.
 
-The following components will be downloaded:  
+The following prebuilt components will be downloaded automatically:  
 * Wine Mono: latest version from the [Wine website](https://dl.winehq.org/wine/wine-mono/)
 * Wine Gecko: latest 32 and 64-bit versions from the [Wine website](https://dl.winehq.org/wine/wine-gecko/)
 * Microsoft Corefonts: from [Sourceforge](https://sourceforge.net/projects/corefonts/)
 * Microsoft Visual C++ Redistributable: latest 32 and 64-bit versions from Microsoft
+* AMD FSR4: from the AMD website
 
 The following components will be built from source:  
 * Wine: latest master using the [wine-tkg build system](https://github.com/Frogging-Family/wine-tkg-git) with some custom config
@@ -1265,37 +1237,61 @@ The following components will be built from source:
 * DXVK-nvapi: latest master from [Github](https://github.com/jp7677/dxvk-nvapi)
 * D7VK: latest master from [Github](https://github.com/WinterSnowfall/d7vk)
 * VKD3D-Proton: latest master from [Github](https://github.com/HansKristian-Work/vkd3d-proton)
+* bubblewrap: latest master from [Github](https://github.com/containers/bubblewrap)
 * xdotool: latest master from [Github](https://github.com/jordansissel/xdotool)
 * zenity: version 4.2 from [Gnome's GitLab](https://gitlab.gnome.org/GNOME/zenity)
-* Some C programs included with the TDF source code used
+* Reaper: latest master from [Github](https://github.com/Plagman/reaper/)
+* libstrangle: latest master from [Gitlab](https://gitlab.com/Infernio/libstrangle)
+* Some C programs included with the TDF source code (used for smoke tests, DND, sleep inhibition, etc.)
 
-The first build will take a good 30-60 minutes to download and compile everything, but subsequent builds will be quicker as the download phase will only download updates for the components and the TDF repo itself.
+The first build will take a good 15-60 minutes to download and compile everything, but subsequent builds will be quicker as the download phase will only download updates for the components and the TDF repo itself.
 
-If the build fails (and let's be honest, the first times it probably will), fix the problem and run `./makeTemplate.sh` again, the script will automatically resume from where it left off.
+If the build fails (and let's be honest, the first few times it probably will), fix the problem and run `./makeTemplate.sh` again, the script will automatically resume from where it left off.
 
 If you don't want to use this caching and resuming system, you can run a clean build using `./makeTemplate.sh clean`, this will delete all saved data and redownload everything, then build TDF.
 
 If you're going to build TDF regularly, you can enable automatic updates for the TDF repo using `TDF_BUILD_AUTOUPDATE=1 ./makeTemplate.sh` (git only).
 
-At the end of the build process, the package will be compressed using a slow but efficient zstd compression and the finished archive will be ~310MB.
+At the end of the build process, the package will be compressed using a slow but efficient zstd compression and the finished archive will be created as a `.tar.zst` file.
 
-## Important security notice
-While TDF provides some additional security compared to a standard installation of Wine or Proton, it is important to understand that Wine is simply not designed for security, quite the opposite, it's designed to seamlessly integrate Windows stuff into Linux.
+## How secure is TDF?
+Wine is an HLE (High Level Emulator) which means that it doesn't emulate an entire system like dosbox does because that would be too slow, instead it provides a way to load Windows exe files, intercept Windows system calls and "convert" them to equivalent Linux system calls. It also provides a ton of libraries and other functionality but that's not relevant here. Without TDF, this means that any random Windows exe that you run in Wine is to all intents and purposes, a regular UNIX process that's running under your user, and therefore it has access to everything you have access to, and malware can easily escape the restrictions put in place by Wine by using Linux system calls directly, it only requires some modest knowledge of how Wine works.
 
-Wine is an HLE (High Level Emulator) which means that, to put it simply, it doesn't emulate an entire system like dosbox does because it would be too slow, instead it provides a way to load Windows exe files, intercept Windows system calls and "convert" them to equivalent Linux system calls. It also provides a ton of libraries and other functionality but that's not relevant here.
+TDF was designed to sandbox Wine itself rather than games running inside it. It provides very strong security compared to a regular installation of Wine, Proton, Lutris, Bottles, and other similar tools, and does it by running Wine inside a sandbox created using [bubblewrap](https://github.com/containers/bubblewrap), the same technology used to sandbox apps distributed through Flatpak, but configured differently. In other words, TDF assumes that your games are malware and treats them as such, by design.
 
-What this means is that a process running inside Wine is, to all intents and purposes, a regular UNIX process that's running under your user, and therefore has access to everything you have access to, and malicious software can easily escape the restrictions put in place by Wine or TDF by using Linux system calls directly, it only requires some modest knowledge of assembly.
+Out of the box, a game running inside TDF has:
+* No network access (games are launched in a separate network namespace where they can only see a loopback interface that is limited to the sandbox). You can enable it if the game has online functionality with `TDF_BLOCK_NETWORK=0`, but remember to set `TDF_ALLOW_HOST_FILESYSTEM=0`
+* No access to processes outside of the sandbox: no way to see them or communicate with them
+* No access to dbus
+* No shared memory between processes (except between parent and children, which is required for some mods to work, and only inside the sandbox)
+* No way to launch applications installed outside the sandbox (except for the browser, which is disabled by default)
+* No [capabilities](https://www.man7.org/linux/man-pages/man7/capabilities.7.html)
+* A completely fake file system:
+    * Inside of Wine:
+        * The C drive points to `data/wineprefix/drive_c`, read-write
+        * The H drive lets you access files on your computer, read-only. __This is only for ease of installation and should be disabled after the game is installed__
+    * Outside of Wine:
+        * The root file system is completely fake, it resides in RAM and is destroyed immediately when TDF is closed
+        * Some files and folders on your system are mounted read-only to allow access to basic commands, drivers, etc., specifically the following (and only if they exist): `"/usr" "/bin" "/lib" "/lib32" "/lib64" "/sys" "/etc/hosts" "/etc/hostname" "/etc/resolv.conf" "/etc/fonts" "/etc/machine-id"`
+        * `/home` is mounted read-write to `data/home`, this way the shader cache can persist
+        * The TDF instance folder is mounted to `/tdf`, read-only except for `/tdf/data`, which is where the sandbox data is stored and is read-write. This way, a malware will not be able to modify TDF itself or your configuration files
+        * Custom mounts defined with `TDF_CUSTOM_MOUNTS` and the host file system (if enabled with `TDF_ALLOW_HOST_FILESYSTEM`) are mounted to `/customMounts/<letter>`
+* Minimal access to devices: games will be able to use the CPU, GPU, the audio (through Pulse, PipeWire or ALSA), the display (through X11 or Wayland), and input devices. Nothing else is exposed.
+* No information about the real users on your computer (there's only a fake `"wine"` user inside the sandbox) at all and no way to use su, sudo, and similar commands
 
-This is not really a problem if you're just running games, the chances of games containing such a sophisticated malware are virtually zero, but it's important to understand that TDF is not a safe way to run malware or other software downloaded from dubious sources, it can easily escape the sandboxing and damage the real system. Always use a well isolated VM to test or reverse engineer malware.
+With that being said, I don't encourage you to run malware in it. In order for games to work, TDF needs to allow *some* access to your system, and this is potential attack surface:
+* Malware can try to run exploits and 0-days againts the kernel, the drivers or bubblewrap. That would be very difficult to pull off, but potentially *very bad* if successful
+* Incorrect configuration, such as exposing your home directory with read-write permissions, will allow malware to create a persistance mechanism and escape the sandbox (like modifying .bashrc), or allowing network access while having the H drive enabled. That would be *very stupid* and it would be entirely your fault
 
-To put it short: if you're worried about telemetry and data collection in games, you just don't want games to put files all over your system or you just want to package games, TDF is good; if you're going to run GTAV_Installer.exe (2.9MB) downloaded from SkidEmpressReloadedLegitCracks69.ru it is very much not.
+If you need to test malware, use a proper hardened VM, this is for games.
 
 ## TODOs and future improvements
 * Implement something similar to the Steam Runtime but based on Arch to mitigate Wine's dependency hell
 * Automatically recognize some known problematic games and apply tweaks to the configuration
-* Find some way to build against old versions of glibc for better compatibility, ideally using the Steam Runtime SDK (Wine-tkg currently fails to build on Debian-based distros due to conflicting dependencies)
 
 ## Videos
+TODO: update
+
 * [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)
 * [Basic usage - Installing Steam rips](https://downloads.fdossena.com/geth.php?r=tdfvideo2)
 * [Basic usage - Installing a game from ISO](https://downloads.fdossena.com/geth.php?r=tdfvideo4)
