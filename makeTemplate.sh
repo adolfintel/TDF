@@ -44,22 +44,23 @@ if [ -z "$TDF_BUILD_STARTED" ]; then
     fi
 fi
 startT=$SECONDS
-failedDeps=""
+failedDeps=()
 for module in "${modules[@]}"; do
     cd "$module"
     for f in ./0-*.sh; do
         err="$($f)"
         if [ -n "$err" ]; then
-            failedDeps="$failedDeps\n$err"
+            IFS=$'\n' read -r -d '' -a err <<< "$err"
+            failedDeps+=("${err[@]}")
         fi
     done
     cd ..
 done
 if ! command -v zstd > /dev/null; then
-    failedDeps="$failedDeps\nzstd not installed\n"
+    failedDeps+=("zstd not installed")
 fi
-if [ -n "$failedDeps" ]; then
-    echo "$failedDeps" | sort | uniq
+if [ "${#failedDeps}" -ne 0 ]; then
+    printf '%s\n' "${failedDeps[@]}" | sort | uniq
     fail "missing dependencies"
 fi
 failedModules=()
