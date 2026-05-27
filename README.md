@@ -117,6 +117,14 @@ Currently implemented languages:
 * `en`: English
 * `it`: Italian
 
+__`TDF_SHOW_PLAY_TIME`__  
+Show playtime after the game closes.
+
+Possible values:  
+* `0` (default): don't show playtime
+* `1`: show playtime for the current session
+* `2`: show playtime for the current session and total played hours
+
 ### Sandbox / Isolation variables
 TDF uses [bubblewrap](https://github.com/containers/bubblewrap) to create a secure sandbox using Linux namespaces. This provides very strong isolation giving games only the bare minimum that they need to work: access to the display, sound, input devices, and the GPU; a potential malware running inside the sandbox won't be able to touch your files, interact with other processes on your computer (or even see them), use the network, use dbus, etc. unless you explicitly allow it.
 

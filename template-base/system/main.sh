@@ -65,6 +65,7 @@ TDF_MANGOHUD=0
 TDF_GAMESCOPE=0
 TDF_GAMESCOPE_PARAMETERS=""
 TDF_HIDE_GAME_RUNNING_DIALOG=0
+TDF_SHOW_PLAY_TIME=0
 #shellcheck disable=SC2034
 TDF_UI_LANGUAGE=""
 
@@ -1222,6 +1223,41 @@ function _stopWinebrowserBridge {
     winebrowserPid=-1
 }
 
+_gameStartT=-1
+function _startPlaytimeTracking {
+    _gameStartT=$SECONDS
+}
+
+function _endPlaytimeTracking {
+    local playedTime=$((SECONDS - _gameStartT))
+    local ss=$((playedTime % 60))
+    local mm=$(( ( playedTime / 60 ) % 60 ))
+    local hh=$((playedTime / 3600))
+    if [ $ss -lt 10 ]; then
+        ss="0$ss"
+    fi
+    if [ $mm -lt 10 ]; then
+        mm="0$mm"
+    fi
+    if [ $hh -lt 10 ]; then
+        hh="0$hh"
+    fi
+    local tot="$playedTime"
+    if [ -e "data/.playedTime" ]; then
+        tot="$(cat "data/.playedTime")"
+        tot=$((tot + playedTime))
+        echo "$tot" > "data/.playedTime"
+    else
+        echo "$playedTime" > "data/.playedTime"
+    fi
+    local totHours=$((tot / 3600))
+    if [ "$TDF_SHOW_PLAY_TIME" -eq 1 ]; then
+        zenity --title="$TDF_TITLE" --info --width=250 --text="$(_loc "$TDF_LOCALE_PLAYEDFOR")"
+    elif [ "$TDF_SHOW_PLAY_TIME" -eq 2 ]; then
+        zenity --title="$TDF_TITLE" --info --width=250 --text="$(_loc "$TDF_LOCALE_PLAYEDFOR2")"
+    fi
+}
+
 function _runCommandPrompt {
     local subshellPid=-1; local trapped=0;
     function cleanup() {
@@ -1290,6 +1326,7 @@ function _runGame {
         wait $callbackSubshellPid
         callbackSubshellPid=-1
     fi
+    _startPlaytimeTracking
     wineCommand=("$_wineDir/wine" "start" "/D" "$game_workingDir" "/WAIT" "$game_exe" "${game_args[@]}")
     if [ -z "$_relayPath" ]; then
         runSandboxed "${wineCommand[@]}" &
@@ -1299,6 +1336,7 @@ function _runGame {
         subshellPid=$!
     fi
     _waitSubshellTermination $subshellPid "$(_loc "$TDF_LOCALE_GAMERUNNING")"
+    _endPlaytimeTracking
     if [ $trapped -eq 1 ]; then
         exit
     fi
