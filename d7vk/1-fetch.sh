@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 echo 1 > state
-echo "Downloading d7vk (master)"
+echo "Downloading d7vk (devel)"
 if [ -f incomplete ]; then
     rm -rf d7vk build
 fi
@@ -9,11 +9,14 @@ touch incomplete
 if [ -d d7vk ]; then
     cd d7vk
     git fetch --all -p
-    git reset --hard origin/master > /dev/null
+    git reset --hard origin/devel > /dev/null
     git submodule update
     cd ..
 else
     git clone --recursive https://github.com/WinterSnowfall/d7vk
+    cd d7vk
+    git checkout devel
+    cd ..
 fi
 rm -f incomplete
 echo 2 > state
