@@ -60,21 +60,15 @@ Here's a video showing how to install a game from GOG that requires no additiona
 
 You can find more video examples at the end of this document.
 
-### Configuration variables
+## Configuration variables
 The following lists contain all the variables that can be added in `vars.conf` to configure emulation settings, work around issues, improve performance, etc.
 
-### Essential variables
+### Essential variables (where the game is installed)
+
 __`game_exe`__  
 Specifies the Windows-style path to the game's exe file. If empty, the command prompt will be launched instead.
 
 Example: `game_exe='C:\GTAV\PlayGTAV.exe'`
-
-__`game_args`__  
-Arguments to be passed to the game.
-
-Accepts a string or a bash array.
-
-Examples: `('-iwad' 'doom2.wad')`  or  `'-iwad doom2.wad'`
 
 __`game_workingDir`__  
 The working directory of the game. By default this is set to the same folder where the `game_exe` resides. All paths must be Windows-style.
@@ -85,47 +79,20 @@ game_exe='bin\indy.exe'
 game_workingDir='C:\Indy'
 ```
 
+__`game_args`__  
+Arguments to be passed to the game.
+
+Accepts a string or a bash array.
+
+Examples: `('-iwad' 'doom2.wad')`  or  `'-iwad doom2.wad'`
+
 __`SteamGameId`__  
 Optional numeric Steam App ID for the game. Identifies a specific game on Steam, enabling game-specific workarounds in the wine-games build (e.g., known configuration tweaks, known fixes). This does NOT require Steam to be installed; it's purely a lookup key for internal game-specific optimizations.
 
 Example: `export SteamGameId="1174180"`
 
-### TDF variables
-__`TDF_TITLE`__  
-The title to show on the title bar of the TDF windows. By default it's set to `"Launcher"`.
+### Sandboxing / Isolation
 
-__`TDF_HIDE_GAME_RUNNING_DIALOG`__  
-Whether to hide the TDF window that says "Game running". By default, TDF shows it so you can stop the game at any time.
-
-Possible values:  
-* `0` (default): show the window
-* `1`: hide it
-
-__`TDF_IGNORE_EXIST_CHECKS`__  
-By default, TDF checks whether the executable specified in `game_exe` actually exists before trying to launch it, but this is not always desirable and can be disabled, which can be useful to run certain commands.
-
-Possible values:  
-* `0` (default): check that the executable actually exists and show an error if it doesn't
-* `1`: don't check and don't show an error if it doesn't exist
-
-__`TDF_UI_LANGUAGE`__  
-The language to use for the TDF user interface. Does not affect Wine or games (see `TDF_WINE_LANGUAGE` for that).
-
-By default, TDF tries to obtain the language from the OS. If a translation is not available, it will fall back to English.
-
-Currently implemented languages:  
-* `en`: English
-* `it`: Italian
-
-__`TDF_SHOW_PLAY_TIME`__  
-Show playtime after the game closes.
-
-Possible values:  
-* `0` (default): don't show playtime
-* `1`: show playtime for the current session
-* `2`: show playtime for the current session and total played hours
-
-### Sandbox / Isolation variables
 TDF uses [bubblewrap](https://github.com/containers/bubblewrap) to create a secure sandbox using Linux namespaces. This provides very strong isolation giving games only the bare minimum that they need to work: access to the display, sound, input devices, and the GPU; a potential malware running inside the sandbox won't be able to touch your files, interact with other processes on your computer (or even see them), use the network, use dbus, etc. unless you explicitly allow it.
 
 __`TDF_ALLOW_HOST_FILESYSTEM`__  
@@ -181,7 +148,8 @@ Possible values:
 
 Note: regardless of this setting, unless udev is misconfigured on your system, this won't allow games to log keypresses to other applications.
 
-### Wine variables
+### Wine
+
 __`TDF_WINE_PREFERRED_VERSION`__  
 TDF comes with 2 different versions of Wine and can also use the one on your system (if installed). This variable lets you choose which one you prefer.
 
@@ -192,123 +160,12 @@ Possible values:
 * `custom`: use the version of Wine that you can put in a folder called `wine-custom` outside the system folder (next to `run.sh`). This is useful to keep TDF updates easy for the occasional game that requires a custom build of Wine
 * any other value: tries to use `./wine-<value>` folder (where `<value>` is the value you set), falls back to system Wine if not found
 
-__`TDF_WINE_HIDE_CRASHES`__  
-When a Wine application crashes, it normally shows a dialog similar to the "Stopped working" thing on Windows, but depending on the game and configuration, it may be impossible to interact with that window, leaving you stuck. By default, TDF disables this crash window, but it can be enabled for debugging and troubleshooting purposes.
-
-Possible values:  
-* `1` (default): hide the crash window
-* `0`: show the crash window
-
-__`TDF_WINE_AUDIO_DRIVER`__  
-Sets the preferred audio driver for Wine. This can be useful if you have crackling audio or if one of the drivers has a lower latency than the others. Default is usually fine.
-
-Possible values:
-* `pulse`: use PulseAudio (you may also want to add `export PULSE_LATENCY_MSEC=20` for lower latency in rhythm games or `export PULSE_LATENCY_MSEC=120` if you have crackling/dropouts)
-* `alsa`: use ALSA
-* `jack`: use Jack
-* `default` (default): let Wine decide
-
-Note: Choosing a driver that doesn't exist in Wine or is not installed in your system will result in no sound being played.
-
-Note: Wine doesn't natively support PipeWire yet, it uses PulseAudio by default for compatibility if you're using PipeWire.
-
-__`TDF_WINE_GRAPHICS_DRIVER`__  
-Sets the preferred graphics driver for Wine (as in how it outputs, not how it renders 3D graphics). This can be useful if you're messing around with Wayland and X11 and Wine doesn't work properly.
-
-Possible values:
-* `default` (default): let Wine decide
-* `x11`: use X11, does not support HDR
-* `wayland`: use Wayland, supports HDR. Beware, it sucks.
-* `auto`: let TDF decide based on what you're using. If `WAYLAND_DISPLAY` is set, `wayland` will be used, otherwise if `DISPLAY` is set `x11` will be used, otherwise default (let Wine decide)
-
-Note: Choosing a driver that doesn't exist in Wine or in your system will result in no graphics being displayed.
-
-Note: This setting is automatically forced to `wayland` when `TDF_HDR` is set to `1`.
-
-__`TDF_WINE_DPI`__  
-DPI value for display scaling of Wine applications.
-
-Possible values:  
-* `0` (default): let Wine handle scaling
-* `-1`: use DPI from the main display (auto-detected via xrdb)
-* number: use this DPI value (96=100% scaling, 120=125% scaling, 144=150% scaling, etc.). 96 DPI will fix some older games
-
-__`TDF_WINE_LANGUAGE`__  
-By default, TDF will pass the system language to Wine, which may be undesirable for some games and applications that just use the system language instead of showing a language selector. Here's a complete [list of locales](https://docs.oracle.com/cd/E23824_01/html/E26033/glset.html), obviously not all games will support them.
-
-Example: `TDF_WINE_LANGUAGE='it_IT.utf-8'`
-
 __`TDF_WINE_ARCH`__  
 The architecture of the Wine installation. Can only be set before the initialization is performed, and can't be changed afterwards without deleting the wineprefix.
 
 Possible values:  
 * `win64` (default): create a 64-bit Windows installation
 * `wow64` (or `win32`): create a 32-on-64 prefix (useful for some old games)
-
-__`TDF_WINE_SYNC`__  
-The synchronization method to be used by Wine (game-optimized build only).
-
-Possible values:  
-* `""` (empty string) (default): let Wine decide (ntsync if available, falls back to fsync/esync)
-* `fsync`: force futex-based fsync (not recommended)
-* `esync`: force Wine esync (not recommended)
-
-Note: Using `fsync` requires `TDF_BLOCK_SHM=0`, which reduces sandbox security.
-
-__`TDF_WINE_LAA`__
-Enable Large Address Aware (LAA) support for 32-bit applications. Allows 32-bit games to address more than 2GB of memory.
-
-Possible values:  
-* `1` (default): Enable LAA
-* `0`: Disable
-
-__`TDF_WINE_HEAP_DELAY_FREE`__
-Enable heap delay-free optimization. Delays freeing heap memory for better compatibility with games with use-after-free bugs and reduces overhead from system calls.
-
-Possible values:  
-* `1` (default): Enable
-* `0`: Disable
-
-__`TDF_WINE_WINVER`__  
-Sets the Windows version to emulate.
-
-Possible values:  
-* `""` (empty string) (default): let Wine decide on prefix creation (at the moment it's `win10`). Can be changed through `winecfg`
-* Sensible values: `win10`, `win11`, `win7`, `win8`, `win81`, `vista`, `winxp`, `winxp64`
-* Other values: `win2003`, `win2008`, `win2008r2`, `winme`, `win2k`, `win98`, `win95`, `nt40`, `nt351`, `win31`, `win30`, `win20`
-
-Note: If using an older Windows version, `TDF_WINE_ARCH` should also be set accordingly. It usually doesn't break anything, but applications may not expect to see 64-bit versions of legacy systems.
-
-__`TDF_WINE_THEME`__  
-Sets the Wine theme.
-
-Possible values:  
-* `""` (empty string) (default): let Wine decide on prefix creation (at the moment it's `light`). Can be changed through `winecfg`
-* `classic`: use the classic 9x style theme (can fix some old apps that have drawing issues with modern themes)
-* `light`: use the modern 11-ish style theme
-
-Note: It's possible to install msstyles themes, in this case, leave this empty and install them through `winecfg`.
-
-__`TDF_WINE_DEBUG_RELAY`__  
-Enables the Wine relay feature, which traces all interaction between the application and the rest of the system to a file. Extremely slow but can be useful to debug weird issues and crashes.
-
-Possible values:  
-* `0` (default): disabled
-* `1`: when the game is launched, TDF will ask where you want to save the trace, then launch the game with relay enabled
-
-__`TDF_WINE_DEBUG_GSTREAMER`__  
-Enables gstreamer debug output (to the terminal). This can be used to debug issues like games not playing videos or crashing when a video is supposed to play.
-
-Possible values:  
-* `0` (default): disabled
-* `1`: enable gstreamer debug output
-
-__`TDF_WINE_SMOKETEST`__  
-Whether or not to perform a "smoke test" to make sure that Wine actually works before trying to run the game, that way you can tell if a crash is a Wine problem or a game problem. TDF does this by default but you can disable it if it takes too long at the "Starting Wine" screen.
-
-Possible values:  
-* `1` (default): do the "smoke test"
-* `0`: skip the "smoke test" for faster startup
 
 __`TDF_WINEMONO`__  
 Whether to install Wine Mono in the prefix or not. Mostly useful for launchers and applications based on .NET, games don't usually need this.
@@ -366,7 +223,86 @@ Example:
 export WINEDEBUG=+loaddll,+pid
 ```
 
+__`export DRI_PRIME`__  
+Sometimes on systems with multiple GPUs, a game might start using the wrong GPU, such as the integrated graphics on your laptop instead of the dedicated card.
+
+By setting a value for `DRI_PRIME` you can tell the game which graphics card to use.
+
+Example:  
+```
+#use the second GPU
+export DRI_PRIME=1
+```
+
+This is not a TDF variable and you can find more about it [here](https://wiki.archlinux.org/title/PRIME).
+
+__`TDF_WINE_HIDE_CRASHES`__  
+When a Wine application crashes, it normally shows a dialog similar to the "Stopped working" thing on Windows, but depending on the game and configuration, it may be impossible to interact with that window, leaving you stuck. By default, TDF disables this crash window, but it can be enabled for debugging and troubleshooting purposes.
+
+Possible values:  
+* `1` (default): hide the crash window
+* `0`: show the crash window
+
+__`TDF_WINE_AUDIO_DRIVER`__  
+Sets the preferred audio driver for Wine. This can be useful if you have crackling audio or if one of the drivers has a lower latency than the others. Default is usually fine.
+
+Possible values:
+* `pulse`: use PulseAudio (you may also want to add `export PULSE_LATENCY_MSEC=20` for lower latency in rhythm games or `export PULSE_LATENCY_MSEC=120` if you have crackling/dropouts)
+* `alsa`: use ALSA
+* `jack`: use Jack
+* `default` (default): let Wine decide
+
+Note: Choosing a driver that doesn't exist in Wine or is not installed in your system will result in no sound being played.
+
+Note: Wine doesn't natively support PipeWire yet, it uses PulseAudio by default for compatibility if you're using PipeWire.
+
+__`TDF_WINE_GRAPHICS_DRIVER`__  
+Sets the preferred graphics driver for Wine (as in how it outputs, not how it renders 3D graphics). This can be useful if you're messing around with Wayland and X11 and Wine doesn't work properly.
+
+Possible values:
+* `default` (default): let Wine decide
+* `x11`: use X11, does not support HDR
+* `wayland`: use Wayland, supports HDR. Beware, it sucks.
+* `auto`: let TDF decide based on what you're using. If `WAYLAND_DISPLAY` is set, `wayland` will be used, otherwise if `DISPLAY` is set `x11` will be used, otherwise default (let Wine decide)
+
+Note: Choosing a driver that doesn't exist in Wine or in your system will result in no graphics being displayed.
+
+Note: This setting is automatically forced to `wayland` when `TDF_HDR` is set to `1`.
+
+__`TDF_COREFONTS`__  
+Whether to install the Microsoft Corefonts or not. These are fonts like Arial, Comic Sans, etc. that are required by some games such as PC Building Simulator. This is generally harmless, but if some application has font rendering issues, try disabling it.
+
+Possible values:  
+* `1` (default): install the Corefonts
+* `0`: don't install the Corefonts
+
+__`TDF_WINE_WINVER`__  
+Sets the Windows version to emulate.
+
+Possible values:  
+* `""` (empty string) (default): let Wine decide on prefix creation (at the moment it's `win10`). Can be changed through `winecfg`
+* Sensible values: `win10`, `win11`, `win7`, `win8`, `win81`, `vista`, `winxp`, `winxp64`
+* Other values: `win2003`, `win2008`, `win2008r2`, `winme`, `win2k`, `win98`, `win95`, `nt40`, `nt351`, `win31`, `win30`, `win20`
+
+Note: If using an older Windows version, `TDF_WINE_ARCH` should also be set accordingly. It usually doesn't break anything, but applications may not expect to see 64-bit versions of legacy systems.
+
+__`TDF_WINE_THEME`__  
+Sets the Wine theme.
+
+Possible values:  
+* `""` (empty string) (default): let Wine decide on prefix creation (at the moment it's `light`). Can be changed through `winecfg`
+* `classic`: use the classic 9x style theme (can fix some old apps that have drawing issues with modern themes)
+* `light`: use the modern 11-ish style theme
+
+Note: It's possible to install msstyles themes, in this case, leave this empty and install them through `winecfg`.
+
+__`TDF_WINE_LANGUAGE`__  
+By default, TDF will pass the system language to Wine, which may be undesirable for some games and applications that just use the system language instead of showing a language selector. Here's a complete [list of locales](https://docs.oracle.com/cd/E23824_01/html/E26033/glset.html), obviously not all games will support them.
+
+Example: `TDF_WINE_LANGUAGE='it_IT.utf-8'`
+
 #### Limiting CPU cores (and setting CPU topology in general)
+
 As CPUs get more and more cores and threads, problems such as crashes, inconsistent performance and general instability can occur in older games. For this reason, TDF implements several ways to limit which cores can be used.
 
 __Note: these settings apply to the game-optimized build only__
@@ -500,7 +436,61 @@ export WINE_CPU_TOPOLOGY="4:0,1,2,3"
 
 Note: if `WINE_CPU_TOPOLOGY` is set, the settings above will have no effect.
 
-#### DXVK and VKD3D variables
+__`TDF_WINE_DPI`__  
+DPI value for display scaling of Wine applications.
+
+Possible values:  
+* `0` (default): let Wine handle scaling
+* `-1`: use DPI from the main display (auto-detected via xrdb)
+* number: use this DPI value (96=100% scaling, 120=125% scaling, 144=150% scaling, etc.). 96 DPI will fix some older games
+
+__`TDF_WINE_SYNC`__  
+The synchronization method to be used by Wine (game-optimized build only).
+
+Possible values:  
+* `""` (empty string) (default): let Wine decide (ntsync if available, falls back to fsync/esync)
+* `fsync`: force futex-based fsync (not recommended)
+* `esync`: force Wine esync (not recommended)
+
+Note: Using `fsync` requires `TDF_BLOCK_SHM=0`, which reduces sandbox security.
+
+__`TDF_WINE_LAA`__  
+Enable Large Address Aware (LAA) support for 32-bit applications. Allows 32-bit games to address more than 2GB of memory.
+
+Possible values:  
+* `1` (default): Enable LAA
+* `0`: Disable
+
+__`TDF_WINE_HEAP_DELAY_FREE`__  
+Enable heap delay-free optimization. Delays freeing heap memory for better compatibility with games with use-after-free bugs and reduces overhead from system calls.
+
+Possible values:  
+* `1` (default): Enable
+* `0`: Disable
+
+__`TDF_WINE_SMOKETEST`__  
+Whether or not to perform a "smoke test" to make sure that Wine actually works before trying to run the game, that way you can tell if a crash is a Wine problem or a game problem. TDF does this by default but you can disable it if it takes too long at the "Starting Wine" screen.
+
+Possible values:  
+* `1` (default): do the "smoke test"
+* `0`: skip the "smoke test" for faster startup
+
+__`TDF_WINE_DEBUG_RELAY`__  
+Enables the Wine relay feature, which traces all interaction between the application and the rest of the system to a file. Extremely slow but can be useful to debug weird issues and crashes.
+
+Possible values:  
+* `0` (default): disabled
+* `1`: when the game is launched, TDF will ask where you want to save the trace, then launch the game with relay enabled
+
+__`TDF_WINE_DEBUG_GSTREAMER`__  
+Enables gstreamer debug output (to the terminal). This can be used to debug issues like games not playing videos or crashing when a video is supposed to play.
+
+Possible values:  
+* `0` (default): disabled
+* `1`: enable gstreamer debug output
+
+### Graphics
+
 __`TDF_DXVK`__  
 Whether to install DXVK or not, which provides Direct3D 8/9/10/11 to Vulkan translation and DXGI implementation. If this is disabled, WineD3D will be used instead, which may be better for some older games. If VKD3D or D7VK is enabled, DXVK is auto-enabled as a dependency.
 
@@ -510,30 +500,12 @@ Possible values:
 * `1` (default): use DXVK
 * `0`: use WineD3D
 
-__`TDF_D7VK`__  
-Whether to install D7VK or not, which provides DirectX 3-7 to Vulkan translation. If this is disabled, WineD3D will be used instead. Requires DXVK.
-
-Settings for D7VK can be changed by downloading the [default configuration file](https://github.com/WinterSnowfall/d7vk/blob/devel/dxvk.conf), placing it into the game's folder and editing it.
-
-Possible values:  
-* `1` (default): use D7VK
-* `0`: use WineD3D
-
 __`TDF_DXVK_NVAPI`__  
 Enable dxvk-nvapi (Nvidia API layer for DXVK). Provides NVAPI support and some performance optimizations on NVIDIA cards. Requires DXVK.
 
 Possible values:  
 * `1` (default): use dxvk-nvapi
 * `0`: don't use dxvk-nvapi
-
-__`TDF_HDR`__  
-Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect if HDR is disabled or unsupported.
-
-Possible values:  
-* `0` (default): don't expose HDR (this is the default because HDR kinda sucks in most games)
-* `1`: expose HDR if available
-
-Note: HDR only works on Wayland, enabling this setting will force Wine to use Wayland, which may break some games.
 
 __`TDF_VKD3D`__  
 Whether to install VKD3D-Proton, which provides Direct3D 12 to Vulkan translation. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version. Requires DXVK.
@@ -544,14 +516,65 @@ Possible values:
 
 VKD3D's config can be changed by using its [environment variables](https://github.com/HansKristian-Work/vkd3d-proton#environment-variables).
 
-__`FSR4_UPGRADE`__  
+__`TDF_D7VK`__  
+Whether to install D7VK or not, which provides DirectX 3-7 to Vulkan translation. If this is disabled, WineD3D will be used instead. Requires DXVK.
+
+Settings for D7VK can be changed by downloading the [default configuration file](https://github.com/WinterSnowfall/d7vk/blob/devel/dxvk.conf), placing it into the game's folder and editing it.
+
+Possible values:  
+* `1` (default): use D7VK
+* `0`: use WineD3D
+
+__`TDF_HDR`__  
+Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect if HDR is disabled or unsupported.
+
+Possible values:  
+* `0` (default): don't expose HDR (this is the default because HDR kinda sucks in most games)
+* `1`: expose HDR if available
+
+Note: HDR only works on Wayland, enabling this setting will force Wine to use Wayland, which may break some games.
+
+__`TDF_GL_MAXFPS`__  
+Enables an FPS limiter for OpenGL applications, based on libstrangle.
+
+Possible values:
+* `0` (default): disabled, and don't load libstrangle
+* number: limit FPS to this number
+
+__`export FSR4_UPGRADE`__  
 Enable AMD FSR4 on supported GPUs and automatically upgrade games that use FSR3 to FSR4. This installs a proprietary AMD DLL into the sandbox.
 
 Possible values:  
 * `0` (default): don't enable FSR4
 * `1`: enable FSR4
 
-#### Gamescope variables
+### Desktop integration
+
+__`TDF_DND`__  
+Enable Do Not Disturb mode while the game is running. Works on supported desktop environments (GNOME, KDE, etc.).
+
+Possible values:  
+* `1` (default): Enable DND
+* `0`: Don't enable DND
+
+__`TDF_NOSLEEP`__  
+Inhibit system sleep while the game is running. Works on supported desktop environments (GNOME, KDE, etc.).
+
+Possible values:  
+* `1` (default): Inhibit sleep
+* `0`: Don't inhibit sleep
+
+### Overlays and other tools
+
+__`TDF_MANGOHUD`__  
+Whether to launch the game with the MangoHud performance overlay or not. If MangoHud is not installed in the system, it has no effect. Note that some games will crash when launched with MangoHud.
+
+Possible values:  
+* `0` (default): don't use MangoHud
+* `1`: use MangoHud
+
+Note: If MangoHud is enabled alongside Gamescope, MangoHud is automatically disabled and Gamescope's built-in mangoapp is used instead.
+
 __`TDF_GAMESCOPE`__  
 Whether to enable Gamescope when running the game or not. This is generally not recommended when using the game-optimized version of Wine, since it integrates the fshack patches which make it mostly useless, but it can be useful when using the mainline version for games that change the screen resolution often, require low resolutions, integers scaling, etc. such as KOTOR or WinQuake. If Gamescope is not installed in the system, it has no effect.
 
@@ -564,61 +587,46 @@ The command line arguments used to start Gamescope. You can see a complete list 
 
 By default, TDF sets this variable to `-f -r 60 -w $XRES -h $YRES`, where `XRES` and `YRES` are two read-only variables provided by TDF for convenience that contain the horizontal and vertical resolution of the main display. This default value emulates a virtual screen with the same resolution as the real display, with a refresh rate of 60hz and sets Gamescope to run in fullscreen without any special scaling.
 
-#### libstrangle variables
-__`TDF_GL_MAXFPS`__
-Enables an FPS limiter for OpenGL applications, based on libstrangle.
+### TDF UI settings
 
-Possible values:
-* `0` (default): disabled, and don't load libstrangle
-* number: limit FPS to this number
+__`TDF_TITLE`__  
+The title to show on the title bar of the TDF windows. By default it's set to `"Launcher"`.
 
-### Miscellaneous variables
-__`TDF_MANGOHUD`__  
-Whether to launch the game with the MangoHud performance overlay or not. If MangoHud is not installed in the system, it has no effect. Note that some games will crash when launched with MangoHud.
+__`TDF_UI_LANGUAGE`__  
+The language to use for the TDF user interface. Does not affect Wine or games (see `TDF_WINE_LANGUAGE` for that).
 
-Possible values:  
-* `0` (default): don't use MangoHud
-* `1`: use MangoHud
+By default, TDF tries to obtain the language from the OS. If a translation is not available, it will fall back to English.
 
-Note: If MangoHud is enabled alongside Gamescope, MangoHud is automatically disabled and Gamescope's built-in mangoapp is used instead.
+Currently implemented languages:  
+* `en`: English
+* `it`: Italian
 
-__`TDF_COREFONTS`__  
-Whether to install the Microsoft Corefonts or not. These are fonts like Arial, Comic Sans, etc. that are required by some games such as PC Building Simulator. This is generally harmless, but if some application has font rendering issues, try disabling it.
+__`TDF_HIDE_GAME_RUNNING_DIALOG`__  
+Whether to hide the TDF window that says "Game running". By default, TDF shows it so you can stop the game at any time.
 
 Possible values:  
-* `1` (default): install the Corefonts
-* `0`: don't install the Corefonts
+* `0` (default): show the window
+* `1`: hide it
 
-__`export DRI_PRIME`__  
-Sometimes on systems with multiple GPUs, a game might start using the wrong GPU, such as the integrated graphics on your laptop instead of the dedicated card.
-
-By setting a value for `DRI_PRIME` you can tell the game which graphics card to use.
-
-Example:  
-```
-#use the second GPU
-export DRI_PRIME=1
-```
-
-This is not a TDF variable and you can find more about it [here](https://wiki.archlinux.org/title/PRIME).
-
-### Desktop integration
-__`TDF_DND`__  
-Enables Do Not Disturb mode (on supported DEs) while the game is running.
+__`TDF_IGNORE_EXIST_CHECKS`__  
+By default, TDF checks whether the executable specified in `game_exe` actually exists before trying to launch it, but this is not always desirable and can be disabled, which can be useful to run certain commands.
 
 Possible values:  
-* `1` (default): mute notifications while the game is running
-* `0`: don't mute them
+* `0` (default): check that the executable actually exists and show an error if it doesn't
+* `1`: don't check and don't show an error if it doesn't exist
 
-__`TDF_NOSLEEP`__  
-Inhibit system sleep while the game is running. Works on supported desktop environments (GNOME, KDE, etc.).
+__`TDF_SHOW_PLAY_TIME`__  
+Show playtime after the game closes.
 
 Possible values:  
-* `1` (default): inhibit sleep
-* `0`: don't inhibit sleep
+* `0` (default): don't show playtime
+* `1`: show playtime for the current session
+* `2`: show playtime for the current session and total played hours
 
 ### Callbacks
 You can optionally define the following functions inside `vars.conf` and they will be called at specific moments during operation. This can be useful to fix games that have issues with window positioning, focusing, etc. or that have some special requirements. The language is just bash.
+
+__NEVER CALL WINE FROM THESE SCRIPTS__
 
 If you need to define some variables, do it inside the callback functions, as the configuration is loaded more than once during the initialization process.
 
