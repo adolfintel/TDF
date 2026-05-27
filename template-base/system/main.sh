@@ -118,6 +118,8 @@ function _zenityProgressStop {
 function fail {
     _zenityProgressStop
     _clearDND
+    _clearNoSleep
+    _stopWinebrowserBridge
     echo "$1"
     _zenityError "$1"
     exit
