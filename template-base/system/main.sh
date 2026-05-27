@@ -147,10 +147,6 @@ source "system/builtinFunctions.sh"
 XRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 1)
 YRES=$(cat /sys/class/graphics/*/virtual_size | cut -d ',' -f 2)
 
-if ! command -v bwrap > /dev/null; then
-    fail "$(_loc "$TDF_LOCALE_BWRAP_MISSING")"
-fi
-
 function runSandboxed {
     cmdArray=("bwrap" "--die-with-parent" "--chdir" "/tdf" "--unshare-user" "--unshare-uts" "--unshare-cgroup" "--unshare-pid" "--tmpfs" "/")
     for f in "/usr" "/bin" "/lib" "/lib32" "/lib64" "/sys" "/etc/hosts" "/etc/hostname" "/etc/localtime" "/etc/resolv.conf" "/etc/fonts" "/etc/machine-id"; do
@@ -1334,6 +1330,9 @@ function _checkAlreadyRunning {
 
 if ! command -v zenity > /dev/null; then
     fail "$(_loc "$TDF_LOCALE_ZENITY_MISSING")"
+fi
+if ! command -v bwrap > /dev/null; then
+    fail "$(_loc "$TDF_LOCALE_BWRAP_MISSING")"
 fi
 _checkAlreadyRunning
 _loadConfig
