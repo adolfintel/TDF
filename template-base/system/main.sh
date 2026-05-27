@@ -1223,14 +1223,26 @@ function _stopWinebrowserBridge {
 }
 
 function _runCommandPrompt {
+    local subshellPid=-1; local trapped=0;
+    function cleanup() {
+        trapped=1
+        if [ $subshellPid -ne -1 ]; then
+            kill $subshellPid
+        fi
+        _stopWinebrowserBridge
+        _zenityWarn "$(_loc "$TDF_LOCALE_DONOTKILL")" &
+    }
+    trap cleanup SIGINT SIGTERM
     _zenityInfo "$(_loc "$TDF_LOCALE_INSTALLMODE_BEFORECMD")"
+    if [ $trapped -eq 1 ]; then
+        exit
+    fi
     _startWinebrowserBridge
     local startDir="C:\\"
     if [ "$TDF_ALLOW_HOST_FILESYSTEM" -ne 0 ]; then
         startDir="H:\\$HOME"
     fi
     wineCommand=("$_wineDir/wine" "start" "/D" "$startDir" "/WAIT" "cmd.exe")
-    local subshellPid=-1
     if [ -z "$_relayPath" ]; then
         runSandboxed "${wineCommand[@]}" &
         subshellPid=$!
@@ -1239,25 +1251,46 @@ function _runCommandPrompt {
         subshellPid=$!
     fi
     _waitSubshellTermination $subshellPid "$(_loc "$TDF_LOCALE_CMDRUNNING")"
+    if [ $trapped -eq 1 ]; then
+        exit
+    fi
     _stopWinebrowserBridge
+    trap - SIGINT SIGTERM
     _zenityInfo "$(_loc "$TDF_LOCALE_INSTALLMODE_AFTERCMD")"
 }
 
-_whileRunningPid=-1
 function _runGame {
+    local subshellPid=-1; local callbackSubshellPid=-1; local trapped=0;
+    function cleanup() {
+        trapped=1
+        if [ $subshellPid -ne -1 ]; then
+            kill $subshellPid
+        fi
+        if [ $callbackSubshellPid -ne -1 ]; then
+            kill $callbackSubshellPid
+        fi
+        _stopWinebrowserBridge
+        _clearDND
+        _clearNoSleep
+        _zenityWarn "$(_loc "$TDF_LOCALE_DONOTKILL")" &
+    }
+    trap cleanup SIGINT SIGTERM
     if [ "$(type -t onGameStart)" = "function" ]; then
         onGameStart &
-        wait $!
+        callbackSubshellPid=$!
+        wait $callbackSubshellPid
+        callbackSubshellPid=-1
     fi
     _applyDND
     _applyNoSleep
     _startWinebrowserBridge
     if [ "$(type -t whileGameRunning)" = "function" ]; then
         whileGameRunning &
-        _whileRunningPid=$!
+        callbackSubshellPid=$!
+        wait $callbackSubshellPid
+        callbackSubshellPid=-1
     fi
     wineCommand=("$_wineDir/wine" "start" "/D" "$game_workingDir" "/WAIT" "$game_exe" "${game_args[@]}")
-    local subshellPid=-1
     if [ -z "$_relayPath" ]; then
         runSandboxed "${wineCommand[@]}" &
         subshellPid=$!
@@ -1266,17 +1299,23 @@ function _runGame {
         subshellPid=$!
     fi
     _waitSubshellTermination $subshellPid "$(_loc "$TDF_LOCALE_GAMERUNNING")"
-    if [ $_whileRunningPid -ne -1 ]; then
-        kill $_whileRunningPid
-        _whileRunningPid=-1
+    if [ $trapped -eq 1 ]; then
+        exit
+    fi
+    if [ $callbackSubshellPid -ne -1 ]; then
+        kill $callbackSubshellPid
+        callbackSubshellPid=-1
     fi
     _clearDND
     _clearNoSleep
     if [ "$(type -t onGameEnd)" = "function" ]; then
         onGameEnd &
-        wait $!
+        callbackSubshellPid=$!
+        wait $callbackSubshellPid
+        callbackSubshellPid=-1
     fi
     _stopWinebrowserBridge
+    trap - SIGINT SIGTERM
 }
 
 function _loadConfig {
