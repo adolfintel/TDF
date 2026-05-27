@@ -122,7 +122,7 @@ function fail {
     _clearNoSleep
     _stopWinebrowserBridge
     echo "$1"
-    _zenityError "$1"
+    _zenityError "$1" &
     exit
 }
 
