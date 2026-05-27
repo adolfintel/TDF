@@ -146,6 +146,8 @@ Possible values:
 * `1` (default): Block with bwrap `--unshare-net`
 * `2`: Block with `unshare -nc` (old method)
 
+Note that unblocking networking will also allow the sandboxed app to communicate with some services on your computer that use sockets (like CUPS).
+
 __`TDF_BLOCK_BROWSER`__  
 Block Wine from launching the system's native web browser.
 
@@ -1281,6 +1283,7 @@ Out of the box, a game running inside TDF has:
 * No information about the real users on your computer (there's only a fake `"wine"` user inside the sandbox) at all and no way to use su, sudo, and similar commands
 
 With that being said, I don't encourage you to run malware in it. In order for games to work, TDF needs to allow *some* access to your system, and this is potential attack surface:
+* Malware can use the graphics and sound systems to try and record your screen. If you're on a modern distro with Wayland and PipeWire this would be immediately noticeable, but it could go unnoticed on other distros
 * Malware can try to run exploits and 0-days againts the kernel, the drivers or bubblewrap. That would be very difficult to pull off, but potentially *very bad* if successful
 * Incorrect configuration, such as exposing your home directory with read-write permissions, will allow malware to create a persistance mechanism and escape the sandbox (like modifying .bashrc), or allowing network access while having the H drive enabled. That would be *very stupid* and it would be entirely your fault
 
