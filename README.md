@@ -1273,7 +1273,7 @@ Out of the box, a game running inside TDF has:
         * The H drive lets you access files on your computer, read-only, and only while running the command prompt to install the game
     * Outside of Wine:
         * The root file system is completely fake, it resides in RAM and is destroyed immediately when TDF is closed
-        * Some files and folders on your system are mounted read-only to allow access to basic commands, drivers, etc., specifically the following (and only if they exist): `"/usr" "/bin" "/lib" "/lib32" "/lib64" "/sys" "/etc/hosts" "/etc/hostname" "/etc/resolv.conf" "/etc/fonts" "/etc/machine-id"`
+        * Some files and folders on your system are mounted read-only to allow access to basic commands, drivers, etc., specifically the following (and only if they exist): `"/usr" "/bin" "/lib" "/lib32" "/lib64" "/sys" "/etc/hosts" "/etc/localtime" "/etc/hostname" "/etc/resolv.conf" "/etc/fonts" "/etc/machine-id"`
         * `/home` is mounted read-write to `data/home`, this way the shader cache can persist
         * The TDF instance folder is mounted to `/tdf`, read-only except for `/tdf/data`, which is where the sandbox data is stored and is read-write. This way, a malware will not be able to modify TDF itself or your configuration files
         * Custom mounts defined with `TDF_CUSTOM_MOUNTS` and the host file system (if enabled with `TDF_ALLOW_HOST_FILESYSTEM`) are mounted to `/customMounts/<letter>`

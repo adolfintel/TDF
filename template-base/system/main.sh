@@ -153,7 +153,7 @@ fi
 
 function runSandboxed {
     cmdArray=("bwrap" "--die-with-parent" "--chdir" "/tdf" "--unshare-user" "--unshare-uts" "--unshare-cgroup" "--unshare-pid" "--tmpfs" "/")
-    for f in "/usr" "/bin" "/lib" "/lib32" "/lib64" "/sys" "/etc/hosts" "/etc/hostname" "/etc/resolv.conf" "/etc/fonts" "/etc/machine-id"; do
+    for f in "/usr" "/bin" "/lib" "/lib32" "/lib64" "/sys" "/etc/hosts" "/etc/hostname" "/etc/localtime" "/etc/resolv.conf" "/etc/fonts" "/etc/machine-id"; do
         if [ -e "$f" ]; then
             cmdArray+=("--ro-bind" "$f" "$f")
         fi
