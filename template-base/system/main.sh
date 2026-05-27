@@ -1332,6 +1332,9 @@ function _checkAlreadyRunning {
     fi
 }
 
+if ! command -v zenity > /dev/null; then
+    fail "$(_loc "$TDF_LOCALE_ZENITY_MISSING")"
+fi
 _checkAlreadyRunning
 _loadConfig
 _zenityProgressInit
