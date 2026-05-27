@@ -1326,7 +1326,11 @@ TODO: update
 
 __Important: some cracked copies of games that I have in my Steam/GOG/EGS library are used in these videos. These cracks have been used to circumvent DRM issues or incompatibilities with modern systems. TDF does not endorse piracy and I will not provide cracked copies of games.__
 
-## What does TDF mean?
+## FAQs
+#### Was this project vibe-coded?
+__No.__ TDF predates the generative AI boom, so the code was written by me. Some AI tools were used (specifically a local instance of Qwen 3.6 and pi) to do things like exploring the Wine source code to look for specific settings or behaviors, updating the documentation, sandbox testing, etc. and it was actually quite helpful.
+
+#### What does TDF mean?
 This project started off in 2021 as a "template" that I could use to easily create these self-contained ready-made environments to easily and safely run Windows games, something that things like Lutris couldn't do really well despite having a nice GUI.
 
 Eventually, my friends started calling it "Template Di Frederico", meaning Frederico's Template in Italian (Frederico being a common misspelling of my name, Federico); the temporary name eventually stuck, it got abbreviated to TDF or just "the template", and I couldn't come up with a better name so TDF became the official name in 2023 when I finally decided to write some documentation and release it.
