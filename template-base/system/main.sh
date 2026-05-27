@@ -337,7 +337,7 @@ function _checkPathsInPrefix {
             else
                 pathInSandbox="$(runSandboxed "$_wineDir/winepath" "$game_workingDir\\$game_exe" 2>/dev/null)"
             fi
-            local result="$(runSandboxed test -e "$pathInSandbox" ; echo $?)"
+            result="$(runSandboxed sh -c 'test -f "$1" ; echo $?' _ "$pathInSandbox")"
             if [ "$result" -ne 0 ]; then
                 fail "$(_loc "$TDF_LOCALE_EXENOTFOUND")"
             fi
