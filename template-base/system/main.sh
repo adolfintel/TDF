@@ -980,7 +980,7 @@ function _prepareCustomMounts {
 
 function _applyFSR4 {
     if [ -e "system/fsr4" ]; then
-        if [ "$FSR4_UPGRADE" -eq 1 ]; then
+        if [[ -z "$FSR4_UPGRADE" && "$FSR4_UPGRADE" -eq 1 ]]; then
             copyIfDifferent "system/fsr4/amdxcffx64.dll" "data/wineprefix/drive_c/windows/system32/amdxcffx64.dll"
         else
             rm -f "data/wineprefix/drive_c/windows/system32/amdxcffx64.dll"
