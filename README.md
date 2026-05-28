@@ -190,7 +190,7 @@ Possible values:
 
 __`export WINEDLLOVERRIDES`__  
 Some game fixes and mods come in the form of DLLs that override one of Windows' DLL, usually `winmm`, `dinput8`, `version`, `d3d9`, etc.  
-Unlike Windows, which happily loads random DLLs from the game's folder, Wine prefers to use its own DLLs and overrides need to be specified manually.
+Unlike Windows, which happily loads random DLLs from the game's folder, by default Wine prefers to use its own DLLs and overrides need to be specified manually.
 
 This is not a TDF variable, but it's part of Wine. More about this [here](https://wiki.winehq.org/Wine_User's_Guide#DLL_Overrides).
 
@@ -209,6 +209,21 @@ export WINEDLLOVERRIDES="amd_ags_x64=b"
 ```
 
 Multiple overrides can be separated by a semicolon `;`.
+
+__`export WINE_PREFER_NATIVE_DLL`__  
+Sets the default DLL load order for DLLs that are not being overridden with WINEDLLOVERRIDES or registry entries.
+
+By default, Wine uses the `b,n` load order for DLLs unless overridden, which may cause issues with some games and mods that override DLLs like `winmm`, `dinput8`, `version`, etc.; if this setting is enabled, it will change the default to `n,b`, meaning that Wine will try to load DLLs provided by the game first and only use its own as a fallback.
+
+This improves compatibility with mods and cracks, but can cause issues such as outdated driver warnings or straight up crashes, so it is disabled by default.
+
+Possible values:  
+* `0` (default): use `b,n` load order for DLLs that are not overridden (Wine default)
+* `1`: use `n,b` load order for DLLs that are not overridden
+
+Notes:
+* `WINEDLLOVERRIDES` will still be applied, this setting only applies if a DLL is NOT overridden
+* This setting is only supported by the game-optimized build
 
 __`export WINEDEBUG`__  
 Enables/disables some [Wine debug channels](https://wiki.winehq.org/Debug_Channels).

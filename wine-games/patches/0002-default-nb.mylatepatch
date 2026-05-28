@@ -1,0 +1,31 @@
+From cd82f7298bdcf0ddb54ae9b69cfd17ce712fbd89 Mon Sep 17 00:00:00 2001
+From: Federico Dossena <info@fdossena.com>
+Date: Thu, 28 May 2026 09:22:53 +0200
+Subject: [PATCH] Add WINE_PREFER_NATIVE_DLL to control default DLL load order
+ (1=n,b unless specified)
+
+---
+ dlls/ntdll/unix/loadorder.c | 7 +++++--
+ 1 file changed, 5 insertions(+), 2 deletions(-)
+
+diff --git a/dlls/ntdll/unix/loadorder.c b/dlls/ntdll/unix/loadorder.c
+index 722190da255..45c7fa55a9b 100644
+--- a/dlls/ntdll/unix/loadorder.c
++++ b/dlls/ntdll/unix/loadorder.c
+@@ -500,8 +500,11 @@ enum loadorder get_load_order( const UNICODE_STRING *nt_name )
+         goto done;
+     }
+ 
+-    /* and last the hard-coded default */
+-    ret = LO_DEFAULT;
++    /* and last the default: check WINE_PREFER_NATIVE_DLL env var */
++    {
++        const char *val = getenv("WINE_PREFER_NATIVE_DLL");
++        ret = val && !strcmp( val, "1" ) ? LO_NATIVE_BUILTIN : LO_DEFAULT;
++    }
+     TRACE( "got hardcoded %s for %s\n", debugstr_loadorder(ret), debugstr_us(nt_name) );
+ 
+  done:
+-- 
+2.54.0
+
