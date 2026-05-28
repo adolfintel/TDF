@@ -5,7 +5,7 @@ if [ -f incomplete ]; then
     rm -rf temp build
 fi
 touch incomplete
-if [ -d build ]; then #don't even bother checking for updates, this stuff hasn't been updated in 20+ years
+if [ -d build ]; then
     rm -f incomplete
     echo 2 > state
     exit 0
@@ -16,20 +16,19 @@ mkdir temp
 cd temp
 set +e
 for exe in "${exes[@]}"; do
-    # shellcheck disable=SC2034
-    for i in {1..20}; do #sometimes a sourceforge mirror is down and if we do this it will try a different one
-        if wget --tries=1 --timeout=10 "https://sourceforge.net/projects/corefonts/files/the fonts/final/$exe.exe"; then
-            break;
+    for i in {1..20}; do
+        if wget --tries=1 --timeout=10 "https://sourceforge.net/projects/corefonts/files/the fonts/final/${exe}.exe"; then
+            break
         fi
     done
-    if [ ! -f "$exe.exe" ]; then
+    if [ ! -f "${exe}.exe" ]; then
         exit 1
     fi
 done
 set -e
 mkdir ../build
-cabextract "./"*.exe
-mv "./"*.TTF "./"*.ttf ../build
+cabextract *.exe
+mv *.TTF *.ttf ../build
 cd ..
 rm -rf temp
 rm -f incomplete

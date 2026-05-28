@@ -3,7 +3,7 @@ set -e
 echo 2 > state
 cd vkd3d-proton
 git -c advice.detachedHead=false checkout --force --no-track -B temp origin/HEAD
-if [ "$(ls ../patches)" ]; then
+if [ -d ../patches ] && [ "$(ls ../patches)" ]; then
     for f in ../patches/*; do
         patch -p1 --forward < "$f"
     done

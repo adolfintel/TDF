@@ -20,5 +20,5 @@ if ! hasCommand pkg-config; then
     echo "pkgconf not installed"
     failed=1
 fi
-#wine-tkg's build script has its own dependency checks
+# wine-tkg's build script has its own dependency checks
 exit $failed

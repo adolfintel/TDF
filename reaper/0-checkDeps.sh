@@ -9,7 +9,7 @@ if ! hasCommand g++; then
     failed=1
 fi
 if ! hasCommand meson; then
-    echo "meson not installed"
+    echo "Meson not installed"
     failed=1
 fi
 exit $failed

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
-echo "Building TDF utils"
 echo 3 > state
+echo "Building TDF utils"
 rm -rf build
 mkdir build
 gcc -o build/synctest synctest.c

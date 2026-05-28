@@ -14,10 +14,10 @@ ver='11.1.0'
 mustDownload=0
 if [ -f ../winemono_version ]; then
     if [ "$(cat ../winemono_version)" != "$ver" ]; then
-        mustDownload=1;
+        mustDownload=1
     fi
 else
-    mustDownload=1;
+    mustDownload=1
 fi
 if [ $mustDownload -eq 1 ]; then
     wget -O winemono.msi "https://dl.winehq.org/wine/wine-mono/$ver/wine-mono-$ver-x86.msi"
@@ -28,10 +28,10 @@ ver='2.47.4'
 mustDownload=0
 if [ -f ../winegecko_version ]; then
     if [ "$(cat ../winegecko_version)" != "$ver" ]; then
-        mustDownload=1;
+        mustDownload=1
     fi
 else
-    mustDownload=1;
+    mustDownload=1
 fi
 if [ $mustDownload -eq 1 ]; then
     wget -O winegecko32.msi "https://dl.winehq.org/wine/wine-gecko/$ver/wine-gecko-$ver-x86.msi"
