@@ -542,7 +542,7 @@ Possible values:
 * number: limit FPS to this number
 
 __`export FSR4_UPGRADE`__  
-Enable AMD FSR4 on supported GPUs and automatically upgrade games that use FSR3 to FSR4. This installs a proprietary AMD DLL into the sandbox.
+Enable AMD FSR4 on supported GPUs and games. This installs a proprietary AMD DLL into the sandbox.
 
 Possible values:  
 * `0` (default): don't enable FSR4
