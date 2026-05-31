@@ -537,8 +537,9 @@ Whether to install D7VK or not, which provides DirectX 3-7 to Vulkan translation
 Settings for D7VK can be changed by downloading the [default configuration file](https://github.com/WinterSnowfall/d7vk/blob/devel/dxvk.conf), placing it into the game's folder and editing it.
 
 Possible values:  
-* `1` (default): use D7VK
-* `0`: use WineD3D
+* `0` (default): use WineD3D
+* `1`: use D7VK
+
 
 __`TDF_HDR`__  
 Whether to expose HDR support to the application or not. HDR must be enabled in the system settings for this to work and an HDR compatible display is required. This setting has no effect if HDR is disabled or unsupported.
