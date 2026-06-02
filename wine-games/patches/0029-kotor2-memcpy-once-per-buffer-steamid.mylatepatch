@@ -1,0 +1,81 @@
+diff --git a/dlls/opengl32/unix_wgl.c b/dlls/opengl32/unix_wgl.c
+index a47bdce5c0a..916768c310d 100644
+--- a/dlls/opengl32/unix_wgl.c
++++ b/dlls/opengl32/unix_wgl.c
+@@ -183,6 +183,7 @@ struct buffer
+     void *vm_ptr;
+     SIZE_T vm_size;
+     BOOL pinned;
++    BOOL mapped;              /* has vm_ptr been copied from host_ptr yet? */
+ 
+     /* members of Vulkan-backed buffer storages */
+     struct vk_device *vk_device;
+@@ -2849,6 +2850,7 @@ static BOOL buffer_vm_alloc( TEB *teb, struct buffer *buffer, SIZE_T size )
+         NtFreeVirtualMemory( GetCurrentProcess(), &buffer->vm_ptr, &buffer->vm_size, MEM_RELEASE );
+         buffer->vm_ptr = NULL;
+         buffer->vm_size = 0;
++        buffer->mapped = FALSE;  /* vm_ptr is being re-allocated, need to re-copy next map */
+     }
+     if (NtAllocateVirtualMemory( GetCurrentProcess(), &buffer->vm_ptr, zero_bits, &size,
+                                  MEM_COMMIT, PAGE_READWRITE ))
+@@ -3089,15 +3091,53 @@ static void *wow64_map_buffer( TEB *teb, struct buffer *buffer, GLenum target, G
+     if (!buffer_vm_alloc( teb, buffer, length + (offset & 0xf) )) goto unmap;
+     buffer->map_ptr = (char *)buffer->vm_ptr + (offset & 0xf);
+     buffer->copy_length = (access & GL_MAP_WRITE_BIT) ? length : 0;
+-    if (!(access & (GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT)))
++    /*
++     * Cache SteamGameId once at startup.  getenv() is called on every
++     * wglMapBuffer* which is a very hot path.
++     */
+     {
+-        static int once;
+-        if (!once++)
+-            FIXME( "Doing a copy of a mapped buffer (expect performance issues)\n" );
++        static BOOL is_kotor;
++        static char init;
++        if (!init++)
++        {
++            const char *sgi = getenv("SteamGameId");
++            is_kotor = sgi && ( !strcmp( sgi, "32370" ) || !strcmp( sgi, "208580" ) );
++        }
++
++        if (!(access & (GL_MAP_INVALIDATE_RANGE_BIT | GL_MAP_INVALIDATE_BUFFER_BIT)))
++        {
++            if (is_kotor)
++            {
++                /*
++                 * KOTOR1/2: copy once per buffer lifetime.  The game modifies
++                 * mapped buffers in-place and re-maps them without invalidate
++                 * flags — Wine would otherwise overwrite those changes back to
++                 * the original host data on every map call.
++                 */
++                static BOOL warned;
++                if (!buffer->mapped)
++                {
++                    if (!warned++)
++                        FIXME( "HACK: memcpy spam in wow64_map_buffer (KOTOR1/2)\n" );
+ 
+-        TRACE( "Copying %#zx from buffer at %p to wow64 buffer %p\n", length, buffer->host_ptr,
+-               buffer->map_ptr );
+-        memcpy( buffer->map_ptr, buffer->host_ptr, length );
++                    TRACE( "Copying %#zx from buffer at %p to wow64 buffer %p\n", length,
++                           buffer->host_ptr, buffer->map_ptr );
++                    memcpy( buffer->map_ptr, buffer->host_ptr, length );
++                    buffer->mapped = TRUE;
++                }
++            }
++            else
++            {
++                /* Other games: always copy */
++                static int once;
++                if (!once++)
++                    FIXME( "Doing a copy of a mapped buffer (expect performance issues)\n" );
++
++                TRACE( "Copying %#zx from buffer at %p to wow64 buffer %p\n", length, buffer->host_ptr,
++                       buffer->map_ptr );
++                memcpy( buffer->map_ptr, buffer->host_ptr, length );
++            }
++        }
+     }
+     TRACE( "returning copy buffer %p\n", buffer->map_ptr );
+     return buffer->map_ptr;
