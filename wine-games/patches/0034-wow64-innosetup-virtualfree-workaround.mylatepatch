@@ -1,0 +1,97 @@
+diff --git a/dlls/kernelbase/memory.c b/dlls/kernelbase/memory.c
+index fa385da56f3..07a7ad7015a 100644
+--- a/dlls/kernelbase/memory.c
++++ b/dlls/kernelbase/memory.c
+@@ -38,6 +38,7 @@
+ #include "wine/debug.h"
+ 
+ WINE_DEFAULT_DEBUG_CHANNEL(heap);
++
+ WINE_DECLARE_DEBUG_CHANNEL(virtual);
+ WINE_DECLARE_DEBUG_CHANNEL(globalmem);
+ 
+@@ -565,6 +566,34 @@ BOOL WINAPI DECLSPEC_HOTPATCH VirtualFreeEx( HANDLE process, void *addr, SIZE_T
+         SetLastError( ERROR_INVALID_PARAMETER );
+         return FALSE;
+     }
++    if (is_wow64 && (ULONG_PTR)addr >= (1UL << 31))
++    {
++        static BOOL checked = FALSE;
++        static BOOL is_setup_tmp = FALSE;
++        const WCHAR *name, *p;
++        const WCHAR setupW[] = { 's','e','t','u','p','.','t','m','p',0 };  // Inno setup
++
++        if (!checked)
++        {
++            checked = TRUE;
++            name = NtCurrentTeb()->Peb->ProcessParameters->ImagePathName.Buffer;
++            if (name)
++            {
++                p = wcsrchr( name, '\\' );
++                p = p ? p + 1 : name;
++                is_setup_tmp = !wcsicmp( p, setupW );
++            }
++        }
++        if (is_setup_tmp)
++        {
++            /* In WOW64, addresses >= 2GB are in the 64-bit transition layer.
++             * Large-address-aware Inno Setup installers incorrectly call
++             * VirtualFree on these addresses. Silently ignore to avoid a crash. */
++            TRACE( "HACK: Ignoring VirtualFree(%p, %p, %x) beyond WOW64 limit (Inno Setup)\n", addr, (void *)(ULONG_PTR)size, type );
++            SetLastError( ERROR_SUCCESS );
++            return TRUE;
++        }
++    }
+     return set_ntstatus( NtFreeVirtualMemory( process, &addr, &size, type ));
+ }
+ 
+diff --git a/dlls/ntdll/unix/virtual.c b/dlls/ntdll/unix/virtual.c
+index 6e1697720f0..4ce4237d1d7 100644
+--- a/dlls/ntdll/unix/virtual.c
++++ b/dlls/ntdll/unix/virtual.c
+@@ -5399,6 +5399,9 @@ static BOOL is_large_address_aware(void)
+  */
+ void virtual_set_large_address_space(void)
+ {
++    static BOOL checked_setup_tmp = FALSE;
++    static BOOL is_setup_tmp = FALSE;
++
+     if (is_win64)
+     {
+         if (!is_wow64())
+@@ -5410,7 +5413,34 @@ void virtual_set_large_address_space(void)
+                 free_reserved_memory( 0, (char *)0x7ffe0000 );
+ #endif
+         }
+-        else user_space_wow_limit = (is_large_address_aware() ? limit_4g : limit_2g) - 1;
++        else if (is_large_address_aware())
++        {
++            if (!checked_setup_tmp)
++            {
++                const WCHAR *name, *p;
++                const WCHAR setupW[] = { 's','e','t','u','p','.','t','m','p',0 }; // Inno setup
++
++                checked_setup_tmp = TRUE;
++                name = NtCurrentTeb()->Peb->ProcessParameters->ImagePathName.Buffer;
++                if (name)
++                {
++                    p = wcsrchr( name, '\\' );
++                    p = p ? p + 1 : name;
++                    is_setup_tmp = !wcsicmp( p, setupW );
++                }
++            }
++            if (is_setup_tmp)
++            {
++                /* Force user space limit to 2GB-1 for large-address-aware Inno Setup
++                 * installers. This prevents crashes when they call VirtualFree on
++                 * addresses in the 2GB-4GB range (e.g., 0xFFFF0004). The kernelbase
++                 * wrapper handles these calls gracefully. */
++                TRACE( "HACK: Setting user_space_wow_limit to 2GB-1 for large-address-aware (Inno Setup)\n" );
++                user_space_wow_limit = limit_2g - 1;
++            }
++            else user_space_wow_limit = limit_4g - 1;
++        }
++        else user_space_wow_limit = limit_2g - 1;
+     }
+     else
+     {
