@@ -89,6 +89,8 @@ Examples: `('-iwad' 'doom2.wad')`  or  `'-iwad doom2.wad'`
 __`SteamGameId`__  
 Optional numeric Steam App ID for the game. Identifies a specific game on Steam, enabling game-specific workarounds in the wine-games build (e.g., known configuration tweaks, known fixes). This does NOT require Steam to be installed; it's purely a lookup key for internal game-specific optimizations.
 
+Look up IDs here: [https://steamdb.info/](https://steamdb.info/)
+
 Example: `export SteamGameId="1174180"`
 
 ### Sandboxing / Isolation
