@@ -56,10 +56,6 @@ This section explains how to use TDF to install, play and optionally package a g
     * About 90% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in `vars.conf`, which we'll discuss later
     * Online games that require anticheat software will usually not work (and that's probably for the best)
 
-Here's a video showing how to install a game from GOG that requires no additional configuration: [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)
-
-You can find more video examples at the end of this document.
-
 ## Configuration variables
 The following lists contain all the variables that can be added in `vars.conf` to configure emulation settings, work around issues, improve performance, etc.
 
@@ -1326,23 +1322,6 @@ If you need to test malware, use a proper hardened VM, this is for games.
 ## TODOs and future improvements
 * Implement something similar to the Steam Runtime but based on Arch to mitigate Wine's dependency hell
 * Automatically recognize some known problematic games and apply tweaks to the configuration
-
-## Videos
-TODO: update
-
-* [Basic usage - Installing a game from GOG](https://downloads.fdossena.com/geth.php?r=tdfvideo1)
-* [Basic usage - Installing Steam rips](https://downloads.fdossena.com/geth.php?r=tdfvideo2)
-* [Basic usage - Installing a game from ISO](https://downloads.fdossena.com/geth.php?r=tdfvideo4)
-* [Troubleshooting: Video driver out of date message](https://downloads.fdossena.com/geth.php?r=tdfvideo3)
-* [Troubleshooting: Repack fails to extract, game with graphical issues](https://downloads.fdossena.com/geth.php?r=tdfvideo5)
-* [Advanced usage - Multiple games in one TDF instance (and some minor troubleshooting)](https://downloads.fdossena.com/geth.php?r=tdfvideo6)
-* [Troubleshooting: A Plague Tale Requiem (Window positioning, graphical issues, crackling audio)](https://downloads.fdossena.com/geth.php?r=tdfvideo7) (Note: this video was shot before all the others, the version of TDF shown is a bit older)
-* [Basic usage - Installing a multiplayer game](https://downloads.fdossena.com/geth.php?r=tdfvideo8)
-* [Advanced usage - Capturing with Apitrace and RenderDoc](https://downloads.fdossena.com/geth.php?r=tdfvideo9)
-* [Basic usage - Creating a game archive to redistribute it or to move it to another computer](https://downloads.fdossena.com/geth.php?r=tdfvideo10)
-* [Callbacks: Automatically backup your saved game, just in case...](https://downloads.fdossena.com/geth.php?r=tdfvideo11)
-
-__Important: some cracked copies of games that I have in my Steam/GOG/EGS library are used in these videos. These cracks have been used to circumvent DRM issues or incompatibilities with modern systems. TDF does not endorse piracy and I will not provide cracked copies of games.__
 
 ## FAQs
 #### Was this project vibe-coded?
