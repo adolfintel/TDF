@@ -517,8 +517,8 @@ __`TDF_DXVK_NVAPI`__
 Enable dxvk-nvapi (Nvidia API layer for DXVK). Provides NVAPI support and some performance optimizations on NVIDIA cards. Requires DXVK.
 
 Possible values:  
-* `1` (default): use dxvk-nvapi
-* `0`: don't use dxvk-nvapi
+* `0` (default): don't use dxvk-nvapi
+* `1`: use dxvk-nvapi
 
 __`TDF_VKD3D`__  
 Whether to install VKD3D-Proton, which provides Direct3D 12 to Vulkan translation. If this is disabled, Wine's version of VKD3D is used instead, which has very poor game compatibility compared to this version. Requires DXVK.
