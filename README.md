@@ -50,7 +50,7 @@ This section explains how to use TDF to install, play and optionally package a g
     * During the installation, you won't need to install things like DirectX, the Visual C++ Redistributables, etc. because TDF has already done it during the initialization
     * If you need to copy or modify some files inside the fake C drive, do it through the Linux file manager, it's easier
     * Once you're done, close the command prompt
-* Edit `vars.conf` and place the location of the game's exe file in the `game_exe` variable. The path must be Windows-style, like `C:\Doom\doom.exe`
+* Edit `vars.conf` and place the location of the game's exe file in the `game_exe` variable. The path must be Windows-style, like `C:\Doom\doom.exe`. It is also recommended to set the `SteamGameId` variable, as it will automatically enable fixes for some known problematic games (you can find the IDs here: [https://steamdb.info/](https://steamdb.info/))
 * Launch `run.sh` again and hopefully the game will start
     * From now on, you can just launch `run.sh` (or create links to it) to launch this game.
     * About 90% of games will work out of the box, some will require some tinkering, usually in the form of changing some variables in `vars.conf`, which we'll discuss later
