@@ -231,7 +231,7 @@ if [ -n "$split" ]; then
 fi
 _loc "$TDF_LOCALE_ARCHIVE_STARTED4"
 checkpoint="$((fromSize/50))"
-command="tar -c --record-size=1K --checkpoint=$checkpoint --checkpoint-action=\"ttyout=█\" -f - \"$folderName\""
+command="tar -c --record-size=1K --checkpoint=$checkpoint --checkpoint-action=\"ttyout=█\" --exclude=\"data/.playedTime\" -f - \"$folderName\""
 if [ -n "$command2" ]; then
     command="$command | $command2"
 fi
