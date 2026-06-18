@@ -293,6 +293,9 @@ function _initSandbox {
     TDF_BLOCK_NETWORK="$realBlockNetwork"
     _envs["WINEDEBUG"]="$realDebug"
     TDF_WINE_ARCH="$realArch"
+    if [ -n "$LD_PRELOAD" ]; then
+        _envs["LD_PRELOAD"]="$LD_PRELOAD"
+    fi
     _removeWineMounts
     _prepareCustomMounts
     _applyFSR4
