@@ -8,7 +8,7 @@ if [ ! -d build ]; then
     mkdir build
 fi
 touch incomplete
-ver='26.5.2'
+ver='26.6.4'
 echo "Downloading AMD FSR4 files ($ver)"
 mustDownload=0
 if [ -f amddrv_version ]; then
