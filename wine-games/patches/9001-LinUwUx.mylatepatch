@@ -1,0 +1,474 @@
+From 04947de058708d78c76d51cde4536f19c891c095 Mon Sep 17 00:00:00 2001
+From: Federico Dossena <info@fdossena.com>
+Date: Thu, 16 Jul 2026 13:17:22 +0200
+Subject: [PATCH] LinUwUx-TDF
+
+---
+ dlls/ntdll/unix/signal_x86_64.c | 278 ++++++++++++++++++++++++++++++++
+ include/wine/server_protocol.h  |  12 ++
+ loader/wine.inf.in              |   1 +
+ server/fd.c                     |  20 ++-
+ server/protocol.def             |   5 +
+ server/request_handlers.h       |   2 +
+ 6 files changed, 317 insertions(+), 1 deletion(-)
+
+diff --git a/dlls/ntdll/unix/signal_x86_64.c b/dlls/ntdll/unix/signal_x86_64.c
+index 110404c274c..06fc53faeec 100644
+--- a/dlls/ntdll/unix/signal_x86_64.c
++++ b/dlls/ntdll/unix/signal_x86_64.c
+@@ -562,6 +562,15 @@ void set_process_instrumentation_callback( void *callback )
+     server_leave_uninterrupted_section( &instrumentation_callback_mutex, &sigset );
+ }
+ 
++static int denuowo_enabled=0;
++// This will point to the games memory region where syscall spoofing is happening
++uint64_t TargetSysHandler = 0;
++uint64_t SyscallBypassMagic = 0x1337133713371337;
++// Spoofed CPUID values - will be set based on CPU vendor
++static unsigned int spoof_leaf40000000_eax, spoof_leaf40000000_ebx, spoof_leaf40000000_ecx, spoof_leaf40000000_edx;
++static unsigned int spoof_leaf40000001_eax, spoof_leaf40000001_ebx, spoof_leaf40000001_ecx, spoof_leaf40000001_edx;
++static unsigned int spoof_leaf1_eax, spoof_leaf1_ebx, spoof_leaf1_ecx, spoof_leaf1_edx;
++
+ struct xcontext
+ {
+     CONTEXT c;
+@@ -2050,6 +2059,23 @@ static void sigsys_handler( int signal, siginfo_t *siginfo, void *sigcontext )
+     ucontext_t *ucontext = init_handler( sigcontext );
+     struct syscall_frame *frame = get_syscall_frame();
+ 
++    if(denuowo_enabled){
++        ucontext_t *ctx = sigcontext;
++
++        __uint128_t *xmm_regs = (__uint128_t *)ctx->uc_mcontext.fpregs->_xmm;
++        if (TargetSysHandler != 0 && (xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) != 0x1337133713371337) {
++            xmm_regs[4] = ctx->uc_mcontext.gregs[REG_RAX] & 0xFFFFFFFF;
++            ctx->uc_mcontext.gregs[REG_RAX] = ctx->uc_mcontext.gregs[REG_RCX];
++            ctx->uc_mcontext.gregs[REG_RCX] = TargetSysHandler;
++            ctx->uc_mcontext.gregs[REG_RIP] = TargetSysHandler;
++            return;
++        }
++        if ((xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) == 0x1337133713371337) {
++            xmm_regs[5] = 0;
++            //MESSAGE("SyscallBypassMagic!\n");
++        }
++    }
++
+     TRACE_(seh)("SIGSYS, rax %#llx, rip %#llx.\n", RAX_sig(ucontext), RIP_sig(ucontext));
+ 
+     if (RAX_sig(ucontext) == 0xffff)
+@@ -2683,6 +2709,90 @@ static inline BOOL check_invalid_gsbase( ucontext_t *ucontext )
+     return TRUE;
+ }
+ 
++/**
++* Patch KUSER_SHARED_DATA with spoofed values
++*/
++static void patch_kuser_shared_data(void) {
++    UINT8 *kuser = (UINT8 *)0x000000007FFE0000UL;
++    
++    // Make memory writable
++    size_t page_size = sysconf(_SC_PAGESIZE);
++    void *page_start = (void *)((uintptr_t)0x000000007FFE0000UL & ~(page_size - 1));
++    //unsigned char* user_shared_data = (unsigned char*)0x7ffe0000;
++    
++    if (mprotect(page_start, page_size, PROT_READ | PROT_WRITE) == -1) {
++        MESSAGE("Failed to make kuser_shared_data writable: %s\n", strerror(errno));
++        return;
++    }
++    
++    // === Original patching code (adapted) ===
++    memcpy((void*)(kuser + 0x30), "\x43\x00\x3A\x00\x5C\x00\x57\x00\x69\x00\x6E\x00\x64\x00\x6F\x00\x77\x00\x73\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00", 0x104);
++
++    
++    *(UINT64*)(kuser + 0x260) = 0x0100006658;
++    *(UINT32*)(kuser + 0x268) = 0x090001;
++    *(UINT32*)(kuser + 0x26C) = 0x0A;
++    *(UINT32*)(kuser + 0x270) = 0x00;
++
++    // ProcessorFeatures
++    *(UINT32*)(kuser + 0x274) = 0x01010000;
++    *(UINT32*)(kuser + 0x278) = 0x010000;
++    *(UINT32*)(kuser + 0x27C) = 0x010101;
++    *(UINT32*)(kuser + 0x280) = 0x010101;
++    *(UINT32*)(kuser + 0x284) = 0x0100;
++    *(UINT32*)(kuser + 0x288) = 0x01010101;
++    *(UINT32*)(kuser + 0x28C) = 0x0;
++    *(UINT32*)(kuser + 0x290) = 0x01;
++    *(UINT32*)(kuser + 0x294) = 0x01000101;
++    *(UINT32*)(kuser + 0x298) = 0x01010101;
++    *(UINT32*)(kuser + 0x29C) = 0x010001;
++    *(UINT32*)(kuser + 0x2A0) = 0x0;
++    *(UINT32*)(kuser + 0x2A4) = 0x0;
++    *(UINT32*)(kuser + 0x2A8) = 0x0;
++    *(UINT32*)(kuser + 0x2AC) = 0x0;
++    *(UINT32*)(kuser + 0x2B0) = 0x1;
++
++    // Disable specific features (byte-level patches)
++    *(UINT8*)(kuser + 0x290) = 0x0;    // Disable MONITORX support
++    *(UINT8*)(kuser + 0x294) = 0x0;    // Disable RDTSCP support
++    *(UINT8*)(kuser + 0x295) = 0x0;    // Disable RDPID support
++    *(UINT8*)(kuser + 0x297) = 0x0;    // Disable RDRAND support
++
++    if (getenv("PROTON_AVX") == NULL || (getenv("PROTON_AVX") != NULL && strcmp(getenv("PROTON_AVX"), "1")) != 0){
++        // XSAVE related stuff
++        *(UINT8*)(kuser + 0x285) = 0x0;    // Disable XSAVE support
++        *(UINT8*)(kuser + 0x29B) = 0x0;    // Disable AVX support
++        *(UINT8*)(kuser + 0x29C) = 0x0;    // Disable AVX2 support
++    }
++
++    *(UINT64*)(kuser + 0x3D8) = 0x0;   // EnabledFeatures
++    *(UINT64*)(kuser + 0x3E0) = 0x0;   // EnabledVolatileFeatures
++    *(UINT32*)(kuser + 0x3EC) = 0x0;   // ControlFlags
++    memset((void*)(kuser + 0x3F0), 0x00, 0x200);   // Features
++    *(UINT64*)(kuser + 0x5F0) = 0x0;   // EnabledSupervisorFeatures
++    *(UINT64*)(kuser + 0x5F8) = 0x0;   // AlignedFeatures
++    memset((void*)(kuser + 0x604), 0x00, 0x200);   // AllFeatures
++    *(UINT64*)(kuser + 0x808) = 0x0;   // EnabledUserVisibleSupervisorFeatures
++    *(UINT64*)(kuser + 0x810) = 0x0;   // ExtendedFeatureDisableFeatures
++
++    *(UINT64*)(kuser + 0x2D0) = 0x320A0000000110;
++    *(UINT64*)(kuser + 0x2E8) = 0x0100007FB10B;
++    *(UINT32*)(kuser + 0x2F4) = 0x0;
++    *(UINT64*)(kuser + 0x36C) = 0x0;
++    *(UINT64*)(kuser + 0x374) = 0x0;
++    *(UINT32*)(kuser + 0x37C) = 0x1;
++    *(UINT64*)(kuser + 0x3C0) = 0x83000100000010;
++
++    *(UINT32*)(kuser + 0xFFC) = 0x13371337;
++
++    // === End of original patching code ===
++
++    // Patch usage of syscalls
++    // 0 = syscalls take slow route, everything gets hooked
++    // 1 = syscalls take fast route unless ntdll.dll gets modified (default)
++    //user_shared_data[0x308] = 1;
++}
++
+ 
+ /**********************************************************************
+  *		segv_handler
+@@ -2696,6 +2806,108 @@ static void segv_handler( int signal, siginfo_t *siginfo, void *sigcontext )
+     struct xcontext context;
+     void *steamclient_addr = NULL;
+ 
++    if(denuowo_enabled){
++        unsigned int leaf;
++        unsigned int subleaf;
++        ucontext_t *uc;
++        unsigned char *rip;
++
++        uc = (ucontext_t *)sigcontext;
++        rip = (unsigned char *)uc->uc_mcontext.gregs[REG_RIP];
++        leaf = ucontext->uc_mcontext.gregs[REG_RAX];
++        subleaf = ucontext->uc_mcontext.gregs[REG_RCX];
++        if ((siginfo->si_code == SI_KERNEL || leaf == 0x336933) && rip[0] == 0x0F && rip[1] == 0xA2) {
++            // Spoof CPUID results based on leaf
++            switch (leaf) {
++                case 1:
++                    uc->uc_mcontext.gregs[REG_RAX] = spoof_leaf1_eax;
++                    uc->uc_mcontext.gregs[REG_RBX] = spoof_leaf1_ebx;
++                    uc->uc_mcontext.gregs[REG_RCX] = spoof_leaf1_ecx | (TargetSysHandler ? 0 : (0x1 << 31));
++                    uc->uc_mcontext.gregs[REG_RDX] = spoof_leaf1_edx;
++                    break;
++
++                case 0x40000000:
++                    uc->uc_mcontext.gregs[REG_RAX] = spoof_leaf40000000_eax;
++                    uc->uc_mcontext.gregs[REG_RBX] = spoof_leaf40000000_ebx;
++                    uc->uc_mcontext.gregs[REG_RCX] = spoof_leaf40000000_ecx;
++                    uc->uc_mcontext.gregs[REG_RDX] = spoof_leaf40000000_edx;
++                    break;
++
++                case 0x40000001:
++                    uc->uc_mcontext.gregs[REG_RAX] = spoof_leaf40000001_eax;
++                    uc->uc_mcontext.gregs[REG_RBX] = spoof_leaf40000001_ebx;
++                    uc->uc_mcontext.gregs[REG_RCX] = spoof_leaf40000001_ecx;
++                    uc->uc_mcontext.gregs[REG_RDX] = spoof_leaf40000001_edx;
++                    break;
++
++                case 0x80000002:
++                    uc->uc_mcontext.gregs[REG_RAX] = 0x756E6544;
++                    uc->uc_mcontext.gregs[REG_RBX] = 0x4F774F76;
++                    uc->uc_mcontext.gregs[REG_RCX] = 0x55504320;
++                    uc->uc_mcontext.gregs[REG_RDX] = 0x31204020;
++                    break;
++
++                case 0x80000003:
++                    uc->uc_mcontext.gregs[REG_RAX] = 0x20373333;
++                    uc->uc_mcontext.gregs[REG_RBX] = 0x007A4847;
++                    uc->uc_mcontext.gregs[REG_RCX] = 0x00000000;
++                    uc->uc_mcontext.gregs[REG_RDX] = 0x00000000;
++                    break;
++
++                case 0x80000004:
++                    uc->uc_mcontext.gregs[REG_RAX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RBX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RCX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RDX] = 0x0;
++                    break;
++
++                case 0x336933:
++                    MESSAGE("Spoofing CPUID leaf %x\n", leaf);
++                    TargetSysHandler = uc->uc_mcontext.gregs[REG_RCX];
++                    patch_kuser_shared_data();
++                    uc->uc_mcontext.gregs[REG_RAX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RBX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RCX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RDX] = 0x0;
++                    break;
++
++                case 0x336967:
++                    MESSAGE("Setting Faketime to %llx... \n", uc->uc_mcontext.gregs[REG_RCX]);
++                    SERVER_START_REQ( set_faketime )
++                    {
++                        req->faketime = uc->uc_mcontext.gregs[REG_RCX];
++                        wine_server_call( req );
++                    }
++                    SERVER_END_REQ;
++                    uc->uc_mcontext.gregs[REG_RAX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RBX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RCX] = 0x0;
++                    uc->uc_mcontext.gregs[REG_RDX] = 0x0;
++                    break;
++
++                default:
++                    // Should implement caching for optimization
++                    // Disable CPUID faulting for real CPUID call
++                    syscall(SYS_arch_prctl, ARCH_SET_CPUID, 1);
++                    __asm__ volatile(
++                        "cpuid"
++                        : "=a"(uc->uc_mcontext.gregs[REG_RAX]),
++                                     "=b"(uc->uc_mcontext.gregs[REG_RBX]),
++                                     "=c"(uc->uc_mcontext.gregs[REG_RCX]),
++                                     "=d"(uc->uc_mcontext.gregs[REG_RDX])
++                                     : "a"(leaf), "c"(subleaf)
++                                     : "memory"
++                    );
++                    // Enable CPUID faulting again
++                    syscall(SYS_arch_prctl, ARCH_SET_CPUID, 0);
++            }
++
++            // Skip the CPUID instruction (2 bytes: 0F A2)
++            uc->uc_mcontext.gregs[REG_RIP] += 2;
++            return;
++        }
++    }
++
+     rec.ExceptionAddress = (void *)RIP_sig(ucontext);
+     save_context( &context, ucontext );
+ 
+@@ -3129,6 +3341,65 @@ static void *mac_thread_gsbase(void)
+ }
+ #endif
+ 
++// Function to detect CPU vendor at startup
++static void detect_cpu_vendor(void) {
++    unsigned int eax, ebx, ecx, edx;
++    int avx = 0;
++    if (getenv("PROTON_AVX") != NULL && strcmp(getenv("PROTON_AVX"), "1") == 0) avx = 1;
++    
++    // Try to get CPUID(0) to detect vendor
++    __asm__ volatile(
++        "cpuid"
++        : "=a"(eax), "=b"(ebx), "=c"(ecx), "=d"(edx)
++        : "a"(0)
++        : "memory"
++    );
++    
++    // Check vendor string
++    if (ebx == 0x756E6547 && edx == 0x49656E69 && ecx == 0x6C65746E) {
++        // "GenuineIntel" - Intel CPU
++        
++        // Set Intel-specific spoofed values
++        spoof_leaf1_eax = 0x000A0655;
++        spoof_leaf1_ebx = 0x00200800;
++        if (avx) {
++        	spoof_leaf1_ecx = 0x7BFAFBFF;
++        } else spoof_leaf1_ecx = 0x01FAEBFF;
++        spoof_leaf1_edx = 0xBFEBFBFF;
++        
++        spoof_leaf40000000_eax = 0x40000001;
++        spoof_leaf40000000_ebx = 0x65707948; // 'epyH'
++        spoof_leaf40000000_ecx = 0x67624472; // 'gbDr'
++        spoof_leaf40000000_edx = 0;
++        
++        spoof_leaf40000001_eax = 0x30237648; // '0#vH'
++        spoof_leaf40000001_ebx = 0;
++        spoof_leaf40000001_ecx = 0;
++        spoof_leaf40000001_edx = 0;
++        
++    } else if (ebx == 0x68747541 && edx == 0x69746E65 && ecx == 0x444D4163) {
++        // "AuthenticAMD" - AMD CPU
++        
++        // Set AMD-specific spoofed values
++        spoof_leaf1_eax = 0x00A20F12;
++        spoof_leaf1_ebx = 0x00100800;
++        if (avx) {
++        	spoof_leaf1_ecx = 0x7AD8320B;
++        } else spoof_leaf1_ecx = 0x00F8220B;
++        spoof_leaf1_edx = 0x178BFBFF;
++        
++        spoof_leaf40000000_eax = 0x40000001;
++        spoof_leaf40000000_ebx = 0x706D6953; // 'pmiS'
++        spoof_leaf40000000_ecx = 0x7653656C; // 'vSel'
++        spoof_leaf40000000_edx = 0x2020206D; // '   m'
++        
++        spoof_leaf40000001_eax = 0x30237648; // '0#vH'
++        spoof_leaf40000001_ebx = 0;
++        spoof_leaf40000001_ecx = 0;
++        spoof_leaf40000001_edx = 0;
++    }
++    // Sorry Zhaoxin/Hygon CPU owners :(
++}
+ 
+ /**********************************************************************
+  *		signal_init_process
+@@ -3181,6 +3452,13 @@ void signal_init_process(void)
+     if (sigaction( SIGTRAP, &sig_act, NULL ) == -1) goto error;
+     sig_act.sa_sigaction = segv_handler;
+     if (sigaction( SIGSEGV, &sig_act, NULL ) == -1) goto error;
++    if(getenv("WINE_DENUOWO")&&strcmp(getenv("WINE_DENUOWO"),"1")==0){
++        denuowo_enabled=1;
++    }
++    if(denuowo_enabled){
++        detect_cpu_vendor();
++        syscall(SYS_arch_prctl, ARCH_SET_CPUID, 0);
++    }
+     if (sigaction( SIGILL, &sig_act, NULL ) == -1) goto error;
+     if (sigaction( SIGBUS, &sig_act, NULL ) == -1) goto error;
+ #ifdef __APPLE__
+diff --git a/include/wine/server_protocol.h b/include/wine/server_protocol.h
+index 45e7f15eb53..f1f9286c536 100644
+--- a/include/wine/server_protocol.h
++++ b/include/wine/server_protocol.h
+@@ -6263,6 +6263,15 @@ struct fsync_free_shm_idx_reply
+     struct reply_header __header;
+ };
+ 
++struct set_faketime_request
++{
++    struct request_header __header;
++    unsigned __int64 faketime;
++};
++struct set_faketime_reply
++{
++    struct reply_header __header;
++};
+ 
+ enum request
+ {
+@@ -6576,6 +6585,7 @@ enum request
+     REQ_d3dkmt_mutex_acquire,
+     REQ_d3dkmt_mutex_release,
+     REQ_fsync_free_shm_idx,
++    REQ_set_faketime,
+     REQ_NB_REQUESTS
+ };
+ 
+@@ -6893,6 +6903,7 @@ union generic_request
+     struct d3dkmt_mutex_acquire_request d3dkmt_mutex_acquire_request;
+     struct d3dkmt_mutex_release_request d3dkmt_mutex_release_request;
+     struct fsync_free_shm_idx_request fsync_free_shm_idx_request;
++    struct set_faketime_request set_faketime_request;
+ };
+ union generic_reply
+ {
+@@ -7208,6 +7219,7 @@ union generic_reply
+     struct d3dkmt_mutex_acquire_reply d3dkmt_mutex_acquire_reply;
+     struct d3dkmt_mutex_release_reply d3dkmt_mutex_release_reply;
+     struct fsync_free_shm_idx_reply fsync_free_shm_idx_reply;
++    struct set_faketime_reply set_faketime_reply;
+ };
+ 
+ #define SERVER_PROTOCOL_VERSION 931
+diff --git a/loader/wine.inf.in b/loader/wine.inf.in
+index ed0acc5adaf..586b1040dc6 100644
+--- a/loader/wine.inf.in
++++ b/loader/wine.inf.in
+@@ -1583,3 +1583,4 @@ HKLM,Software\Khronos\OpenXR\1,"ActiveRuntime",,"C:\openxr\wineopenxr64.json"
+ ;;Other app-specific overrides
+ HKCU,Software\Wine\AppDefaults\Pentiment.exe\DllOverrides,"SpeechSynthesisWrapper",4,
+ HKCU,Software\Wine\AppDefaults\Maine-Win64-Shipping.exe\DllOverrides,"SpeechSynthWrapper",4,
++HKLM,System\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0001,"HwProfileGuid",,"{12345678-1234-1234-1234-123456789012}"
+diff --git a/server/fd.c b/server/fd.c
+index 4440f7ead83..8cea52e6ca0 100644
+--- a/server/fd.c
++++ b/server/fd.c
+@@ -352,6 +352,8 @@ static struct list rel_timeout_list = LIST_INIT(rel_timeout_list); /* sorted rel
+ timeout_t current_time;
+ timeout_t monotonic_time;
+ 
++static timeout_t faketime = 0;
++
+ struct _KUSER_SHARED_DATA *user_shared_data = NULL;
+ static const timeout_t user_shared_data_timeout = 16 * 10000;
+ 
+@@ -428,12 +430,23 @@ static void set_user_shared_data_time(void)
+     atomic_store_ulong(&user_shared_data->TickCountLowDeprecated, tick_count);
+ }
+ 
++static int denuowo_checked = 0;
++static int denuowo_enabled = 0;
++
+ void set_current_time(void)
+ {
+     static const timeout_t ticks_1601_to_1970 = (timeout_t)86400 * (369 * 365 + 89) * TICKS_PER_SEC;
+     struct timeval now;
+     gettimeofday( &now, NULL );
+-    current_time = (timeout_t)now.tv_sec * TICKS_PER_SEC + now.tv_usec * 10 + ticks_1601_to_1970;
++    if(!denuowo_checked){
++        denuowo_enabled=getenv("WINE_DENUOWO")&&strcmp(getenv("WINE_DENUOWO"),"1")==0;
++        denuowo_checked=1;
++    }
++    if(denuowo_enabled){
++        current_time = (timeout_t)now.tv_sec * TICKS_PER_SEC + now.tv_usec * 10 + ticks_1601_to_1970 - faketime;
++    }else{
++        current_time = (timeout_t)now.tv_sec * TICKS_PER_SEC + now.tv_usec * 10 + ticks_1601_to_1970;
++    }
+     monotonic_time = monotonic_counter();
+     if (user_shared_data) set_user_shared_data_time();
+ }
+@@ -3357,3 +3370,8 @@ DECL_HANDLER(set_fd_eof_info)
+         release_object( fd );
+     }
+ }
++
++DECL_HANDLER(set_faketime)
++{
++    faketime = ((current_time >> 32) - req->faketime) << 32;
++}
+diff --git a/server/protocol.def b/server/protocol.def
+index ac38076b22c..9862d55a737 100644
+--- a/server/protocol.def
++++ b/server/protocol.def
+@@ -4353,3 +4353,8 @@ enum fsync_type
+     unsigned int shm_idx;
+ @REPLY
+ @END
++
++@REQ(set_faketime)
++    unsigned __int64 faketime;
++@REPLY
++@END
+diff --git a/server/request_handlers.h b/server/request_handlers.h
+index b4e772d673c..926bd9e2024 100644
+--- a/server/request_handlers.h
++++ b/server/request_handlers.h
+@@ -317,6 +317,7 @@ DECL_HANDLER(d3dkmt_object_open_name);
+ DECL_HANDLER(d3dkmt_mutex_acquire);
+ DECL_HANDLER(d3dkmt_mutex_release);
+ DECL_HANDLER(fsync_free_shm_idx);
++DECL_HANDLER(set_faketime);
+ 
+ typedef void (*req_handler)( const void *req, void *reply );
+ static const req_handler req_handlers[REQ_NB_REQUESTS] =
+@@ -631,6 +632,7 @@ static const req_handler req_handlers[REQ_NB_REQUESTS] =
+     (req_handler)req_d3dkmt_mutex_acquire,
+     (req_handler)req_d3dkmt_mutex_release,
+     (req_handler)req_fsync_free_shm_idx,
++    (req_handler)req_set_faketime,
+ };
+ 
+ C_ASSERT( sizeof(abstime_t) == 8 );
+-- 
+2.55.0
+
