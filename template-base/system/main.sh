@@ -994,6 +994,7 @@ function _applyFSR4 {
         if [[ -z "$FSR4_UPGRADE" && "$FSR4_UPGRADE" -eq 1 ]]; then
             copyIfDifferent "system/fsr4/amdxcffx64.dll" "data/wineprefix/drive_c/windows/system32/amdxcffx64.dll"
         else
+            export FSR4_UPGRADE=0
             rm -f "data/wineprefix/drive_c/windows/system32/amdxcffx64.dll"
         fi
     fi
