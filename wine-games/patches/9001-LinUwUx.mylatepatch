@@ -20,7 +20,7 @@ index 110404c274c..06fc53faeec 100644
      server_leave_uninterrupted_section( &instrumentation_callback_mutex, &sigset );
  }
  
-+static int denuowo_enabled=0;
++static int denuvowo_enabled=0;
 +// This will point to the games memory region where syscall spoofing is happening
 +uint64_t TargetSysHandler = 0;
 +uint64_t SyscallBypassMagic = 0x1337133713371337;
@@ -36,7 +36,7 @@ index 110404c274c..06fc53faeec 100644
      ucontext_t *ucontext = init_handler( sigcontext );
      struct syscall_frame *frame = get_syscall_frame();
  
-+    if(denuowo_enabled){
++    if(denuvowo_enabled){
 +        ucontext_t *ctx = sigcontext;
 +
 +        __uint128_t *xmm_regs = (__uint128_t *)ctx->uc_mcontext.fpregs->_xmm;
@@ -151,7 +151,7 @@ index 110404c274c..06fc53faeec 100644
      struct xcontext context;
      void *steamclient_addr = NULL;
  
-+    if(denuowo_enabled){
++    if(denuvowo_enabled){
 +        unsigned int leaf;
 +        unsigned int subleaf;
 +        ucontext_t *uc;
@@ -326,10 +326,10 @@ index 110404c274c..06fc53faeec 100644
      if (sigaction( SIGTRAP, &sig_act, NULL ) == -1) goto error;
      sig_act.sa_sigaction = segv_handler;
      if (sigaction( SIGSEGV, &sig_act, NULL ) == -1) goto error;
-+    if(getenv("WINE_DENUOWO")&&strcmp(getenv("WINE_DENUOWO"),"1")==0){
-+        denuowo_enabled=1;
++    if(getenv("WINE_DENUVOWO")&&strcmp(getenv("WINE_DENUVOWO"),"1")==0){
++        denuvowo_enabled=1;
 +    }
-+    if(denuowo_enabled){
++    if(denuvowo_enabled){
 +        detect_cpu_vendor();
 +        syscall(SYS_arch_prctl, ARCH_SET_CPUID, 0);
 +    }
@@ -406,8 +406,8 @@ index 4440f7ead83..8cea52e6ca0 100644
      atomic_store_ulong(&user_shared_data->TickCountLowDeprecated, tick_count);
  }
  
-+static int denuowo_checked = 0;
-+static int denuowo_enabled = 0;
++static int denuvowo_checked = 0;
++static int denuvowo_enabled = 0;
 +
  void set_current_time(void)
  {
@@ -415,11 +415,11 @@ index 4440f7ead83..8cea52e6ca0 100644
      struct timeval now;
      gettimeofday( &now, NULL );
 -    current_time = (timeout_t)now.tv_sec * TICKS_PER_SEC + now.tv_usec * 10 + ticks_1601_to_1970;
-+    if(!denuowo_checked){
-+        denuowo_enabled=getenv("WINE_DENUOWO")&&strcmp(getenv("WINE_DENUOWO"),"1")==0;
-+        denuowo_checked=1;
++    if(!denuvowo_checked){
++        denuvowo_enabled=getenv("WINE_DENUVOWO")&&strcmp(getenv("WINE_DENUVOWO"),"1")==0;
++        denuvowo_checked=1;
 +    }
-+    if(denuowo_enabled){
++    if(denuvowo_enabled){
 +        current_time = (timeout_t)now.tv_sec * TICKS_PER_SEC + now.tv_usec * 10 + ticks_1601_to_1970 - faketime;
 +    }else{
 +        current_time = (timeout_t)now.tv_sec * TICKS_PER_SEC + now.tv_usec * 10 + ticks_1601_to_1970;

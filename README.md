@@ -502,14 +502,14 @@ Possible values:
 * `0` (default): disabled
 * `1`: enable gstreamer debug output
 
-__`TDF_DENUOWO`__  
-Enables support for DenuOwO hypervisor bypass. To be used for digital preservation purposes.
+__`TDF_DENUVOWO`__  
+Enables support for DenuvOwO hypervisor bypass. To be used for digital preservation purposes.
 
 Possible values:  
 * `0` (defualt): disabled
 * `1`: enabled
 
-Note that while this is supported in TDF, additional setup may be required depending on your hardware, such as setting kernel parameters (`clearcpuid=514`), installing the cpuid_fault emulation kernel module, setting `export PROTON_AVX=0`, or other game-specific configuration. Refer to the DenuOwO documentation for exact settings if a game doesn't work. Also keep in mind that this is highly experimental, it may not work properly yet and it may be removed in future versions of TDF.
+Note that while this is supported in TDF, additional setup may be required depending on your hardware, such as setting kernel parameters (`clearcpuid=514`), installing the cpuid_fault emulation kernel module, setting `export PROTON_AVX=0`, or other game-specific configuration. Refer to the DenuvOwO documentation for exact settings if a game doesn't work. Also keep in mind that this is highly experimental, it may not work properly yet and it may be removed in future versions of TDF.
 
 Do not enable this if it's not strictly necessary, as it will break A LOT of games.
 

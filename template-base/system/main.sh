@@ -51,7 +51,7 @@ TDF_WINE_DEBUG_GSTREAMER=0
 TDF_WINE_SYNC=""
 TDF_WINE_LAA=1
 TDF_WINE_HEAP_DELAY_FREE=1
-TDF_DENUOWO=0
+TDF_DENUVOWO=0
 TDF_DXVK=1
 TDF_DXVK_NVAPI=0
 TDF_VKD3D=1
@@ -288,7 +288,7 @@ function _initSandbox {
     _applyDebugGStreamer
     _applyCPULimits
     _apply32bitOptimizations
-    _applyDenuowo
+    _applyDenuvowo
     _prepareMangohudCommand
     _prepareGamescopeCommand
     TDF_ALLOW_HOST_FILESYSTEM="$realAllowHostAccess"
@@ -929,9 +929,9 @@ function _apply32bitOptimizations {
     fi
 }
 
-function _applyDenuowo {
-    if [ "$TDF_DENUOWO" -eq 1 ]; then
-        _envs["WINE_DENUOWO"]=1
+function _applyDenuvowo {
+    if [ "$TDF_DENUVOWO" -eq 1 ]; then
+        _envs["WINE_DENUVOWO"]=1
         _envs["WINEDLLOVERRIDES"]="${_envs["WINEDLLOVERRIDES"]};winmm=n,b;version.dll=n,b;reflex.dll=n,b"
     fi
 }
