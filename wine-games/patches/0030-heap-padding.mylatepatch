@@ -38,7 +38,7 @@ index 1e99799da13..45bd78a4ce9 100644
          status = STATUS_INVALID_HANDLE;
      else if ((block_size = heap_get_block_size( heap, heap_flags, size )) == ~0U)
 diff --git a/dlls/ntdll/loader.c b/dlls/ntdll/loader.c
-index bbb448cc69d..c84b7be3093 100644
+index bbb448cc69d..6da2ce82d03 100644
 --- a/dlls/ntdll/loader.c
 +++ b/dlls/ntdll/loader.c
 @@ -4676,6 +4676,24 @@ void loader_init( CONTEXT *context, void **entry )
@@ -49,18 +49,18 @@ index bbb448cc69d..c84b7be3093 100644
 +        {
 +            if (env_str[0] == L'1')
 +            {
-+                TRACE( "Enabling 16-byte heap padding.\n" );
++                ERR( "Enabling 16-byte heap padding.\n" );
 +                heap_padding_size = 16;
 +            }
 +            else if (env_str[0] == L'2')
 +            {
-+                TRACE( "Enabling 4KB heap padding.\n" );
++                ERR( "Enabling 4KB heap padding.\n" );
 +                heap_padding_size = 4096;
 +            }
 +        }
 +        else if ((get_env( L"SteamGameId", env_str, sizeof(env_str))) && !wcsicmp( env_str, L"32370" ))
 +        {
-+            TRACE( "KOTOR (SteamGameId=32370): enabling 16-byte heap padding.\n" );
++            ERR( "Enabling 16-byte heap padding for KOTOR (SteamGameId=32370).\n" );
 +            heap_padding_size = 16;
 +        }
  
