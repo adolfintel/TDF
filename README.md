@@ -1213,7 +1213,7 @@ Wine depends on a lot of libraries, and some may be missing. TDF is built exclus
     * `export ACO_DEBUG=noopt`
     * `export RADV_PERFTEST=nosam`
     * `export AMD_DEBUG=nongg`
-* Some games have memory management issues that can be workarounded by adding `export WINE_HEAP_DELAY_FREE=1`
+* Some games have memory management issues that can be workarounded by adding `TDF_WINE_HEAP_DELAY_FREE=1`
 * Look for game-specific fixes on [PCGamingWiki](https://www.pcgamingwiki.com/wiki/Home), even if it's focused on Windows, the same fixes often apply to Wine as well
 * If this is an old DX9 game, add `unset WINEDEBUG` to the configuration, open a terminal and run `./run.sh`, if you see errors about shader compilation, you probably need to install the [old DirectX redistributable](https://www.microsoft.com/en-us/download/details.aspx?id=8109)
 * It is extremely rare but some very old games don't work with Wine's msvcrt/msvcp, for those you'll have to find an old version of the Visual C++ Redistributable (version 6 and older) or take it from Windows, put the DLLs in the game's folder and add `export WINEDLLOVERRIDES="msvcrt,msvcp=n,b"`
