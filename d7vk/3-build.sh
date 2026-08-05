@@ -6,8 +6,8 @@ rm -rf build
 cd d7vk
 bash package-release.sh master ../build --no-package
 cd ../build
-mv dxvk-master/x* .
-rm -rf dxvk-master
+mv d7vk-master/x* .
+rm -rf d7vk-master
 cd ..
 echo 4 > state
 exit 0
