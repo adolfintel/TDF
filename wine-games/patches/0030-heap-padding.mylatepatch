@@ -1,0 +1,80 @@
+diff --git a/dlls/ntdll/heap.c b/dlls/ntdll/heap.c
+index 1e99799da13..45bd78a4ce9 100644
+--- a/dlls/ntdll/heap.c
++++ b/dlls/ntdll/heap.c
+@@ -253,6 +253,16 @@ C_ASSERT( BIN_SIZE_STEP_7 + 3 * BLOCK_ALIGN <= FIELD_MAX( struct block, tail_siz
+ static BYTE affinity_mapping[] = {20,6,31,15,14,29,27,4,18,24,26,13,0,9,2,30,17,7,23,25,10,19,12,3,22,21,5,16,1,28,11,8};
+ static LONG next_thread_affinity;
+ 
++/*
++ * Heap allocation tail padding for games that read slightly out-of-bounds.
++ *
++ * Set via WINE_HEAP_PADDING env var (read in loader.c during init):
++ *   0 — disabled
++ *   1 — 16 bytes (default for SteamGameId=32370 / KOTOR)
++ *   2 — 4 KB
++ */
++SIZE_T heap_padding_size = 0;
++
+ /* a bin, tracking heap blocks of a certain size */
+ struct bin
+ {
+@@ -2060,6 +2070,8 @@ void *WINAPI DECLSPEC_HOTPATCH RtlAllocateHeap( HANDLE handle, ULONG flags, SIZE
+     ULONG heap_flags;
+     NTSTATUS status;
+ 
++    size += heap_padding_size;
++
+     heap = unsafe_heap_from_handle( handle, flags, &heap_flags );
+     if ((block_size = heap_get_block_size( heap, heap_flags, size )) == ~0U)
+         status = STATUS_NO_MEMORY;
+@@ -2254,6 +2266,8 @@ void *WINAPI RtlReAllocateHeap( HANDLE handle, ULONG flags, void *ptr, SIZE_T si
+ 
+     if (!ptr) return NULL;
+ 
++    size += heap_padding_size;
++
+     if (!(heap = unsafe_heap_from_handle( handle, flags, &heap_flags )))
+         status = STATUS_INVALID_HANDLE;
+     else if ((block_size = heap_get_block_size( heap, heap_flags, size )) == ~0U)
+diff --git a/dlls/ntdll/loader.c b/dlls/ntdll/loader.c
+index bbb448cc69d..c84b7be3093 100644
+--- a/dlls/ntdll/loader.c
++++ b/dlls/ntdll/loader.c
+@@ -4676,6 +4676,24 @@ void loader_init( CONTEXT *context, void **entry )
+             ERR( "Enabling heap top down hack.\n" );
+             heap_top_down_hack = TRUE;
+         }
++        if (get_env( L"WINE_HEAP_PADDING", env_str, sizeof(env_str)))
++        {
++            if (env_str[0] == L'1')
++            {
++                TRACE( "Enabling 16-byte heap padding.\n" );
++                heap_padding_size = 16;
++            }
++            else if (env_str[0] == L'2')
++            {
++                TRACE( "Enabling 4KB heap padding.\n" );
++                heap_padding_size = 4096;
++            }
++        }
++        else if ((get_env( L"SteamGameId", env_str, sizeof(env_str))) && !wcsicmp( env_str, L"32370" ))
++        {
++            TRACE( "KOTOR (SteamGameId=32370): enabling 16-byte heap padding.\n" );
++            heap_padding_size = 16;
++        }
+ 
+         peb->ProcessHeap        = RtlCreateHeap( heap_flags, NULL, 0, 0, NULL, NULL );
+ 
+diff --git a/dlls/ntdll/ntdll_misc.h b/dlls/ntdll/ntdll_misc.h
+index 1af5c3d1d08..57b5357cdc5 100644
+--- a/dlls/ntdll/ntdll_misc.h
++++ b/dlls/ntdll/ntdll_misc.h
+@@ -54,6 +54,7 @@ static const UINT_PTR page_size = 0x1000;
+ extern BOOL delay_heap_free;
+ extern BOOL heap_zero_hack;
+ extern BOOL heap_top_down_hack;
++extern SIZE_T heap_padding_size;
+ 
+ /* exceptions */
+ extern NTSTATUS call_seh_handlers( EXCEPTION_RECORD *rec, CONTEXT *context );

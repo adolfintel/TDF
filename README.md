@@ -481,6 +481,15 @@ Possible values:
 * `1` (default): Enable
 * `0`: Disable
 
+__`export WINE_HEAP_PADDING`__  
+Add a few bytes of padding to memory allocations for better compatibility with games that do out of bounds read/writes.
+
+Possible values:  
+* not set (default): let wine decide
+* `0`: Disable
+* `1`: Use a 16 byte padding
+* `2`: Use a 4 kByte padding
+
 __`TDF_WINE_SMOKETEST`__  
 Whether or not to perform a "smoke test" to make sure that Wine actually works before trying to run the game, that way you can tell if a crash is a Wine problem or a game problem. TDF does this by default but you can disable it if it takes too long at the "Starting Wine" screen.
 
