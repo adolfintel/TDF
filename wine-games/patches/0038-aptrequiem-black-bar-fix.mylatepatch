@@ -10,7 +10,7 @@ index 0fb8d74eaba..37fa97e9d82 100644
 +        /* A Plague Tale: Requiem creates the window with borders, then removes them
 +         * without calling SetWindowPos with SWP_FRAMECHANGED, causing a black bar
 +         * at the top. Force frame recalculation for this game. */
-+        if (sgi && !strcmp( sgi, "1182900" ) && offset == GWL_STYLE)
++        if (sgi && ( !strcmp( sgi, "1182900" ) || !strcmp( sgi, "2713000" ) ) && offset == GWL_STYLE)
 +        {
 +            DWORD old_border = retval & (WS_BORDER | WS_DLGFRAME | WS_CAPTION | WS_SYSMENU |
 +                                          WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
@@ -18,7 +18,7 @@ index 0fb8d74eaba..37fa97e9d82 100644
 +                                          WS_THICKFRAME | WS_MINIMIZEBOX | WS_MAXIMIZEBOX);
 +            if ((old_border & ~new_border) && !(newval & (WS_CHILD | WS_POPUP)))
 +            {
-+                TRACE( "forcing frame recalc for SteamGameId=1182900\n" );
++                TRACE( "forcing frame recalc for Plague Tale Requiem/Resonance\n" );
 +                NtUserSetWindowPos( hwnd, 0, 0, 0, 0, 0,
 +                                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOACTIVATE |
 +                                    SWP_FRAMECHANGED );
