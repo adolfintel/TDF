@@ -1,0 +1,24 @@
+From 812368da47cca8466557ecb4f27dd3641c578fe1 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?Bernhard=20=C3=9Cbelacker?= <bernhardu@mailbox.org>
+Date: Sat, 16 May 2026 12:49:44 +0200
+Subject: [PATCH] ntdll: Reserve last 68 kb of 32-bit address space in new
+ wow64.
+
+Wine-Bug: https://bugs.winehq.org/show_bug.cgi?id=59472
+
+diff --git a/dlls/ntdll/unix/virtual.c b/dlls/ntdll/unix/virtual.c
+--- a/dlls/ntdll/unix/virtual.c
++++ b/dlls/ntdll/unix/virtual.c
+@@ -5405,7 +5405,11 @@ void virtual_set_large_address_space(void)
+                 free_reserved_memory( 0, (char *)0x7ffe0000 );
+ #endif
+         }
+-        else user_space_wow_limit = (is_large_address_aware() ? limit_4g : limit_2g) - 1;
++        else
++        {
++            user_space_wow_limit = (is_large_address_aware() ? limit_4g : limit_2g) - 1;
++            mmap((void*)(0xffffffff-0x11000+1), 0x11000, PROT_NONE, MAP_FIXED | MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1, 0);
++        }
+     }
+     else
+     {

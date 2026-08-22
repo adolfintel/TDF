@@ -1,5 +1,4 @@
 diff --git a/dlls/kernelbase/memory.c b/dlls/kernelbase/memory.c
-index fa385da56f3..07a7ad7015a 100644
 --- a/dlls/kernelbase/memory.c
 +++ b/dlls/kernelbase/memory.c
 @@ -38,6 +38,7 @@
@@ -46,10 +45,9 @@ index fa385da56f3..07a7ad7015a 100644
  }
  
 diff --git a/dlls/ntdll/unix/virtual.c b/dlls/ntdll/unix/virtual.c
-index 6e1697720f0..4ce4237d1d7 100644
 --- a/dlls/ntdll/unix/virtual.c
 +++ b/dlls/ntdll/unix/virtual.c
-@@ -5399,6 +5399,9 @@ static BOOL is_large_address_aware(void)
+@@ -5394,6 +5394,9 @@ static BOOL is_large_address_aware(void)
   */
  void virtual_set_large_address_space(void)
  {
@@ -59,11 +57,13 @@ index 6e1697720f0..4ce4237d1d7 100644
      if (is_win64)
      {
          if (!is_wow64())
-@@ -5410,7 +5413,34 @@ void virtual_set_large_address_space(void)
-                 free_reserved_memory( 0, (char *)0x7ffe0000 );
- #endif
+@@ -5407,8 +5410,33 @@ void virtual_set_large_address_space(void)
          }
--        else user_space_wow_limit = (is_large_address_aware() ? limit_4g : limit_2g) - 1;
+-        else
+-        {
+-            user_space_wow_limit = (is_large_address_aware() ? limit_4g : limit_2g) - 1;
+-            mmap((void*)(0xffffffff-0x11000+1), 0x11000, PROT_NONE, MAP_FIXED | MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1, 0);
+-        }
 +        else if (is_large_address_aware())
 +        {
 +            if (!checked_setup_tmp)
@@ -92,6 +92,7 @@ index 6e1697720f0..4ce4237d1d7 100644
 +            else user_space_wow_limit = limit_4g - 1;
 +        }
 +        else user_space_wow_limit = limit_2g - 1;
++
++        mmap((void*)(0xffffffff-0x11000+1), 0x11000, PROT_NONE, MAP_FIXED | MAP_NORESERVE | MAP_PRIVATE | MAP_ANON, -1, 0);
      }
      else
-     {
