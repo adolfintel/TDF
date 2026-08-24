@@ -1,0 +1,115 @@
+From f5299a826d34b4ed3c24219e8f01a47b47a6c14a Mon Sep 17 00:00:00 2001
+From: Federico Dossena <info@fdossena.com>
+Date: Mon, 24 Aug 2026 12:06:53 +0200
+Subject: [PATCH] Threading fixes
+
+---
+ src/limiter.c | 24 +++++++++++++++++++++++-
+ src/util.c    | 12 ++++++++++++
+ 2 files changed, 35 insertions(+), 1 deletion(-)
+
+diff --git a/src/limiter.c b/src/limiter.c
+index 3d60e5d..cfa5b8c 100644
+--- a/src/limiter.c
++++ b/src/limiter.c
+@@ -28,8 +28,11 @@
+ #include <time.h>
+ #include <string.h>
+ #include <stdbool.h>
++#include <pthread.h>
++#include <errno.h>
+ 
+ static TimeArray *overhead_times = NULL;
++static pthread_mutex_t limiter_mutex = PTHREAD_MUTEX_INITIALIZER;
+ 
+ TimeArray* TimeArray_new(size_t size) {
+ 	TimeArray *self = (TimeArray*) calloc(1, sizeof(TimeArray));
+@@ -87,7 +90,13 @@ int strangle_nanosleep( nanotime_t sleepTime ) {
+ 	}
+ 
+ 	struct timespec ts = nanotimeToTimespec( sleepTime );
+-	return nanosleep( &ts, NULL );
++	struct timespec remaining = ts;
++
++	while ( nanosleep( &remaining, &remaining ) == -1 && errno == EINTR ) {
++		/* Retry with remaining time */
++	}
++
++	return 0;
+ }
+ 
+ __attribute__ ((constructor))
+@@ -97,10 +106,21 @@ void strangle_limiter_init() {
+ 
+ void limiter( const StrangleConfig* config ) {
+ 	static bool onBatteryPower = false;
++	static bool initialized = false;
+ 	static nanotime_t oldTime = 0,
+ 	                  overhead = 0,
+ 	                  lastBatteryCheck = 0;
+ 
++	pthread_mutex_lock(&limiter_mutex);
++
++	/* Initialize oldTime on first call to avoid garbage from boot time */
++	if (!initialized) {
++		oldTime = getNanoTime();
++		initialized = true;
++		pthread_mutex_unlock(&limiter_mutex);
++		return;
++	}
++
+ 	if ( config->targetFrameTimeBattery != config->targetFrameTime
+ 		&& getNanoTime() > lastBatteryCheck + 10e9 )
+ 	{
+@@ -112,6 +132,7 @@ void limiter( const StrangleConfig* config ) {
+ 		= onBatteryPower ? config->targetFrameTimeBattery : config->targetFrameTime;
+ 
+ 	if ( targetFrameTime <= 0 ) {
++		pthread_mutex_unlock(&limiter_mutex);
+ 		return;
+ 	}
+ 
+@@ -128,4 +149,5 @@ void limiter( const StrangleConfig* config ) {
+ 	}
+ 
+ 	oldTime = getNanoTime();
++	pthread_mutex_unlock(&limiter_mutex);
+ }
+diff --git a/src/util.c b/src/util.c
+index 3dc46d4..e8adf82 100644
+--- a/src/util.c
++++ b/src/util.c
+@@ -113,6 +113,12 @@ int getPowerSupplies(PowerSupply** dest) {
+ 	}
+ 
+ 	free(ents);
++
++	/* Free individual psu.path allocations before setting dest */
++	for (int i = 0; i < psuCount; ++i) {
++		free(psus[i].path);
++	}
++
+ 	*dest = psus;
+ 	return psuCount;
+ }
+@@ -133,11 +139,17 @@ bool isRunningOnBattery() {
+ 			continue;
+ 		}
+ 		if (psus[i].status != PowerSupplyStatus_Offline) {
++			for (int j = 0; j < psuCount; ++j) {
++				free(psus[j].path);
++			}
+ 			free(psus);
+ 			return false;
+ 		}
+ 	}
+ 
++	for (int i = 0; i < psuCount; ++i) {
++		free(psus[i].path);
++	}
+ 	free(psus);
+ 	return true;
+ }
+-- 
+2.55.0
+
