@@ -1,0 +1,21 @@
+diff --git a/dlls/ntdll/unix/loader.c b/dlls/ntdll/unix/loader.c
+index 0d65255e02b..ac176eba499 100644
+--- a/dlls/ntdll/unix/loader.c
++++ b/dlls/ntdll/unix/loader.c
+@@ -549,14 +549,8 @@ static void preloader_exec( char **argv, WORD machine )
+ {
+ #ifdef HAVE_WINE_PRELOADER
+ #if !defined(__arm__) && !defined(__aarch64__)
+-    const char *p;
+-
+-    if (machine == IMAGE_FILE_MACHINE_AMD64
+-        && ((p = remove_tail( argv[1], "x86_64-unix/wine" )) || (p = remove_tail( argv[1], "i386-unix/wine64" ))))
+-    {
+-        asprintf( &argv[0], "%si386-unix/wine64-preloader", p );
+-        asprintf( &argv[1], "%si386-unix/wine64", p );
+-    }
++    if (machine == IMAGE_FILE_MACHINE_AMD64)
++        asprintf( &argv[0], "%s64-preloader", argv[1] );
+     else
+ #endif
+         asprintf( &argv[0], "%s-preloader", argv[1] );
