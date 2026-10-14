@@ -330,11 +330,6 @@ function _checkPathsInPrefix {
         if [ -z "$game_workingDir" ]; then
             game_workingDir="${game_exe%\\*}"
         fi
-        if [[ ${#game_args[@]} -ne 0 ]]; then
-            if [[ "$(declare -p game_args)" =~ "declare -a" ]]; then
-                readarray -t game_args < <(printf '%s' "game_args" | xargs -n1)
-            fi
-        fi
         if [ "$TDF_IGNORE_EXIST_CHECKS" -ne 1 ]; then
             local pathInSandbox=""
             if [[ "$game_exe" =~ ^[A-Z,a-z]:.*$ ]]; then

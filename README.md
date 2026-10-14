@@ -76,11 +76,10 @@ game_workingDir='C:\Indy'
 ```
 
 __`game_args`__  
-Arguments to be passed to the game.
-
-Accepts a string or a bash array.
-
-Examples: `('-iwad' 'doom2.wad')`  or  `'-iwad doom2.wad'`
+Arguments to be passed to the game as a bash array.
+Examples:
+* `(-iwad doom2.wad)` 
+* `(-map "file with spaces.map")`
 
 __`SteamGameId`__  
 Optional numeric Steam App ID for the game. Identifies a specific game on Steam, enabling game-specific workarounds in the wine-games build (e.g., known configuration tweaks, known fixes). This does NOT require Steam to be installed; it's purely a lookup key for internal game-specific optimizations.
