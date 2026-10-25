@@ -4,19 +4,28 @@ Date: Thu, 16 Jul 2026 13:17:22 +0200
 Subject: [PATCH] LinUwUx-TDF
 
 ---
- dlls/ntdll/unix/signal_x86_64.c | 278 ++++++++++++++++++++++++++++++++
- include/wine/server_protocol.h  |  12 ++
- loader/wine.inf.in              |   1 +
- server/fd.c                     |  20 ++-
- server/protocol.def             |   5 +
- server/request_handlers.h       |   2 +
- 6 files changed, 317 insertions(+), 1 deletion(-)
+ dlls/ntdll/unix/signal_x86_64.c |  279 +++++++++++++++++++++++++++++++++++++++
+ include/wine/server_protocol.h  |   16 ++
+ loader/wine.inf.in              |    1 
+ server/fd.c                     |   20 +++
+ server/protocol.def             |    5 +
+ server/request_handlers.h       |    5 +
+ server/request_trace.h          |    8 +
+ 7 files changed, 332 insertions(+), 2 deletions(-)
 
 diff --git a/dlls/ntdll/unix/signal_x86_64.c b/dlls/ntdll/unix/signal_x86_64.c
-index 110404c274c..06fc53faeec 100644
+index 751d955c564..0b78ed5268a 100644
 --- a/dlls/ntdll/unix/signal_x86_64.c
 +++ b/dlls/ntdll/unix/signal_x86_64.c
-@@ -562,6 +562,15 @@ void set_process_instrumentation_callback( void *callback )
+@@ -27,6 +27,7 @@
+ #include "config.h"
+ 
+ #include <assert.h>
++#include <errno.h>
+ #include <pthread.h>
+ #include <signal.h>
+ #include <stdlib.h>
+@@ -566,6 +567,15 @@ void set_process_instrumentation_callback( void *callback )
      server_leave_uninterrupted_section( &instrumentation_callback_mutex, &sigset );
  }
  
@@ -32,31 +41,7 @@ index 110404c274c..06fc53faeec 100644
  struct xcontext
  {
      CONTEXT c;
-@@ -2050,6 +2059,23 @@ static void sigsys_handler( int signal, siginfo_t *siginfo, void *sigcontext )
-     ucontext_t *ucontext = init_handler( sigcontext );
-     struct syscall_frame *frame = get_syscall_frame();
- 
-+    if(denuvowo_enabled){
-+        ucontext_t *ctx = sigcontext;
-+
-+        __uint128_t *xmm_regs = (__uint128_t *)ctx->uc_mcontext.fpregs->_xmm;
-+        if (TargetSysHandler != 0 && (xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) != 0x1337133713371337) {
-+            xmm_regs[4] = ctx->uc_mcontext.gregs[REG_RAX] & 0xFFFFFFFF;
-+            ctx->uc_mcontext.gregs[REG_RAX] = ctx->uc_mcontext.gregs[REG_RCX];
-+            ctx->uc_mcontext.gregs[REG_RCX] = TargetSysHandler;
-+            ctx->uc_mcontext.gregs[REG_RIP] = TargetSysHandler;
-+            return;
-+        }
-+        if ((xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) == 0x1337133713371337) {
-+            xmm_regs[5] = 0;
-+            //MESSAGE("SyscallBypassMagic!\n");
-+        }
-+    }
-+
-     TRACE_(seh)("SIGSYS, rax %#llx, rip %#llx.\n", RAX_sig(ucontext), RIP_sig(ucontext));
- 
-     if (RAX_sig(ucontext) == 0xffff)
-@@ -2683,6 +2709,90 @@ static inline BOOL check_invalid_gsbase( ucontext_t *ucontext )
+@@ -2510,6 +2520,90 @@ static inline BOOL check_invalid_gsbase( ucontext_t *ucontext )
      return TRUE;
  }
  
@@ -147,7 +132,7 @@ index 110404c274c..06fc53faeec 100644
  
  /**********************************************************************
   *		segv_handler
-@@ -2696,6 +2806,108 @@ static void segv_handler( int signal, siginfo_t *siginfo, void *sigcontext )
+@@ -2523,6 +2617,108 @@ static void segv_handler( int signal, siginfo_t *siginfo, void *sigcontext )
      struct xcontext context;
      void *steamclient_addr = NULL;
  
@@ -253,13 +238,37 @@ index 110404c274c..06fc53faeec 100644
 +        }
 +    }
 +
-     rec.ExceptionAddress = (void *)RIP_sig(ucontext);
-     save_context( &context, ucontext );
+     /* cpuid fault may happen in native thread. */
+     if (TRAP_sig(ucontext) == TRAP_x86_PROTFLT && siginfo->si_code == 0x80 && !ERROR_sig(ucontext)
+         && handle_cpuid_fault( (ULONG_PTR *)&RIP_sig(ucontext), (ULONG_PTR *)&RAX_sig(ucontext),
+@@ -2833,6 +3029,23 @@ static void sigsys_handler( int signal, siginfo_t *siginfo, void *sigcontext )
+     ucontext_t *ucontext = init_handler( sigcontext );
+     struct syscall_frame *frame = get_syscall_frame();
  
-@@ -3129,6 +3341,65 @@ static void *mac_thread_gsbase(void)
++    if(denuvowo_enabled){
++        ucontext_t *ctx = sigcontext;
++
++        __uint128_t *xmm_regs = (__uint128_t *)ctx->uc_mcontext.fpregs->_xmm;
++        if (TargetSysHandler != 0 && (xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) != 0x1337133713371337) {
++            xmm_regs[4] = ctx->uc_mcontext.gregs[REG_RAX] & 0xFFFFFFFF;
++            ctx->uc_mcontext.gregs[REG_RAX] = ctx->uc_mcontext.gregs[REG_RCX];
++            ctx->uc_mcontext.gregs[REG_RCX] = TargetSysHandler;
++            ctx->uc_mcontext.gregs[REG_RIP] = TargetSysHandler;
++            return;
++        }
++        if ((xmm_regs[5] & 0xFFFFFFFFFFFFFFFF) == 0x1337133713371337) {
++            xmm_regs[5] = 0;
++            //MESSAGE("SyscallBypassMagic!\n");
++        }
++    }
++
+     TRACE_(seh)("SIGSYS, rax %#llx, rip %#llx.\n", RAX_sig(ucontext), RIP_sig(ucontext));
+ 
+ #ifdef __linux__
+@@ -3011,6 +3224,65 @@ static int libc_addr_cb( struct dl_phdr_info *info, size_t info_size, void *arg
+     return 1;
  }
  #endif
- 
 +// Function to detect CPU vendor at startup
 +static void detect_cpu_vendor(void) {
 +    unsigned int eax, ebx, ecx, edx;
@@ -322,7 +331,7 @@ index 110404c274c..06fc53faeec 100644
  
  /**********************************************************************
   *		signal_init_process
-@@ -3181,6 +3452,13 @@ void signal_init_process(void)
+@@ -3063,6 +3335,13 @@ void signal_init_process(void)
      if (sigaction( SIGTRAP, &sig_act, NULL ) == -1) goto error;
      sig_act.sa_sigaction = segv_handler;
      if (sigaction( SIGSEGV, &sig_act, NULL ) == -1) goto error;
@@ -335,28 +344,29 @@ index 110404c274c..06fc53faeec 100644
 +    }
      if (sigaction( SIGILL, &sig_act, NULL ) == -1) goto error;
      if (sigaction( SIGBUS, &sig_act, NULL ) == -1) goto error;
- #ifdef __APPLE__
+ #if defined(__APPLE__) || defined(__linux__)
 diff --git a/include/wine/server_protocol.h b/include/wine/server_protocol.h
-index 45e7f15eb53..f1f9286c536 100644
 --- a/include/wine/server_protocol.h
 +++ b/include/wine/server_protocol.h
-@@ -6263,6 +6263,15 @@ struct fsync_free_shm_idx_reply
+@@ -6270,6 +6270,17 @@
      struct reply_header __header;
  };
  
 +struct set_faketime_request
 +{
 +    struct request_header __header;
++    char __pad_12[4];
 +    unsigned __int64 faketime;
 +};
 +struct set_faketime_reply
 +{
 +    struct reply_header __header;
 +};
++
  
  enum request
  {
-@@ -6576,6 +6585,7 @@ enum request
+@@ -6583,6 +6594,7 @@
      REQ_d3dkmt_mutex_acquire,
      REQ_d3dkmt_mutex_release,
      REQ_fsync_free_shm_idx,
@@ -364,7 +374,7 @@ index 45e7f15eb53..f1f9286c536 100644
      REQ_NB_REQUESTS
  };
  
-@@ -6893,6 +6903,7 @@ union generic_request
+@@ -6900,6 +6912,7 @@
      struct d3dkmt_mutex_acquire_request d3dkmt_mutex_acquire_request;
      struct d3dkmt_mutex_release_request d3dkmt_mutex_release_request;
      struct fsync_free_shm_idx_request fsync_free_shm_idx_request;
@@ -372,25 +382,28 @@ index 45e7f15eb53..f1f9286c536 100644
  };
  union generic_reply
  {
-@@ -7208,6 +7219,7 @@ union generic_reply
+@@ -7215,8 +7228,9 @@
      struct d3dkmt_mutex_acquire_reply d3dkmt_mutex_acquire_reply;
      struct d3dkmt_mutex_release_reply d3dkmt_mutex_release_reply;
      struct fsync_free_shm_idx_reply fsync_free_shm_idx_reply;
 +    struct set_faketime_reply set_faketime_reply;
  };
  
- #define SERVER_PROTOCOL_VERSION 931
+-#define SERVER_PROTOCOL_VERSION 931
++#define SERVER_PROTOCOL_VERSION 932
+ 
+ #endif /* __WINE_WINE_SERVER_PROTOCOL_H */
 diff --git a/loader/wine.inf.in b/loader/wine.inf.in
-index ed0acc5adaf..586b1040dc6 100644
+index 0aee5cfe8e0..a775904ca22 100644
 --- a/loader/wine.inf.in
 +++ b/loader/wine.inf.in
-@@ -1583,3 +1583,4 @@ HKLM,Software\Khronos\OpenXR\1,"ActiveRuntime",,"C:\openxr\wineopenxr64.json"
+@@ -1546,3 +1546,4 @@ HKLM,Software\Wow6432Node\Khronos\OpenXR\1,"ActiveRuntime",,"C:\openxr\wineopenx
  ;;Other app-specific overrides
  HKCU,Software\Wine\AppDefaults\Pentiment.exe\DllOverrides,"SpeechSynthesisWrapper",4,
  HKCU,Software\Wine\AppDefaults\Maine-Win64-Shipping.exe\DllOverrides,"SpeechSynthWrapper",4,
 +HKLM,System\CurrentControlSet\Control\IDConfigDB\Hardware Profiles\0001,"HwProfileGuid",,"{12345678-1234-1234-1234-123456789012}"
 diff --git a/server/fd.c b/server/fd.c
-index 4440f7ead83..8cea52e6ca0 100644
+index aa71e6dfe2a..64d52a7ff1b 100644
 --- a/server/fd.c
 +++ b/server/fd.c
 @@ -352,6 +352,8 @@ static struct list rel_timeout_list = LIST_INIT(rel_timeout_list); /* sorted rel
@@ -427,7 +440,7 @@ index 4440f7ead83..8cea52e6ca0 100644
      monotonic_time = monotonic_counter();
      if (user_shared_data) set_user_shared_data_time();
  }
-@@ -3357,3 +3370,8 @@ DECL_HANDLER(set_fd_eof_info)
+@@ -3333,3 +3346,8 @@ DECL_HANDLER(set_fd_eof_info)
          release_object( fd );
      }
  }
@@ -437,10 +450,10 @@ index 4440f7ead83..8cea52e6ca0 100644
 +    faketime = ((current_time >> 32) - req->faketime) << 32;
 +}
 diff --git a/server/protocol.def b/server/protocol.def
-index ac38076b22c..9862d55a737 100644
+index 66968ebd562..31608a7be82 100644
 --- a/server/protocol.def
 +++ b/server/protocol.def
-@@ -4353,3 +4353,8 @@ enum fsync_type
+@@ -4360,3 +4360,8 @@ enum fsync_type
      unsigned int shm_idx;
  @REPLY
  @END
@@ -450,10 +463,9 @@ index ac38076b22c..9862d55a737 100644
 +@REPLY
 +@END
 diff --git a/server/request_handlers.h b/server/request_handlers.h
-index b4e772d673c..926bd9e2024 100644
 --- a/server/request_handlers.h
 +++ b/server/request_handlers.h
-@@ -317,6 +317,7 @@ DECL_HANDLER(d3dkmt_object_open_name);
+@@ -317,6 +317,7 @@
  DECL_HANDLER(d3dkmt_mutex_acquire);
  DECL_HANDLER(d3dkmt_mutex_release);
  DECL_HANDLER(fsync_free_shm_idx);
@@ -461,7 +473,7 @@ index b4e772d673c..926bd9e2024 100644
  
  typedef void (*req_handler)( const void *req, void *reply );
  static const req_handler req_handlers[REQ_NB_REQUESTS] =
-@@ -631,6 +632,7 @@ static const req_handler req_handlers[REQ_NB_REQUESTS] =
+@@ -631,6 +632,7 @@
      (req_handler)req_d3dkmt_mutex_acquire,
      (req_handler)req_d3dkmt_mutex_release,
      (req_handler)req_fsync_free_shm_idx,
@@ -469,6 +481,49 @@ index b4e772d673c..926bd9e2024 100644
  };
  
  C_ASSERT( sizeof(abstime_t) == 8 );
--- 
-2.55.0
-
+@@ -2412,3 +2414,6 @@
+ C_ASSERT( offsetof(struct fsync_free_shm_idx_request, shm_idx) == 12 );
+ C_ASSERT( sizeof(struct fsync_free_shm_idx_request) == 16 );
+ C_ASSERT( sizeof(struct fsync_free_shm_idx_reply) == 8 );
++C_ASSERT( offsetof(struct set_faketime_request, faketime) == 16 );
++C_ASSERT( sizeof(struct set_faketime_request) == 24 );
++C_ASSERT( sizeof(struct set_faketime_reply) == 8 );
+diff --git a/server/request_trace.h b/server/request_trace.h
+--- a/server/request_trace.h
++++ b/server/request_trace.h
+@@ -3568,6 +3568,11 @@
+     fprintf( stderr, " shm_idx=%08x", req->shm_idx );
+ }
+ 
++static void dump_set_faketime_request( const struct set_faketime_request *req )
++{
++    dump_uint64( " faketime=", &req->faketime );
++}
++
+ typedef void (*dump_func)( const void *req );
+ 
+ static const dump_func req_dumpers[REQ_NB_REQUESTS] =
+@@ -3882,6 +3887,7 @@
+     (dump_func)dump_d3dkmt_mutex_acquire_request,
+     (dump_func)dump_d3dkmt_mutex_release_request,
+     (dump_func)dump_fsync_free_shm_idx_request,
++    (dump_func)dump_set_faketime_request,
+ };
+ 
+ static const dump_func reply_dumpers[REQ_NB_REQUESTS] =
+@@ -4196,6 +4202,7 @@
+     (dump_func)dump_d3dkmt_mutex_acquire_reply,
+     NULL,
+     NULL,
++    NULL,
+ };
+ 
+ static const char * const req_names[REQ_NB_REQUESTS] =
+@@ -4510,6 +4517,7 @@
+     "d3dkmt_mutex_acquire",
+     "d3dkmt_mutex_release",
+     "fsync_free_shm_idx",
++    "set_faketime",
+ };
+ 
+ static const struct
